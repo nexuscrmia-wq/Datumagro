@@ -1,0 +1,17 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Editar Propriedade{% else %}Adicionar Nova Propriedade{% endif %} - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="form-container" style="max-width: 600px; margin: auto;">
+        <h2>{% if object %}Editar Propriedade: {{ object.nome }}{% else %}Adicionar Nova Propriedade{% endif %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button-primary">Salvar</button>
+            <a href="#" style="display: block; text-align: center; margin-top: 1rem;">Cancelar</a>
+        </form>
+    </div>
+{% endblock %}
+{% endraw %}

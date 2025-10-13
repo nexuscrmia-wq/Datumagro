@@ -1,0 +1,45 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Minha Assinatura - DatumAgro{% endblock %}
+
+{% block content %}
+    <h1>Gerenciamento da Assinatura</h1>
+
+    {% if assinatura %}
+        <div class="assinatura-info">
+            <h3>Seu Plano Atual</h3>
+            <div class="plano-atual-card">
+                <h2>{{ assinatura.plano.nome }}</h2>
+                <p>Status: <strong class="status-{{ assinatura.status }}">{{ assinatura.get_status_display }}</strong></p>
+                <p>Próximo vencimento: {{ assinatura.data_vencimento|date:"d/m/Y" }}</p>
+            </div>
+
+            <h3>Detalhes da Próxima Fatura</h3>
+            <div class="fatura-detalhes">
+                <div class="fatura-item"><span>Valor Base do Plano:</span> <span>{{ detalhes_fatura.valor_base }}</span></div>
+                <div class="fatura-item"><span>Custo Variável ({{ detalhes_fatura.numero_de_animais }} animais):</span> <span>{{ detalhes_fatura.custo_variavel_animais }}</span></div>
+                <hr>
+                <div class="fatura-item total"><span>TOTAL A PAGAR:</span> <span>{{ detalhes_fatura.total_a_pagar }}</span></div>
+            </div>
+
+            <div class="assinatura-acoes">
+                <a href="#" class="button-secondary">Alterar Plano</a>
+                <a href="#" class="button-secondary">Atualizar Pagamento</a>
+            </div>
+        </div>
+    {% else %}
+        <p>Você ainda não possui uma assinatura ativa. Escolha um dos nossos planos para começar.</p>
+        <a href="#" class="button-primary">Ver Planos</a>
+    {% endif %}
+
+    <style>
+        .plano-atual-card { background-color: var(--cor-fundo-bege); padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .plano-atual-card h2 { color: var(--cor-verde-principal); }
+        .fatura-detalhes { max-width: 500px; }
+        .fatura-item { display: flex; justify-content: space-between; padding: 10px 0; }
+        .fatura-item.total { font-weight: bold; font-size: 1.2rem; }
+        .assinatura-acoes { margin-top: 40px; }
+    </style>
+{% endblock %}
+{% endraw %}

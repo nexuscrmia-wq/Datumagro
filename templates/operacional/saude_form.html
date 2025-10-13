@@ -1,0 +1,21 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Registrar Manejo Sanitário - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="form-container" style="max-width: 600px; margin: auto;">
+        <h2>Registrar Novo Manejo Sanitário</h2>
+        <p>Preencha os dados abaixo para registrar uma nova aplicação de produto no seu rebanho.</p>
+
+        <form method="post" style="margin-top: 20px;">
+            {% csrf_token %}
+            
+            {{ form.as_p }}
+            
+            <button type="submit" class="button-primary">Salvar Registro</button>
+            <a href="#" style="display: block; text-align: center; margin-top: 1rem;">Cancelar</a>
+        </form>
+    </div>
+{% endblock %}
+{% endraw %}

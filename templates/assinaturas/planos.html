@@ -1,0 +1,73 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Planos e Preços - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="header-planos">
+        <h1>Escolha o Plano Ideal para sua Fazenda</h1>
+        <p>Tecnologia e gestão de ponta para todos os tamanhos de rebanho.</p>
+    </div>
+
+    <div class="planos-container">
+        {% for plano in planos %}
+            <div class="plano-card">
+                <h3>{{ plano.nome }}</h3>
+                <p class="plano-descricao">{{ plano.descricao }}</p>
+
+                <div class="plano-preco">
+                    <strong>R$ {{ plano.valor_base_mensal|floatformat:2 }}</strong>
+                    <span>/mês</span>
+                    {% if plano.valor_por_animal_mensal > 0 %}
+                        <small>+ R$ {{ plano.valor_por_animal_mensal|floatformat:2 }} por animal/mês</small>
+                    {% endif %}
+                </div>
+
+                <ul class="plano-features">
+                    <li>
+                        {% if plano.limite_animais %}
+                            Até {{ plano.limite_animais }} animais
+                        {% else %}
+                            Animais Ilimitados
+                        {% endif %}
+                    </li>
+                    <li>Módulo de IA "Zootecnista Virtual"</li>
+                    
+                    {% if plano.hardware_incluso %}
+                        <li><strong>Brincos Eletrônicos Inclusos</strong></li>
+                    {% else %}
+                        <li><span style="color: #999;">Brincos não inclusos</span></li>
+                    {% endif %}
+                    
+                    {% if plano.servico_assistido %}
+                        <li><strong>Acompanhamento Vet/Zoo</strong></li>
+                    {% else %}
+                        <li><span style="color: #999;">Sem gestão assistida</span></li>
+                    {% endif %}
+                </ul>
+
+                <a href="{% url 'usuarios:cadastro' %}" class="button-primary" style="width: 100%;">Assine Agora</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <style>
+        .header-planos { text-align: center; margin-bottom: 40px; }
+        .planos-container { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .plano-card {
+            flex: 1; min-width: 300px; max-width: 350px;
+            border: 1px solid #ddd; border-radius: 8px;
+            padding: 30px; text-align: center;
+            background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: flex; flex-direction: column;
+        }
+        .plano-descricao { font-size: 0.9rem; color: #666; min-height: 60px; }
+        .plano-preco { margin: 20px 0; }
+        .plano-preco strong { font-size: 2.5rem; color: var(--cor-verde-principal); }
+        .plano-preco span { color: #666; }
+        .plano-preco small { display: block; margin-top: 5px; }
+        .plano-features { list-style: none; margin: 20px 0; flex-grow: 1; }
+        .plano-features li { padding: 8px 0; border-bottom: 1px solid #eee; }
+    </style>
+{% endblock %}
+{% endraw %}

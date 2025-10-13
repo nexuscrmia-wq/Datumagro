@@ -1,0 +1,44 @@
+# requirements.txt
+
+# --- Core do Django e Servidor de Produção ---
+django
+gunicorn
+
+# --- API ---
+djangorestframework
+
+# --- Banco de Dados ---
+# Conector para PostgreSQL, o banco de dados padrão para produção em Django
+psycopg2-binary
+
+# --- Tarefas Assíncronas (IA, Notificações, Relatórios) ---
+# Gerenciador de filas de tarefas
+celery
+# Broker de mensagens para o Celery (ponte de comunicação)
+redis
+
+# --- Análise de Dados e Geração de Relatórios ---
+# Manipulação de dados e exportação para Excel
+pandas
+# Motor para o Pandas escrever arquivos .xlsx
+openpyxl
+# Geração de PDF a partir de HTML/CSS (moderno e fácil)
+weasyprint
+# Geração de gráficos estáticos (imagens)
+matplotlib
+# Geração de gráficos interativos para o frontend
+plotly
+
+# --- Integrações e Utilidades ---
+# API oficial da Twilio para enviar WhatsApp
+twilio
+# Para ler variáveis de ambiente do arquivo .env
+python-dotenv
+# Para gerar os QR Codes da rastreabilidade
+
+dj-database-url
+whitenoise
+pillow
+qrcode[pil]
+# ... e todas as outras bibliotecas que já tínhamos
+github

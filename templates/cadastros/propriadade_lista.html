@@ -1,0 +1,39 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Minhas Propriedades - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="header-com-botao">
+        <h1>Minhas Propriedades</h1>
+        <a href="#" class="button-primary">Adicionar Nova Propriedade</a>
+    </div>
+
+    <p>Gerencie todas as suas fazendas, arrendamentos e outras propriedades.</p>
+
+    <table class="tabela-dados" style="margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>Nome da Propriedade</th>
+                <th>Cidade / Estado</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for propriedade in object_list %}
+                <tr>
+                    <td><strong>{{ propriedade.nome }}</strong></td>
+                    <td>{{ propriedade.cidade|default:"-" }} - {{ propriedade.uf|default:"-" }}</td>
+                    <td>
+                        <a href="#">Editar</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Nenhuma propriedade cadastrada ainda.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% endraw %}

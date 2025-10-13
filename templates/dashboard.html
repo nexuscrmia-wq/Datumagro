@@ -1,0 +1,59 @@
+{% raw %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - {{ nome_cliente }}{% endblock %}
+
+{% block content %}
+    <div class="header-com-botao">
+        <h1>Dashboard da {{ nome_cliente }}</h1>
+        <span class="bem-vindo">Bem-vindo, {{ user.username }}!</span>
+    </div>
+
+    <hr>
+
+    <div class="dashboard-widgets">
+        <div class="widget">
+            <h3>Total de Animais</h3>
+            <p class="widget-value">{{ total_animais }}</p>
+            <a href="#">Gerenciar Rebanho</a>
+        </div>
+
+        <div class="widget">
+            <h3>Assinatura</h3>
+            {% if assinatura %}
+                <p class="widget-value status-{{ assinatura.status }}" style="font-size: 1.8rem; text-transform: capitalize;">{{ assinatura.get_status_display }}</p>
+                <small>Plano: {{ assinatura.plano.nome }} | Vence em: {{ assinatura.data_vencimento|date:"d/m/Y" }}</small>
+            {% else %}
+                <p class="widget-value status-inativa">Sem Assinatura</p>
+            {% endif %}
+        </div>
+
+        <div class="widget">
+            <h3>Financeiro</h3>
+            <p class="widget-value">-</p>
+            <a href="{% url 'financeiro:fluxo_de_caixa' %}">Ver Fluxo de Caixa</a>
+        </div>
+    </div>
+
+    <div class="alertas-container">
+        <h2>Últimos Alertas da IA</h2>
+        <div class="alert-list">
+            {% for alerta in ultimos_alertas %}
+                <div class="alerta">
+                    <strong>{{ alerta.get_tipo_alerta_display }}:</strong>
+                    <p>{{ alerta.mensagem }}</p>
+                    <small>{{ alerta.data_geracao|date:"d/m/Y H:i" }}</small>
+                </div>
+            {% empty %}
+                <p>Nenhum alerta recente. Tudo em ordem!</p>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+{% endblock %}
+{% endraw %}

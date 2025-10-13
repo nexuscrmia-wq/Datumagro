@@ -1,0 +1,23 @@
+{% raw %}
+<header class="main-header">
+    <nav class="container">
+        <a href="{% url 'core:homepage' %}" class="logo"><strong>Vexus</strong> / DatumAgro</a>
+        <ul class="nav-links">
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                <li><a href="#">Minha Assinatura</a></li>
+                <li>
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-logout-button">Sair ({{ user.username }})</button>
+                    </form>
+                </li>
+            {% else %}
+                <li><a href="#">Planos</a></li>
+                <li><a href="{% url 'login' %}">Entrar</a></li>
+                <li><a href="{% url 'usuarios:cadastro' %}" class="nav-button-primary">Crie sua Conta</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>
+{% endraw %}

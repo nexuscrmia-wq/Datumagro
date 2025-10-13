@@ -1,0 +1,67 @@
+# Arquivo .gitignore
+
+# 1. Arquivos de Ambiente e Credenciais (MAIS IMPORTANTE)
+# Nunca envie suas senhas e variáveis secretas para o repositório!
+.env
+.env.*
+
+# 2. Ambiente Virtual Python
+# A pasta .venv é específica do seu computador e não deve ser versionada.
+.venv/
+venv/
+ENV/
+env/
+virtual/
+__pypackages__/
+
+# 3. Arquivos do Banco de Dados
+# O banco de dados de desenvolvimento não deve ir para o repositório.
+db.sqlite3
+db.sqlite3-journal
+
+# 4. Arquivos Temporários e Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 5. Arquivos de Configuração de Editores e IDEs
+# Ignora arquivos específicos do PyCharm, VS Code, etc.
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 6. Arquivos Estáticos Compilados (se aplicável no futuro)
+# Se você usar ferramentas como Sass, os arquivos compilados não precisam ser versionados.
+.sass-cache/
+*.css.map
+
+# 7. Arquivos de Log e Cobertura de Testes
+logs/
+*.log
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/

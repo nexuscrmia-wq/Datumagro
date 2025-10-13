@@ -1,0 +1,30 @@
+{% raw %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DatumAgro by Vexus{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    
+    {% include 'partials/_menu_navegacao.html' %}
+
+    <main class="container">
+        {% include 'partials/_alertas.html' %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% include 'partials/_footer.html' %}
+
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+{% endraw %}

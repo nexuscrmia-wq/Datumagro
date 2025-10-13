@@ -1,0 +1,16 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Adicionar Transação - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="form-container" style="max-width: 600px; margin: auto;">
+        <h2>Adicionar Nova Transação</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button-primary">Salvar Transação</button>
+        </form>
+    </div>
+{% endblock %}
+{% endraw %}

@@ -1,0 +1,15 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Assinatura Ativada! - DatumAgro{% endblock %}
+
+{% block content %}
+    <div style="text-align: center; padding: 40px 0;">
+        <h2>Pagamento Confirmado!</h2>
+        <p>Sua assinatura do plano <strong>{{ assinatura.plano.nome }}</strong> foi ativada com sucesso.</p>
+        <p>Agora você tem acesso a todas as ferramentas para levar sua gestão a um novo nível.</p>
+        <br>
+        <a href="{% url 'core:dashboard' %}" class="button-primary" style="font-size: 1.2rem; padding: 15px 30px;">Ir para o meu Dashboard</a>
+    </div>
+{% endblock %}
+{% endraw %}

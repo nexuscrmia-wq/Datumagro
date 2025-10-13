@@ -1,0 +1,45 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Meu Rebanho - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="header-com-botao">
+        <h1>Meu Rebanho</h1>
+        <a href="#" class="button-primary">Adicionar Novo Animal</a>
+    </div>
+
+    <p>Visualize e gerencie todos os animais cadastrados em suas propriedades.</p>
+
+    <table class="tabela-dados" style="margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>Brinco</th>
+                <th>Raça</th>
+                <th>Nascimento</th>
+                <th style="text-align: right;">Último Peso (kg)</th>
+                <th>Propriedade</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for animal in object_list %} {# object_list é o nome padrão para a lista em ListViews #}
+                <tr>
+                    <td><strong>{{ animal.brinco }}</strong></td>
+                    <td>{{ animal.raca|default:"-" }}</td>
+                    <td>{{ animal.data_nascimento|date:"d/m/Y"|default:"-" }}</td>
+                    <td style="text-align: right;">{{ animal.pesagens.first.peso|default:"-" }}</td>
+                    <td>{{ animal.propriedade_atual.nome|default:"-" }}</td>
+                    <td>
+                        <a href="#">Ver Detalhes</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">Nenhum animal cadastrado ainda.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% endraw %}

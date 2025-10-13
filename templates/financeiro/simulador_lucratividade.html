@@ -1,0 +1,63 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Simulador de Lucratividade - DatumAgro{% endblock %}
+
+{% block content %}
+    <h1>Simulador de Lucratividade de Lote</h1>
+    <p>Preencha os parâmetros abaixo para projetar os custos e o lucro de uma operação de engorda.</p>
+    
+    <div class="simulador-container">
+        <div class="form-container">
+            <h3>Parâmetros da Simulação</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="button-primary">Calcular</button>
+            </form>
+        </div>
+
+        <div class="resultados-container">
+            <h3>Resultados da Simulação</h3>
+            {% if resultados %}
+                <div class="resultado-item">
+                    <span>Duração da Operação:</span>
+                    <strong>{{ resultados.dias_confinamento }} dias</strong>
+                </div>
+                <div class="resultado-item">
+                    <span>Custo Total por Animal:</span>
+                    <strong>R$ {{ resultados.custo_total_por_animal|floatformat:2 }}</strong>
+                </div>
+                <div class="resultado-item">
+                    <span>Receita por Animal:</span>
+                    <strong>R$ {{ resultados.receita_por_animal|floatformat:2 }}</strong>
+                </div>
+                <div class="resultado-item lucro">
+                    <span>LUCRO POR ANIMAL:</span>
+                    <strong>R$ {{ resultados.lucro_por_animal|floatformat:2 }}</strong>
+                </div>
+                <hr>
+                <div class="resultado-item lucro-total">
+                    <span>LUCRO TOTAL DO LOTE:</span>
+                    <strong>R$ {{ resultados.lucro_total_lote|floatformat:2 }}</strong>
+                </div>
+                <div class="resultado-item">
+                    <span>Margem de Lucro:</span>
+                    <strong>{{ resultados.margem_lucro|floatformat:2 }}%</strong>
+                </div>
+            {% else %}
+                <p>Preencha e envie os dados ao lado para ver a projeção de resultados aqui.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .simulador-container { display: flex; gap: 40px; }
+        .form-container { flex: 1; }
+        .resultados-container { flex: 1; border-left: 1px solid #ddd; padding-left: 40px; }
+        .resultado-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .resultado-item.lucro strong { color: var(--cor-sucesso); font-size: 1.2rem; }
+        .resultado-item.lucro-total strong { color: var(--cor-sucesso); font-size: 1.5rem; }
+    </style>
+{% endblock %}
+{% endraw %}

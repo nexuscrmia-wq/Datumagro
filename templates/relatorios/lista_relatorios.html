@@ -1,0 +1,63 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Meus Relatórios - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="header-com-botao">
+        <h1>Meus Relatórios Solicitados</h1>
+        <a href="{% url 'relatorios:solicitar_relatorio' %}" class="button-primary">Solicitar Novo Relatório</a>
+    </div>
+
+    <p>Abaixo está o histórico de todos os relatórios que você já solicitou.</p>
+
+    <table class="tabela-dados" style="margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>Data da Solicitação</th>
+                <th>Tipo de Relatório</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitacao in solicitacoes %}
+                <tr>
+                    <td>{{ solicitacao.solicitado_em|date:"d/m/Y H:i" }}</td>
+                    <td>{{ solicitacao.get_tipo_relatorio_display }}</td>
+                    <td>
+                        <span class="status-tag status-{{ solicitacao.status }}">
+                            {{ solicitacao.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if solicitacao.status == 'concluido' and solicitacao.arquivo_gerado %}
+                            <a href="{{ solicitacao.arquivo_gerado.url }}" target="_blank">Baixar</a>
+                        {% elif solicitacao.status == 'erro' %}
+                            <span>Falhou</span>
+                        {% else %}
+                            <span>Processando...</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Nenhum relatório solicitado ainda.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <style>
+        .header-com-botao { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .tabela-dados { width: 100%; border-collapse: collapse; }
+        .tabela-dados th, .tabela-dados td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        .tabela-dados th { background-color: #f8f8f8; }
+        .status-tag { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; color: white; }
+        .status-concluido { background-color: var(--cor-sucesso); }
+        .status-processando { background-color: #ffc107; color: #333; }
+        .status-erro { background-color: var(--cor-erro); }
+        .status-solicitado { background-color: #17a2b8; }
+    </style>
+{% endblock %}
+{% endraw %}

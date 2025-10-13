@@ -1,0 +1,24 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Entrar - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="form-container" style="max-width: 400px; margin: auto;">
+        <h2>Acessar sua Conta</h2>
+        
+        {% if form.errors %}
+            <p class="error-message" style="color: var(--cor-erro);">Usuário ou senha inválidos. Tente novamente.</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button-primary" style="width: 100%;">Entrar</button>
+            <p style="margin-top: 1rem; text-align: center;">
+                <a href="{% url 'password_reset' %}">Esqueceu a senha?</a>
+            </p>
+        </form>
+    </div>
+{% endblock %}
+{% endraw %}

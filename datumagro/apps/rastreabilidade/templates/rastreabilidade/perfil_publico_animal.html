@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastreabilidade DatumAgro - {{ perfil.animal.brinco }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2E4024; /* Verde Vexus */
+            border-bottom: 2px solid #B8860B; /* Dourado Vexus */
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .info-card {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #6D4C41; /* Marrom Vexus */
+        }
+        .info-card h3 {
+            margin-top: 0;
+            color: #2E4024;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        strong {
+            color: #333;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>{{ perfil.titulo_perfil|default:"Histórico do Animal" }}</h1>
+            <p>{{ perfil.historia_destacada|default:"Conheça a origem e a qualidade da nossa produção."|linebreaks }}</p>
+        </header>
+
+        <section class="info-grid">
+            <div class="info-card">
+                <h3>Dados do Animal</h3>
+                <ul>
+                    <li><strong>Brinco:</strong> {{ perfil.animal.brinco }}</li>
+                    <li><strong>Raça:</strong> {{ perfil.animal.raca }}</li>
+                    <li><strong>Sexo:</strong> {{ perfil.animal.get_sexo_display }}</li>
+                    <li><strong>Nascimento:</strong> {{ perfil.animal.data_nascimento|date:"d/m/Y" }}</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>Origem</h3>
+                <ul>
+                    <li><strong>Propriedade:</strong> {{ perfil.animal.propriedade.nome_propriedade }}</li>
+                    <li><strong>Localização:</strong> {{ perfil.animal.propriedade.cidade }} - {{ perfil.animal.propriedade.estado }}</li>
+                    <li><strong>Produtor:</strong> {{ perfil.animal.propriedade.cliente.nome_empresa }}</li>
+                </ul>
+            </div>
+        </section>
+
+        {% if perfil.animal.manejos_sanitarios.all %}
+        <section>
+            <h2>Histórico Sanitário</h2>
+            <div class="info-card">
+                <ul>
+                    {% for manejo in perfil.animal.manejos_sanitarios.all %}
+                        <li>
+                            <strong>{{ manejo.produto.get_tipo_produto_display }}:</strong> {{ manejo.produto.nome }}
+                            <br>
+                            <small>Aplicado em: {{ manejo.data_aplicacao|date:"d/m/Y" }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+        {% endif %}
+
+        <footer>
+            <p>Rastreabilidade garantida por DatumAgro - Vexus IA</p>
+        </footer>
+    </div>
+
+</body>
+</html>

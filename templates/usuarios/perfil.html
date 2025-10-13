@@ -1,0 +1,25 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil - DatumAgro{% endblock %}
+
+{% block content %}
+    <h1>Meu Perfil</h1>
+
+    <div class="profile-details">
+        <h3>Dados da Conta</h3>
+        <p><strong>Nome de Usuário:</strong> {{ user.username }}</p>
+        <p><strong>E-mail:</strong> {{ user.email }}</p>
+        
+        <hr style="margin: 20px 0;">
+
+        <h3>Dados da Empresa/Fazenda</h3>
+        <p><strong>Empresa:</strong> {{ user.perfilusuario.cliente.nome_empresa }}</p>
+        <p><strong>Cliente desde:</strong> {{ user.perfilusuario.cliente.data_cadastro|date:"d/m/Y" }}</p>
+
+        <hr style="margin: 20px 0;">
+
+        <a href="{% url 'password_change' %}">Alterar minha senha</a>
+    </div>
+{% endblock %}
+{% endraw %}

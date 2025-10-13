@@ -1,0 +1,24 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Crie sua Conta - DatumAgro{% endblock %}
+
+{% block content %}
+    <div class="form-container" style="max-width: 500px; margin: auto;">
+        <h2>Crie sua Conta na DatumAgro</h2>
+        <p>Preencha os dados abaixo para começar a gerenciar sua fazenda de forma inteligente.</p>
+        
+        <form method="post" action="{% url 'usuarios:cadastro' %}" style="margin-top: 20px;">
+            {% csrf_token %}
+            
+            {{ form.as_p }}
+            
+            <button type="submit" class="button-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">Finalizar Cadastro</button>
+        </form>
+
+        <p style="margin-top: 20px; text-align: center;">
+            Já tem uma conta? <a href="{% url 'login' %}">Faça o login</a>.
+        </p>
+    </div>
+{% endblock %}
+{% endraw %}

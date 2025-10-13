@@ -1,0 +1,54 @@
+{% raw %}
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Animal: {{ animal.brinco }}{% endblock %}
+
+{% block content %}
+    <div class="header-com-botao">
+        <h1>Ficha do Animal: {{ animal.brinco }}</h1>
+        <div>
+            <a href="#" class="button-secondary">Editar Animal</a>
+            <a href="#" class="button-primary">Registrar Nova Pesagem</a>
+        </div>
+    </div>
+
+    <div class="detalhe-container">
+        <div class="detalhe-dados-principais">
+            <h3>Dados Principais</h3>
+            <p><strong>RFID:</strong> {{ animal.rfid|default:"Não informado" }}</p>
+            <p><strong>Raça:</strong> {{ animal.raca|default:"Não informada" }}</p>
+            <p><strong>Data de Nascimento:</strong> {{ animal.data_nascimento|date:"d/m/Y"|default:"Não informada" }}</p>
+            <p><strong>Propriedade Atual:</strong> {{ animal.propriedade_atual.nome|default:"Não informada" }}</p>
+            </div>
+
+        <div class="detalhe-historico">
+            <h3>Histórico de Pesagens</h3>
+            <table class="tabela-dados-simples">
+                <thead><tr><th>Data</th><th style="text-align: right;">Peso (kg)</th></tr></thead>
+                <tbody>
+                    {% for pesagem in animal.pesagens.all %}
+                        <tr><td>{{ pesagem.data_pesagem|date:"d/m/Y" }}</td><td style="text-align: right;">{{ pesagem.peso }}</td></tr>
+                    {% empty %}
+                        <tr><td colspan="2">Nenhuma pesagem registrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <h3 style="margin-top: 20px;">Alertas da IA</h3>
+            {% for alerta in animal.alertaia_set.all %}
+                <div class="alerta">{{ alerta.mensagem }}</div>
+            {% empty %}
+                <p>Nenhum alerta da IA para este animal.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <style>
+        .detalhe-container { display: flex; gap: 40px; margin-top: 20px; }
+        .detalhe-dados-principais { flex: 1; }
+        .detalhe-historico { flex: 2; }
+        .tabela-dados-simples { width: 100%; }
+        .tabela-dados-simples th, .tabela-dados-simples td { padding: 8px; border-bottom: 1px solid #eee; }
+    </style>
+{% endblock %}
+{% endraw %}
