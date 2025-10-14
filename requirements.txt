@@ -40,4 +40,3 @@ dj-database-url
 whitenoise
 pillow
 qrcode[pil]
-# ... e todas as outras bibliotecas que já tínhamos
