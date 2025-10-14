@@ -76,6 +76,6 @@ Para rodar este projeto em um ambiente de desenvolvimento local:
     ```bash
     python manage.py runserver
     ```
-O sistema estará rodando em `http://127.0.0.1:8000/`.
+O sistema estará rodando em https://datumagro-api.onrender.com .
 
 ---
