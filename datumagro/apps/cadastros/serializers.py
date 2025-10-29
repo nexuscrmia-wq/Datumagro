@@ -29,7 +29,7 @@ class AnimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Animal
         fields = '__all__'
-        read_only_fields = ('id',)
+        read_only_fields = ('id', 'updated_at')
 
     def get_idade_meses(self, obj):
         from .services import calcular_idade_em_meses

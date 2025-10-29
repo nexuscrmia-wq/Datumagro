@@ -14,6 +14,7 @@ urlpatterns = [
 
     # URLs da API, organizadas por app
     path('api/usuarios/', include('datumagro.apps.usuarios.urls', namespace='usuarios')),
+    path('api/cadastros/', include('datumagro.apps.cadastros.urls', namespace='cadastros')),
     # ... (o resto do seu arquivo continua igual)
 ]
 

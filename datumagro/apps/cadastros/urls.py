@@ -11,3 +11,11 @@ router.register(r'animais', AnimalViewSet, basename='animal')
 router.register(r'pesagens', RegistroPesagemViewSet, basename='pesagem')
 
 urlpatterns = router.urls
+
+# Rota adicional para sincronização em lote
+from .views import sync_view
+from django.urls import path
+
+urlpatterns += [
+	path('sync/', sync_view, name='sync'),
+]

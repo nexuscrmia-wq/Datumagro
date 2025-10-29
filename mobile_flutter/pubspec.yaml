@@ -1,0 +1,27 @@
+name: datumagro_mobile
+description: "Cliente Flutter offline-first para DatumAgro (MVP)"
+version: 0.1.0
+publish_to: "none"
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.5
+  connectivity_plus: ^4.0.0
+  drift: ^2.7.0
+  drift_flutter: ^2.7.0
+  path_provider: ^2.0.15
+  provider: ^6.0.5
+  flutter_secure_storage: ^8.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.3.3
+  drift_dev: ^2.7.0
+
+flutter:
+  uses-material-design: true

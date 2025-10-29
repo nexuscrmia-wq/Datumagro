@@ -16,7 +16,11 @@ class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         """ Retorna apenas os alertas do cliente do usuário logado. """
-        return Alerta.objects.filter(cliente=self.request.user.perfilusuario.cliente)
+        perfil = getattr(self.request.user, 'perfilusuario', None)
+        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        if not cliente:
+            return Alerta.objects.none()
+        return Alerta.objects.filter(cliente=cliente)
 
     @action(detail=True, methods=['post'])
     def marcar_como_resolvido(self, request, pk=None):
@@ -24,6 +28,12 @@ class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
         Ação customizada para marcar um alerta como 'RESOLVIDO'.
         URL: /api/inteligencia/alertas/{id}/marcar_como_resolvido/
         """
+        # Defensive: ensure user has cliente linked before attempting to modify
+        perfil = getattr(request.user, 'perfilusuario', None)
+        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        if not cliente:
+            return Response({'detail': 'Usuário sem cliente vinculado.'}, status=status.HTTP_400_BAD_REQUEST)
+
         alerta = self.get_object()
         alerta.status = 'RESOLVIDO'
         alerta.save()

@@ -37,45 +37,143 @@ O motor do DatumAgro é modular e foi dividido em 11 apps, cada um com sua respo
 * **Análise de Dados:** Pandas
 * **Outros:** WeasyPrint (PDFs), Pillow (Imagens), Twilio (WhatsApp)
 
-## 🚀 Setup e Instalação Local
+# DatumAgro �
 
-Para rodar este projeto em um ambiente de desenvolvimento local:
+Este repositório contém o backend Django do DatumAgro e um scaffold de cliente mobile Flutter (pasta `mobile_flutter/`) criado para demonstrar um aplicativo offline-first que sincroniza com a API.
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone [https://github.com/victor226942-web/DatumAgro.git](https://github.com/victor226942-web/DatumAgro.git)
-    cd DatumAgro
-    ```
+Este `README` foi atualizado automaticamente para resumir o trabalho realizado, explicar onde as mudanças foram feitas e como testar o backend e o aplicativo Flutter no emulador local.
 
-2.  **Crie e ative o ambiente virtual:**
-    ```bash
-    python -m venv .venv
-    source .venv/bin/activate
-    ```
+## Resumo do que foi implementado
 
-3.  **Instale as dependências:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+- Backend (Django / DRF):
+    - Adicionado endpoint de sincronização em `datumagro/apps/cadastros/views.py` (view `sync_view`) que aceita lotes de mudanças do cliente e aplica operações de create/update/delete de forma transacional.
+    - Detecta conflitos simples usando o campo `updated_at` (política inicial: server_wins). Retorna ao cliente objetos aplicados, mudanças do servidor (`server_changes`) e conflitos.
+    - `Animal` model atualizado para incluir `updated_at = models.DateTimeField(auto_now=True)`.
+    - Serializers ajustados para expor `updated_at` como read-only.
+    - Testes unitários adicionados em `datumagro/apps/cadastros/tests_sync.py` para cobrir cenários de create, update-conflict e delete via `/api/cadastros/sync/`.
 
-4.  **Configure as variáveis de ambiente:**
-    * Crie uma cópia do arquivo `.env.example` (se houver) para `.env`.
-    * Preencha as variáveis como `SECRET_KEY`, `DATABASE_URL` (para dev, pode deixar em branco), e chaves de API.
+- Mobile (Flutter + Drift):
+    - Scaffold criado em `mobile_flutter/` com `pubspec.yaml`, telas (`lib/screens/`), serviço de sincronização (`lib/services/sync_service.dart`) e esquema Drift (`lib/data/database.dart`).
+    - Drift mapeia a tabela `Animals` com os principais campos do modelo (incluindo `serverId` e `updatedAt`) e uma `SyncQueue` local para enfileirar mudanças.
+    - `Login` salva token DRF em `flutter_secure_storage` e todas as requisições usam `Authorization: Token <token>`.
+    - `AnimalsList` escuta mudanças de conectividade e executa sincronização automática ao reconectar (debounce de 10s).
+    - `AnimalForm` grava/atualiza registros locais e enfileira a mudança completa (incluindo `updated_at`) para envio ao servidor.
 
-5.  **Aplique as migrações do banco de dados:**
-    ```bash
-    python manage.py migrate
-    ```
+## Arquivos/trechos importantes modificados/criados
 
-6.  **Crie um superusuário:**
-    ```bash
-    python manage.py createsuperuser
-    ```
+- Backend:
+    - `datumagro/apps/cadastros/views.py` — `sync_view` e lógica de aplicação de mudanças.
+    - `datumagro/apps/cadastros/models.py` — `updated_at` adicionado ao `Animal`.
+    - `datumagro/apps/cadastros/serializers.py` — `updated_at` como read-only.
+    - `datumagro/apps/cadastros/urls.py` — rota `sync/` registrada.
+    - `datumagro/apps/cadastros/tests_sync.py` — testes da API de sincronização.
 
-7.  **Inicie o servidor:**
-    ```bash
-    python manage.py runserver
-    ```
-O sistema estará rodando em https://datumagro-api.onrender.com .
+- Mobile (novo diretório `mobile_flutter/`):
+    - `pubspec.yaml` — dependências (drift, drift_flutter, build_runner, connectivity_plus, flutter_secure_storage, http, path_provider, provider).
+    - `lib/data/database.dart` — esquema Drift (`Animals`, `SyncQueue`) e métodos utilitários (`upsertByServerId`, `getByServerId`).
+    - `lib/services/sync_service.dart` — envia lotes ao endpoint `/api/cadastros/sync/` e aplica `server_changes` localmente.
+    - `lib/screens/login.dart`, `lib/screens/animals_list.dart`, `lib/screens/animal_form.dart` — telas básicas para autenticação, listagem e criação/edição de animais.
+
+## Como rodar — Backend (local)
+
+1. Configure ambiente Python e dependências (exemplo usando venv):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2. Configure variáveis de ambiente (creie `.env` a partir de `.env.example` se houver):
+
+- `SECRET_KEY`, `DATABASE_URL` (para desenvolvimento pode usar SQLite) e outras chaves de API usadas no projeto.
+
+3. Aplique migrações e crie um superusuário:
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+4. Execute o servidor Django em modo de desenvolvimento (escutando em 127.0.0.1:8000 por padrão):
+
+```bash
+python manage.py runserver
+```
+
+Observação: o endpoint de obtenção do token DRF fica em `/api/api-token-auth/` e o grupo de rotas do app `cadastros` foi incluído em `/api/cadastros/`.
+
+## Como rodar — Flutter (emulador Android / desenvolvimento)
+
+Observação importante: o código do Drift precisa gerar os arquivos de implementação. Execute os comandos abaixo dentro de `mobile_flutter/`.
+
+1. Instale dependências Flutter e execute `pub get`:
+
+```bash
+cd mobile_flutter
+flutter pub get
+```
+
+2. Gere os arquivos do Drift (build_runner):
+
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+3. Execute no emulador Android (recomendo usar o emulador do Android Studio). Quando o backend estiver rodando no host local, o app usa por padrão `http://10.0.2.2:8000/api/cadastros` para se comunicar com o servidor (endereço especial do emulador para alcançar o host):
+
+```bash
+flutter run
+```
+
+Se preferir testar com o dispositivo físico, ajuste `baseUrl` nas configurações do serviço de sincronização para apontar ao IP da máquina de desenvolvimento (por exemplo `http://192.168.0.42:8000`).
+
+## Como testar a sincronização (fluxo básico)
+
+1. No backend, garanta que o servidor esteja rodando (`python manage.py runserver`).
+2. No app Flutter (emulador):
+     - Faça login com um usuário existente via `/api/api-token-auth/` (a tela de login do scaffold faz isso automaticamente) e o token será salvo em armazenamento seguro.
+     - Crie ou edite um animal no `AnimalForm`. O registro será gravado localmente e colocado na `SyncQueue`.
+     - Quando a conectividade for detectada (ou ao acionar sincronização manual no código), o `SyncService` envia o lote para o endpoint `/api/cadastros/sync/`.
+     - O servidor aplica mudanças e responde com `applied`, `server_changes` e `conflicts`. O cliente remove itens aplicados da fila e aplica `server_changes` localmente via upsert por `serverId`.
+
+## Rodando os testes Django (sincronização)
+
+Os testes adicionados ficam em `datumagro/apps/cadastros/tests_sync.py`.
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py test datumagro.apps.cadastros.tests_sync
+```
+
+## Pontos importantes / Notas
+
+- Emulação de rede: para o Android emulator use `10.0.2.2` para alcançar `localhost` da máquina host.
+- Drift: você precisa executar o `build_runner` localmente para gerar `database.g.dart` antes de executar o app.
+- Conflitos: hoje a política de conflito é simples (server_wins). Para produção você provavelmente vai querer uma UI de resolução ou uma estratégia de merge mais avançada.
+- Segurança: o endpoint de sync atual é funcional, mas minimalista — adicione validação, autorização e limitação de tamanho/pagina para produção.
+
+## Próximos passos recomendados
+
+1. Gerar e commitar os arquivos gerados do Drift (opcional para manter a facilidade de testes sem rodar build_runner).
+2. Melhorar a estratégia de resolução de conflitos (UI para merges, campos por campo, ou CRDTs se necessário).
+3. Implementar suporte a upload de imagens (campo `fotoPerfil`) com armazenamento resiliente e referências no Drift.
+4. Paginação e limites no endpoint de sincronização para evitar payloads grandes.
+5. Harden security: rate-limiting, payload validation, authentication/authorization checks e auditoria de mudanças.
+
+## Resumo final — o que eu alterei aqui
+
+- Backend: adicionei `sync_view`, `updated_at` no `Animal`, e testes de sincronização.
+- Mobile: criei um scaffold Flutter com Drift e um SyncService que implementa a lógica cliente para enviar/receber lotes.
+
+Se quiser, eu posso agora:
+
+- Executar os testes Django aqui (preciso da sua confirmação para rodar comandos no ambiente).
+- Gerar os artefatos do Drift em `mobile_flutter/` (isso requer `flutter` instalado aqui e tempo para rodar `build_runner`).
+- Melhorar a UI de resolução de conflitos e adicionar testes adicionais.
 
 ---
+
+Arquivo gerado automaticamente em 21 de outubro de 2025.

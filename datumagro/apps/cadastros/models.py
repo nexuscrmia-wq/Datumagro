@@ -1,9 +1,11 @@
-# datumagro/apps/cadastros/models.py
-
 from django.db import models
 
 
 class Cliente(models.Model):
+    """
+    Representa o cliente pagante do sistema, a "conta" principal.
+    A conexão com o usuário de login é feita a partir do modelo PerfilUsuario.
+    """
     nome_empresa = models.CharField(max_length=255)
     cpf_cnpj = models.CharField(max_length=18, unique=True)
     telefone = models.CharField(max_length=20, blank=True)
@@ -19,16 +21,22 @@ class Cliente(models.Model):
 
 
 class Propriedade(models.Model):
+    """
+    Representa uma fazenda ou propriedade rural de um Cliente.
+    Um cliente pode ter várias propriedades.
+    """
     OBJETIVO_CHOICES = [('CRIA', 'Cria'), ('RECRIA', 'Recria'), ('ENGORDA', 'Engorda')]
     TIPO_SOLO_CHOICES = [('ARENOSO', 'Arenoso'), ('ARGILOSO', 'Argiloso'), ('MISTO', 'Misto')]
     TOPOGRAFIA_CHOICES = [('PLANO', 'Plano'), ('ONDULADO', 'Ondulado'), ('MONTANHOSO', 'Montanhoso')]
+
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='propriedades')
     nome_propriedade = models.CharField(max_length=255)
     endereco = models.CharField(max_length=255, blank=True)
     cidade = models.CharField(max_length=100)
-    estado = models.CharField(max_length=2)
+    estado = models.CharField(max_length=2)  # UF
     cep = models.CharField(max_length=9, blank=True)
     hectares = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
     objetivo_producao = models.CharField(max_length=10, choices=OBJETIVO_CHOICES, null=True, blank=True)
     tipo_solo = models.CharField(max_length=10, choices=TIPO_SOLO_CHOICES, null=True, blank=True)
     topografia = models.CharField(max_length=15, choices=TOPOGRAFIA_CHOICES, null=True, blank=True)
@@ -43,6 +51,10 @@ class Propriedade(models.Model):
 
 
 class Animal(models.Model):
+    """
+    O modelo central do sistema, representando um animal individual com todas as suas características.
+    """
+    # --- LISTAS DE ESCOLHA PARA OS CAMPOS ---
     SEXO_CHOICES = [('M', 'Macho'), ('F', 'Fêmea')]
     RACA_CHOICES = [('NELORE', 'Nelore'), ('ANGUS', 'Angus'), ('BRAHMAN', 'Brahman'), ('BRANGUS', 'Brangus'),
                     ('SENEPOL', 'Senepol'), ('GUZERA', 'Guzerá'), ('TABAPUA', 'Tabapuã'), ('GIR', 'Gir Leiteiro'),
@@ -55,6 +67,7 @@ class Animal(models.Model):
     STATUS_REPRODUTIVO_CHOICES = [('VAZIA', 'Vazia'), ('PRENHA', 'Prenha'), ('LACTANTE', 'Em Lactação'),
                                   ('SECA', 'Seca')]
 
+    # --- DEFINIÇÃO DOS CAMPOS ---
     propriedade = models.ForeignKey(Propriedade, on_delete=models.CASCADE, related_name='animais')
     brinco = models.CharField(max_length=50, help_text="Identificação única do animal.")
     raca = models.CharField(max_length=100, choices=RACA_CHOICES)
@@ -78,6 +91,7 @@ class Animal(models.Model):
     mae = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='descendentes_mae',
                             limit_choices_to={'sexo': 'F'})
     ativo = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Animal"
@@ -90,12 +104,15 @@ class Animal(models.Model):
 
     @property
     def numero_de_crias(self):
+        """ Calcula e retorna o número de partos registrados para esta fêmea. """
         if self.sexo == 'F':
+            # Usa a relação reversa 'registros_reprodutivos' definida no modelo RegistroReprodutivo
             return self.registros_reprodutivos.filter(tipo_evento='PARTO').count()
         return 0
 
 
 class RegistroPesagem(models.Model):
+    """ Registra o peso de um animal em uma data específica. """
     animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name='pesagens')
     data_pesagem = models.DateField()
     peso_kg = models.DecimalField(max_digits=7, decimal_places=2)
