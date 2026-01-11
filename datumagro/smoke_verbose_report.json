@@ -1,0 +1,54 @@
+[
+  {
+    "name": "register",
+    "ok": true,
+    "status_code": 201,
+    "body": "{\"user\":{\"id\":31,\"email\":\"test+a9631097@example.com\",\"username\":\"\",\"first_name\":\"Smoke\",\"last_name\":\"Test\",\"telefone\":null,\"data_nascimento\":null,\"foto_perfil\":null},\"refresh\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2MjI4MTE2OCwiaWF0IjoxNzYxNjc2MzY4LCJqdGkiOiJiMWIwNmQ4ODc2MWM0N2Y5OGQxMGMwMTZjNzA3YzFkNiIsInVzZXJfaWQiOiIzMSJ9.aWIIrBfNsEh20525kxxBV3ymp0Aecz87p57803WDRmA\",\"access\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxNzYyNzY4LCJpYXQiOjE3NjE2NzYzNjgsImp0aSI6IjA0ODVkNzRmZjI4ZDQzYWNiY2ZiYjUwN2Q4NTdiYTRiIiwidXNlcl9pZCI6IjMxIn0.6ZZjuomxFN84D7o9CJemfiTgECtlbo7oqaQIjoxgvAI\"}"
+  },
+  {
+    "name": "login",
+    "ok": true,
+    "status_code": 200,
+    "body": "{\"user\":{\"id\":31,\"email\":\"test+a9631097@example.com\",\"username\":\"\",\"first_name\":\"Smoke\",\"last_name\":\"Test\",\"telefone\":null,\"data_nascimento\":null,\"foto_perfil\":null},\"refresh\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2MjI4MTE2OCwiaWF0IjoxNzYxNjc2MzY4LCJqdGkiOiIwODhkM2JhMjY5OGU0MzdjOWJhODJhMDQ0OWYxODMzYyIsInVzZXJfaWQiOiIzMSJ9.1fI2vhAvH_0LuM9UWFmJgbWTdm_VNajmeu7GQfoOqVE\",\"access\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxNzYyNzY4LCJpYXQiOjE3NjE2NzYzNjgsImp0aSI6IjQ5ZjE2YWMwNTIxMjQzZTZiYzgwZDhhOWI5NTFiZTcwIiwidXNlcl9pZCI6IjMxIn0.Tr-C6lfoP7shkB2Pt8avnN45twQaOMyeguAaen17Y0Y\"}"
+  },
+  {
+    "name": "profile",
+    "ok": true,
+    "status_code": 200,
+    "body": "{\"id\":31,\"email\":\"test+a9631097@example.com\",\"username\":\"\",\"first_name\":\"Smoke\",\"last_name\":\"Test\",\"telefone\":null,\"data_nascimento\":null,\"foto_perfil\":null}"
+  },
+  {
+    "name": "create_cliente_action",
+    "ok": false,
+    "status_code": 500,
+    "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n  <meta name=\"robots\" content=\"NONE,NOARCHIVE\">\n  <title>TypeError\n          at /api/usuarios/usuarios/create_cliente/</title>\n  <style>\n    html * { padding:0; margin:0; }\n    body * { padding:10px 20px; }\n    body * * { padding:0; }\n    body { font-family: sans-serif; background-color:#fff; color:#000; }\n    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }\n    h1 { font-weight:normal; }\n    h2 { margin-bottom:.8em; }\n    h3 { margin:1em 0 .5em 0; }\n    h4 { margin:0 0 .5em 0; font-weight: normal; }\n    code, pre { font-size: 100%; white-space: pre-wrap; word-break: break-word; }\n    summary { cursor: pointer; }\n    table { border:1px solid #ccc; border-collapse: collapse; width:100%; background:white; }\n    tbody td, tbody th { vertical-align:top; padding:2px 3px; }\n    thead th {\n      padding:1px 6px 1px 3px; background:#fefefe; text-align:left;\n      font-weight:normal; font-size: 0.6875rem; border:1px solid #ddd;\n    }\n    tbody th { width:12em; text-align:right; color:#666; padding-right:.5em; }\n    table.vars { margin:5px 10px 2px 40px; width: auto; }\n    table.vars td, table.req td { font-family:monospace; }\n    table td.code { width:100%; }\n    table td.code pre { overflow:hidden; }\n    table.source th { color:#666; }\n    table.source td { font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }\n    ul.traceback { list-style-type:none; color: #222; }\n    ul.traceback li.cause { word-break: break-word; }\n    ul.traceback li.frame { padding-bottom:1em; color:#4f4f4f; }\n    ul.traceback li.user { background-color:#e0e0e0; color:#000 }\n    div.context { padding:10px 0; overflow:hidden; }\n    div.context ol { padding-left:30px; margin:0 10px; list-style-position: inside; }\n    div.context ol li { font-family:monospace; white-space:pre; color:#777; cursor:pointer; padding-left: 2px; }\n    div.context ol li pre { display:inline; }\n    div.context ol.context-line li { color:#464646; background-color:#dfdfdf; padding: 3px 2px; }\n    div.context ol.context-line li span { position:absolute; right:32px; }\n    .user div.context ol.context-line li { background-color:#bbb; color:#000; }\n    .user div.context ol li { color:#666; }\n    div.commands, summary.commands { margin-left: 40px; }\n    div.commands a, summary.commands { color:#555; text-decoration:none; }\n    .user div.commands a { color: black; }\n    #summary { background: #ffc; }\n    #summary h2 { font-weight: normal; color: #666; }\n    #info { padding: 0; }\n    #info > * { padding:10px 20px; }\n    #explanation { background:#eee; }\n    #template, #template-not-exist { background:#f6f6f6; }\n    #template-not-exist ul { margin: 0 0 10px 20px; }\n    #template-not-exist .postmortem-section { margin-bottom: 3px; }\n    #unicode-hint { background:#eee; }\n    #traceback { background:#eee; }\n    #requestinfo { background:#f6f6f6; padding-left:120px; }\n    #summary table { border:none; background:transparent; }\n    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }\n    #requestinfo h3 { margin-bottom:-1em; }\n    .error { background: #ffc; }\n    .specific { color:#cc3300; font-weight:bold; }\n    h2 span.commands { font-size: 0.7rem; font-weight:normal; }\n    span.commands a:link {color:#5E5694;}\n    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5rem; margin: 10px 0 10px 0; }\n    .append-bottom { margin-bottom: 10px; }\n    .fname { user-select: all; }\n  </style>\n  \n  <script>\n    function hideAll(elems) {\n      for (var e = 0; e < elems.length; e++) {\n        elems[e].style.display = 'none';\n      }\n    }\n    window.onload = function() {\n      hideAll(document.querySelectorAll('ol.pre-context'));\n      hideAll(document.querySelectorAll('ol.post-context'));\n      hideAll(document.querySelectorAll('div.pastebin'));\n    }\n    function toggle() {\n      for (var i = 0; i < arguments.length; i++"
+  },
+  {
+    "name": "financeiro_create_categoria",
+    "ok": false,
+    "status_code": 400,
+    "body": "{\"detail\":\"Usu\u00e1rio sem cliente vinculado.\"}"
+  },
+  {
+    "name": "financeiro_create_transacao",
+    "ok": false,
+    "status_code": 400,
+    "body": "{\"categoria\":[\"Este campo n\u00e3o pode ser nulo.\"]}"
+  },
+  {
+    "name": "financeiro_fluxo_caixa_mensal",
+    "ok": false,
+    "status_code": 400,
+    "body": "{\"detail\":\"Usu\u00e1rio sem cliente vinculado.\"}"
+  },
+  {
+    "name": "inteligencia_list_alertas",
+    "ok": true,
+    "status_code": 200,
+    "body": "{\"count\":0,\"next\":null,\"previous\":null,\"results\":[]}"
+  },
+  {
+    "name": "inteligencia_marcar_resolvido",
+    "ok": true
+  }
+]

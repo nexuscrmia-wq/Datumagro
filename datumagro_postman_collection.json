@@ -1,0 +1,232 @@
+{
+  "info": {
+    "name": "DatumAgro API",
+    "description": "Coleção Postman completa para API DatumAgro - Gestão Pecuária",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Autenticação",
+      "item": [
+        {
+          "name": "Registrar Usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"novousuario@datumagro.com\",\n  \"username\": \"novousuario\",\n  \"password\": \"senha123\",\n  \"password2\": \"senha123\",\n  \"first_name\": \"João\",\n  \"last_name\": \"Silva\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/usuarios/registrar/",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "usuarios", "registrar", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"novousuario@datumagro.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/usuarios/login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "usuarios", "login", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type", 
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"seu_refresh_token_aqui\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/token/refresh/",
+              "host": ["{{baseUrl}}"],
+              "path": ["token", "refresh", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Usuários",
+      "item": [
+        {
+          "name": "Obter Perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/usuarios/perfil/",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "usuarios", "perfil", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏞️ Propriedades", 
+      "item": [
+        {
+          "name": "Listar Propriedades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/propriedades/",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "propriedades", ""]
+            }
+          }
+        },
+        {
+          "name": "Criar Propriedade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization", 
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Minha Fazenda\",\n  \"localizacao\": \"Cidade, Estado\",\n  \"area_total\": 150.5,\n  \"unidade_area\": \"hectares\",\n  \"moeda\": \"BRL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/propriedades/",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "propriedades", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🐄 Animais",
+      "item": [
+        {
+          "name": "Listar Animais",
+          "request": {
+            "method": "GET", 
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cadastros/animais/",
+              "host": ["{{baseUrl}}"],
+              "path": ["cadastros", "animais", ""]
+            }
+          }
+        },
+        {
+          "name": "Criar Animal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw", 
+              "raw": "{\n  \"brinco\": \"BOV001\",\n  \"nome\": \"Touro Bravo\",\n  \"sexo\": \"M\",\n  \"raca\": \"Nelore\",\n  \"aptidao\": \"C\",\n  \"propriedade\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cadastros/animais/",
+              "host": ["{{baseUrl}}"],
+              "path": ["cadastros", "animais", ""]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Pesagem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data_pesagem\": \"2024-01-15\",\n  \"peso\": 450.5,\n  \"observacoes\": \"Pesagem mensal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cadastros/animais/1/adicionar_pesagem/",
+              "host": ["{{baseUrl}}"],
+              "path": ["cadastros", "animais", "1", "adicionar_pesagem", ""]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

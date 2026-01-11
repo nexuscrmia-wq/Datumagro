@@ -1,0 +1,58 @@
+{
+  "runs_at": "2025-10-28T16:56:46.785842",
+  "tests": {
+    "registro": {
+      "ok": true,
+      "detail": {
+        "status_code": 201,
+        "email": "smoketest+1761670606-2efb3c@datumagro.local"
+      }
+    },
+    "login": {
+      "ok": true,
+      "detail": {
+        "status_code": 200
+      }
+    },
+    "perfil": {
+      "ok": true,
+      "detail": {
+        "profile": {
+          "id": 16,
+          "email": "smoketest+1761670606-2efb3c@datumagro.local",
+          "username": "smoketest_1761670606",
+          "first_name": "Smoke",
+          "last_name": "Test",
+          "telefone": null,
+          "data_nascimento": null,
+          "foto_perfil": null
+        }
+      }
+    },
+    "criar_propriedade": {
+      "ok": true,
+      "detail": {
+        "status_code": 201,
+        "id": 6
+      }
+    },
+    "criar_animal": {
+      "ok": true,
+      "detail": {
+        "status_code": 201,
+        "brinco": "SMOKE-1761670606-bf54"
+      }
+    },
+    "reset_senha": {
+      "ok": true,
+      "detail": {
+        "status_code": 202
+      }
+    }
+  },
+  "summary": {
+    "passed": 6,
+    "total": 6,
+    "success": true
+  }
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "name": "register",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"detail\":\"As credenciais de autentica\u00e7\u00e3o n\u00e3o foram fornecidas.\"}"
+  },
+  {
+    "name": "login",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"error\":\"Credenciais inv\u00e1lidas\"}"
+  },
+  {
+    "name": "profile",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"detail\":\"As credenciais de autentica\u00e7\u00e3o n\u00e3o foram fornecidas.\"}"
+  },
+  {
+    "name": "financeiro_create_categoria",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"detail\":\"As credenciais de autentica\u00e7\u00e3o n\u00e3o foram fornecidas.\"}"
+  },
+  {
+    "name": "financeiro_create_transacao",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"detail\":\"As credenciais de autentica\u00e7\u00e3o n\u00e3o foram fornecidas.\"}"
+  },
+  {
+    "name": "financeiro_fluxo_caixa_mensal",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"detail\":\"As credenciais de autentica\u00e7\u00e3o n\u00e3o foram fornecidas.\"}"
+  },
+  {
+    "name": "inteligencia_list_alertas",
+    "ok": false,
+    "status_code": 401,
+    "body": "{\"detail\":\"As credenciais de autentica\u00e7\u00e3o n\u00e3o foram fornecidas.\"}"
+  },
+  {
+    "name": "inteligencia_marcar_resolvido",
+    "ok": true
+  }
+]

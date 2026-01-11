@@ -65,3 +65,12 @@ class DashboardViewTest(TestCase):
         self.assertEqual(response.context['total_propriedades'], 1)
         self.assertEqual(response.context['total_animais_ativos'], 1)
         self.assertEqual(response.context['nome_usuario'], 'dashboard@teste.com')
+
+
+class HealthAPITest(TestCase):
+    def test_health_endpoint(self):
+        """Verifica que /api/health/ retorna 200 e JSON com status 'ok'."""
+        response = self.client.get('/api/health/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data.get('status'), 'ok')

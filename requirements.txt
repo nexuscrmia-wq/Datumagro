@@ -1,13 +1,23 @@
 # requirements.txt (VERSÃO FINAL E CORRETA)
 
 # --- Core do Django e Servidor de Produção ---
-django
+Django>=5.0
 gunicorn
 whitenoise
 
 # --- API ---
 djangorestframework
 dj-rest-auth
+djangorestframework-simplejwt
+drf-yasg
+
+# --- CORS e Autenticação ---
+django-cors-headers
+django-filter
+
+# --- Cache e Performance ---
+django-redis
+python-json-logger
 
 # --- Banco de Dados ---
 psycopg2-binary
@@ -27,4 +37,9 @@ qrcode[pil]
 
 # --- Utilidades ---
 python-dotenv
+python-decouple
 Pillow
+
+# Monitoring and Security tools
+sentry-sdk>=1.7.0
+bandit>=1.7.4

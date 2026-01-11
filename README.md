@@ -1,3 +1,157 @@
+# DatumAgro Backend — API guide for Flutter frontend
+
+This README documents how to run and use the Django backend so you can connect the Flutter frontend (auth, password reset, forms of payment, etc.). It also includes sample Flutter and curl requests.
+
+## Quick start (development)
+
+1. Create and activate a virtualenv
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Migrate and create superuser
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+4. Run server
+
+```bash
+python manage.py runserver
+```
+
+Server runs on `http://127.0.0.1:8000/` by default.
+
+## Auth endpoints
+
+All user endpoints are under `/api/usuarios/usuarios/` because the `UsuarioViewSet` is registered with the `usuarios` router.
+
+- Register (creates user + returns JWT tokens):
+  - POST `/api/usuarios/usuarios/registrar/`
+  - Body (JSON): `{ "email": "you@example.com", "password": "Pass123!", "password2": "Pass123!", "first_name": "Nome", "last_name": "Sobrenome" }`
+
+- Login (returns JWT tokens):
+  - POST `/api/usuarios/usuarios/login/`
+  - Body (JSON): `{ "email": "you@example.com", "password": "Pass123!" }`
+
+- Get profile (requires Authorization: Bearer <access_token>):
+  - GET `/api/usuarios/me/`
+
+- Password reset (request email):
+  - POST `/api/usuarios/usuarios/reset_password/`
+  - Body: `{ "email": "you@example.com" }`
+  - The backend will send an email (or print to console in dev) with a `reset_url` containing a token.
+
+- Confirm password reset:
+  - POST `/api/usuarios/usuarios/confirm_reset_password/`
+  - Body: `{ "token": "<token>", "new_password": "NewPass123!", "new_password2": "NewPass123!" }`
+
+## Forms of Payment (financeiro)
+
+- List and create forms of payment (authenticated):
+  - GET `/api/financeiro/formas-pagamento/`
+  - POST `/api/financeiro/formas-pagamento/`
+  - Example POST body for PIX: `{ "tipo": "PX", "titular": "João", "chave_pix": "meu-pix@banco" }`
+  - Example POST body for card: `{ "tipo": "CC", "titular": "João", "numero_cartao": "4111111111111111", "validade": "12/2027", "bandeira": "VISA" }`
+
+Notes: for security never store CVV; in production use a payment gateway and tokenize card data.
+
+## cURL examples
+
+Register:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/usuarios/usuarios/registrar/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Testpass123!","password2":"Testpass123!","first_name":"Teste","last_name":"Usuario"}'
+```
+
+Login:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/usuarios/usuarios/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Testpass123!"}'
+```
+
+Use the returned `access` token in requests:
+
+```bash
+curl -H "Authorization: Bearer <ACCESS_TOKEN>" http://127.0.0.1:8000/api/usuarios/me/
+```
+
+Create FormaPagamento (example):
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/financeiro/formas-pagamento/ \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"tipo":"PX","titular":"João","chave_pix":"meu-pix@banco"}'
+```
+
+## Flutter integration notes
+
+- Use the Android emulator base URL `http://10.0.2.2:8000` or `http://localhost:8000` for iOS simulator. For a physical device, use the machine IP on the local network (ex.: `http://192.168.1.100:8000`).
+- Example Dart service (login):
+
+```dart
+// lib/data/services/api_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class ApiConfig { static const baseUrl = 'http://10.0.2.2:8000'; }
+
+class ApiService {
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    final res = await http.post(
+      Uri.parse('\${ApiConfig.baseUrl}/api/usuarios/usuarios/login/'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'password': password}),
+    );
+    if (res.statusCode == 200) return json.decode(res.body);
+    throw Exception('Falha no login');
+  }
+}
+```
+
+Store `access` and `refresh` tokens securely (recommendation: `flutter_secure_storage`).
+
+Implement token refresh flow (call `/api/token/refresh/` with `refresh` token to obtain a new access token).
+
+## Email and dev behavior
+
+- If `EMAIL_HOST_USER` is not set in your `.env`, the back-end uses `console` email backend so password reset emails are printed on the server console (development friendly).
+
+## CORS and frontend
+
+- `CORS_ALLOWED_ORIGINS` already includes common dev addresses for React/Flutter emulators.
+- If you run Flutter on a physical device, add your machine IP to `CORS_ALLOWED_ORIGINS` or set `CORS_ALLOW_ALL_ORIGINS = True` (dev only).
+
+## Next steps / suggestions
+
+- Add OpenAPI/Swagger (e.g., `drf-yasg` or `drf-spectacular`) to provide a machine-readable API description for faster frontend integration.
+- Consider adding integration tests and a Postman collection for the frontend team.
+- For payments, integrate with a payment gateway (Stripe, Pagar.me) and store tokens instead of raw card numbers.
+
+---
+
+If you want, posso now:
+- add a Swagger/OpenAPI endpoint,
+- create an example Postman collection file,
+- or run quick smoke tests against the running server.
+
+Tell me which you want next.
 # DatumAgro 🐂
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)

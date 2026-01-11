@@ -5,6 +5,14 @@ from django.views.generic import TemplateView
 # O import do 'ObjectDoesNotExist' foi REMOVIDO, pois não é mais necessário.
 from datumagro.apps.cadastros.models import Animal, Propriedade
 from datumagro.apps.assinaturas.models import Assinatura
+from django.conf import settings
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+import uuid
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from datumagro.apps.cadastros.models import Cliente
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -39,3 +47,43 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             ).count()
 
         return context
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health(request):
+    """
+    Simple health endpoint for frontend probes.
+    Returns JSON with status and optional version from settings.VERSION.
+    """
+    version = getattr(settings, "VERSION", "unknown")
+    return Response({"status": "ok", "version": version})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_cliente_for_user(request):
+    """
+    Debug helper (development only): cria um Cliente e associa ao PerfilUsuario do usuário autenticado.
+    Útil para testes locais/integração (não recomendado em produção).
+    """
+    user = request.user
+    perfil = getattr(user, 'perfilusuario', None)
+    if not perfil:
+        return Response({'detail': 'Perfil do usuário não encontrado.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    nome_empresa = request.data.get('nome_empresa') or f'Empresa {user.email}'
+    cpf_cnpj = request.data.get('cpf_cnpj') or str(uuid.uuid4())[:14]
+    telefone = request.data.get('telefone') or ''
+
+    cliente = Cliente.objects.create(
+        perfil_usuario=perfil,
+        nome_empresa=nome_empresa,
+        cpf_cnpj=cpf_cnpj,
+        telefone=telefone,
+        email_contato=user.email
+    )
+
+    perfil.cliente = cliente
+    perfil.save()
+
+    return Response({'id': cliente.id, 'nome_empresa': cliente.nome_empresa}, status=status.HTTP_201_CREATED)

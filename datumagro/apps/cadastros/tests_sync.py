@@ -11,9 +11,8 @@ class SyncEndpointTest(TestCase):
 
     def setUp(self):
         self.client_user = Usuario.objects.create_user(email='sync@teste.com', password='123')
-        # PerfilUsuario created by signal
+        # Create Cliente without perfil_usuario (model does not have this field)
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.client_user.perfilusuario,
             nome_empresa='Fazenda Sync',
             cpf_cnpj='00011122233344',
             email_contato='contato@sync.com'
@@ -50,6 +49,7 @@ class SyncEndpointTest(TestCase):
         resp = self.api.post('/api/cadastros/sync/', payload, format='json')
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
+        print('DEBUG create response:', body)
         self.assertIn('applied', body)
         applied = body['applied']
         self.assertEqual(len(applied), 1)
@@ -91,6 +91,7 @@ class SyncEndpointTest(TestCase):
         resp = self.api.post('/api/cadastros/sync/', payload, format='json')
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
+        print('DEBUG update response:', body)
         self.assertIn('conflicts', body)
         self.assertTrue(len(body['conflicts']) >= 1)
 
@@ -117,6 +118,7 @@ class SyncEndpointTest(TestCase):
         resp = self.api.post('/api/cadastros/sync/', payload, format='json')
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
+        print('DEBUG delete response:', body)
         applied = body.get('applied', [])
         self.assertEqual(applied[0].get('status'), 'ok')
         animal.refresh_from_db()
