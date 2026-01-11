@@ -15,9 +15,9 @@ class NotificacaoServicesTest(TestCase):
     def setUp(self):
         self.user = Usuario.objects.create_user(email='notificacao@teste.com', password='123')
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.user.perfilusuario,
             nome_empresa='Fazenda Notificada',
             email_contato='contato@fazenda.com',
+            cpf_cnpj='12345678000190',
             telefone='+5522999998888'  # Número de exemplo
         )
         self.alerta = Alerta.objects.create(

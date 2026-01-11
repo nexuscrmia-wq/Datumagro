@@ -14,9 +14,9 @@ class CadastrosModelsTest(TestCase):
     def setUp(self):
         self.user = Usuario.objects.create_user(email='cliente@teste.com', password='123')
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.user.perfilusuario,
             nome_empresa='Fazenda Modelo',
-            cpf_cnpj='111222333000199'
+            cpf_cnpj='111222333000199',
+            email_contato='modelo@fazenda.com'
         )
         self.propriedade = Propriedade.objects.create(
             cliente=self.cliente,
@@ -32,18 +32,21 @@ class CadastrosModelsTest(TestCase):
         touro = Animal.objects.create(
             propriedade=self.propriedade,
             brinco='TOURO-01',
+            raca='NELORE',
             sexo='M',
             data_nascimento=date(2020, 1, 1)
         )
         matriz = Animal.objects.create(
             propriedade=self.propriedade,
             brinco='MATRIZ-01',
+            raca='NELORE',
             sexo='F',
             data_nascimento=date(2021, 1, 1)
         )
         bezerro = Animal.objects.create(
             propriedade=self.propriedade,
             brinco='BEZERRO-01',
+            raca='NELORE',
             sexo='M',
             data_nascimento=date(2024, 1, 1),
             pai=touro,
@@ -61,9 +64,9 @@ class CadastrosServicesTest(TestCase):
     def setUp(self):
         self.user = Usuario.objects.create_user(email='cliente@servico.com', password='123')
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.user.perfilusuario,
             nome_empresa='Fazenda Serviços',
-            cpf_cnpj='444555666000188'
+            cpf_cnpj='444555666000188',
+            email_contato='servicos@fazenda.com'
         )
         self.propriedade = Propriedade.objects.create(
             cliente=self.cliente,
@@ -74,6 +77,7 @@ class CadastrosServicesTest(TestCase):
         self.animal = Animal.objects.create(
             propriedade=self.propriedade,
             brinco='ANIMAL-GMD',
+            raca='NELORE',
             sexo='M',
             # Nasceu há exatamente 12 meses
             data_nascimento=date.today() - timedelta(days=365)
@@ -130,6 +134,7 @@ class CadastrosServicesTest(TestCase):
         animal_sem_pesagem = Animal.objects.create(
             propriedade=self.propriedade,
             brinco='SEM-PESO',
+            raca='NELORE',
             sexo='F',
             data_nascimento=date.today()
         )

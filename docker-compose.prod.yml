@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-datumagro}
+      POSTGRES_USER: ${POSTGRES_USER:-datumagro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+
+  web:
+    build: .
+    command: gunicorn datumagro.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-datumagro}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-datumagro}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: 'False'
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - static_volume:/app/staticfiles
+
+volumes:
+  db_data:
+  static_volume:

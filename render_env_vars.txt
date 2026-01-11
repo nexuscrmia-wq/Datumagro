@@ -1,0 +1,87 @@
+# ============================================================================
+# 🚀 DATUMAGRO - VARIÁVEIS DE AMBIENTE PARA RENDER.COM
+# ============================================================================
+# Copie estas variáveis para o painel do Render.com
+# Dashboard → Your Service → Environment
+# ============================================================================
+
+# ============================================================================
+# DJANGO CORE SETTINGS
+# ============================================================================
+DEBUG=False
+ENVIRONMENT=production
+SECRET_KEY=your-super-secret-key-change-this-in-render
+
+# IMPORTANTE: Gere uma nova SECRET_KEY para produção
+# Execute: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+# ============================================================================
+# DATABASE (PostgreSQL no Render)
+# ============================================================================
+# Será preenchido automaticamente quando você criar o banco PostgreSQL no Render
+# Formato: postgres://user:password@host:port/database
+DATABASE_URL=
+
+# ============================================================================
+# REDIS (Opcional - para cache avançado)
+# ============================================================================
+# Será preenchido automaticamente quando você criar o Redis no Render
+# Formato: redis://host:port
+REDIS_URL=
+
+# ============================================================================
+# EMAIL CONFIGURATION
+# ============================================================================
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=DatumAgro <noreply@datumagro.com>
+
+# ============================================================================
+# CORS E FRONTEND
+# ============================================================================
+FRONTEND_URL=https://your-frontend-domain.com
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com,https://your-app-name.onrender.com
+
+# ============================================================================
+# MONITORAMENTO (OPCIONAL)
+# ============================================================================
+# Sentry para monitoramento de erros
+SENTRY_DSN=
+SENTRY_TRACES_SAMPLE_RATE=0.1
+SENTRY_SEND_PII=False
+
+# ============================================================================
+# PRODUÇÃO - CONFIGURAÇÕES ADICIONAIS
+# ============================================================================
+ALLOWED_HOSTS=your-app-name.onrender.com,127.0.0.1,localhost
+SECURE_SSL_REDIRECT=True
+SECURE_HSTS_SECONDS=31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+SECURE_HSTS_PRELOAD=True
+
+# ============================================================================
+# INSTRUÇÕES PARA CONFIGURAR NO RENDER.COM
+# ============================================================================
+#
+# 1. ACESSE: https://render.com → Dashboard → Your Web Service → Environment
+#
+# 2. ADICIONE CADA VARIÁVEL ACIMA:
+#    - Key: DEBUG
+#    - Value: False
+#    - (repita para todas as variáveis)
+#
+# 3. PARA DATABASE_URL:
+#    - Primeiro crie um PostgreSQL no Render
+#    - Copie a connection string fornecida
+#
+# 4. PARA REDIS_URL (opcional):
+#    - Crie um Redis no Render
+#    - Copie a connection string
+#
+# 5. APÓS CONFIGURAR: Clique "Save Changes" e o serviço será reimplantado
+#
+# ============================================================================

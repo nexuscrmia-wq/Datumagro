@@ -22,6 +22,7 @@ dev_dependencies:
     sdk: flutter
   build_runner: ^2.3.3
   drift_dev: any
+  flutter_lints: ^2.0.0
 
   # native SQLite bindings for Flutter (required by some drift setups)
   sqlite3_flutter_libs: any

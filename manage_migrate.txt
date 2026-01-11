@@ -1,0 +1,4 @@
+Operations to perform:
+  Apply all migrations: admin, assinaturas, auth, authtoken, cadastros, contenttypes, financeiro, integracoes, inteligencia, notificacoes, operacional, rastreabilidade, relatorios, sessions, usuarios
+Running migrations:
+  No migrations to apply.

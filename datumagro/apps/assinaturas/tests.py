@@ -27,9 +27,9 @@ class AssinaturaServicesTest(TestCase):
         )
         # Cria um cliente associado ao usuário
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.user.perfilusuario,
             nome_empresa='Fazenda Teste SA',
-            cpf_cnpj='12345678000190'
+            cpf_cnpj='12345678000190',
+            email_contato='teste@fazenda.com'
         )
         # Cria os planos que serão usados nos testes
         self.plano_digital = Plano.objects.create(

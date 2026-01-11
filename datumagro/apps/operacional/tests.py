@@ -45,13 +45,15 @@ class OperacionalServicesTest(TestCase):
         )
 
     def test_mover_lote_para_piquete_atualiza_status_corretamente(self):
-        self.assertEqual(self.lote.piquete_atual, self.piquete_a)
+        self.assertEqual(self.piquete_a.lote_atual, self.lote)
 
         mover_lote_para_piquete(self.lote, self.piquete_b)
 
         self.piquete_a.refresh_from_db()
         self.piquete_b.refresh_from_db()
+        self.lote.refresh_from_db()
 
         self.assertEqual(self.piquete_b.lote_atual, self.lote)
         self.assertEqual(self.piquete_a.status, 'DESCANSANDO')
         self.assertEqual(self.piquete_b.status, 'EM_USO')
+        self.assertIsNone(self.piquete_a.lote_atual)

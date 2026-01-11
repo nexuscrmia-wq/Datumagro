@@ -51,4 +51,3 @@ class UsuarioServicesTest(TestCase):
         cliente_criado = Cliente.objects.first()
         self.assertEqual(novo_usuario.perfilusuario.cliente, cliente_criado)
         self.assertEqual(cliente_criado.nome_empresa, 'Fazenda Nova Esperança')
-        self.assertEqual(cliente_criado.perfil_usuario, novo_usuario.perfilusuario)

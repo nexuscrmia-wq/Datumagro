@@ -21,7 +21,11 @@ class Plano(models.Model):
     nome = models.CharField(max_length=100, unique=True, choices=PLANO_CHOICES)
     descricao = models.TextField(help_text="Descrição comercial do plano para o site.")
     valor_base_mensal = models.DecimalField(max_digits=10, decimal_places=2)
-    limite_animais = models.PositiveIntegerField(help_text="Limite de animais monitorados neste plano.")
+    limite_animais = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Limite de animais monitorados neste plano. Null significa sem limite (ilimitado)."
+    )
 
     # Diferencial de Negócio: HaaS (Hardware as a Service)
     hardware_incluso = models.BooleanField(
@@ -33,6 +37,18 @@ class Plano(models.Model):
     suporte_especialista = models.BooleanField(
         default=False,
         help_text="Diferencial do Plano Elite: Acesso a veterinários e zootecnistas parceiros."
+    )
+
+    # Controle de usuários por assinatura
+    max_funcionarios = models.PositiveIntegerField(
+        default=0,
+        help_text="Número máximo de usuários do tipo 'funcionário' permitidos além do usuário master. 0 significa nenhum funcionário permitido."
+    )
+
+    # Acesso a módulo especial de importação internacional (disponível apenas no plano superior)
+    acesso_importacao_internacional = models.BooleanField(
+        default=False,
+        help_text="Habilita o módulo de importação internacional para o cliente (ex.: Planos Enterprise/Elite)."
     )
 
     ativo = models.BooleanField(default=True)

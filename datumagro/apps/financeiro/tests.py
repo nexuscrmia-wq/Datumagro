@@ -14,9 +14,9 @@ class FinanceiroServicesTest(TestCase):
     def setUp(self):
         self.user = Usuario.objects.create_user(email='financeiro@teste.com', password='123')
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.user.perfilusuario,
             nome_empresa='Fazenda Financeira',
-            cpf_cnpj='987654321000199'
+            cpf_cnpj='987654321000199',
+            email_contato='financeiro@fazenda.com'
         )
 
         # Cria categorias para usar nos testes

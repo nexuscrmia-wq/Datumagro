@@ -12,6 +12,8 @@ class PlanoSerializer(serializers.ModelSerializer):
             'descricao',
             'valor_base_mensal',
             'limite_animais',
+            'max_funcionarios',
+            'acesso_importacao_internacional',
             'hardware_incluso',
             'suporte_especialista',
         ]

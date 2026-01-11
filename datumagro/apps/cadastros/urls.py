@@ -1,21 +1,21 @@
 # datumagro/apps/cadastros/urls.py
 
 from rest_framework.routers import DefaultRouter
-from .views import PropriedadeViewSet, AnimalViewSet, RegistroPesagemViewSet
+from .views import (PropriedadeViewSet, AnimalViewSet, RegistroPesagemViewSet, ClienteViewSet,
+                    PiqueteViewSet, VacinaViewSet, AplicacaoVacinaViewSet,
+                    InformacaoGeneticaViewSet, FichaTecnicaAnimalViewSet)
 
-app_name = 'cadastros' # <-- A LINHA CORRIGIDA
+app_name = 'cadastros'
 
 router = DefaultRouter()
+router.register(r'clientes', ClienteViewSet, basename='cliente')
 router.register(r'propriedades', PropriedadeViewSet, basename='propriedade')
 router.register(r'animais', AnimalViewSet, basename='animal')
 router.register(r'pesagens', RegistroPesagemViewSet, basename='pesagem')
+router.register(r'piquetes', PiqueteViewSet, basename='piquete')
+router.register(r'vacinas', VacinaViewSet, basename='vacina')
+router.register(r'aplicacoes-vacina', AplicacaoVacinaViewSet, basename='aplicacao-vacina')
+router.register(r'informacoes-geneticas', InformacaoGeneticaViewSet, basename='informacao-genetica')
+router.register(r'fichas-tecnicas', FichaTecnicaAnimalViewSet, basename='ficha-tecnica')
 
 urlpatterns = router.urls
-
-# Rota adicional para sincronização em lote
-from .views import sync_view
-from django.urls import path
-
-urlpatterns += [
-	path('sync/', sync_view, name='sync'),
-]

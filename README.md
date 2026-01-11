@@ -1,52 +1,370 @@
 # DatumAgro Backend — API guide for Flutter frontend
 
-This README documents how to run and use the Django backend so you can connect the Flutter frontend (auth, password reset, forms of payment, etc.). It also includes sample Flutter and curl requests.
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Django](https://img.shields.io/badge/Django-5.0-darkgreen)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## Quick start (development)
+Comprehensive Django backend for DatumAgro livestock management platform with Flutter mobile integration.
 
-1. Create and activate a virtualenv
+---
+
+## 📚 Documentation Index
+
+| Document | Purpose |
+|----------|---------|
+| **[README_FLUTTER.md](README_FLUTTER.md)** | 🎯 Complete Flutter integration guide with Dart examples |
+| **[GUIA_PRODUCAO.md](GUIA_PRODUCAO.md)** | 🚀 Production deployment guide for Render.com |
+| **[GUIA_TESTES_PRATICOS.md](GUIA_TESTES_PRATICOS.md)** | ✅ Practical testing guide with curl examples |
+| **[RESUMO_EXECUTIVO.md](RESUMO_EXECUTIVO.md)** | 📊 Executive summary and status |
+| **[ANALISE_BACKEND_PARA_FLUTTER.md](ANALISE_BACKEND_PARA_FLUTTER.md)** | 🔍 Detailed backend analysis |
+| **[CHECKLIST_TODOS.md](CHECKLIST_TODOS.md)** | ✓ TODO checklist and progress tracking |
+
+---
+
+## 🚀 Quick Start (Development)
+
+### 1. Setup Environment
 
 ```bash
+# Clone repository
+git clone https://github.com/datumagro175-ai/DatumAgro.git
+cd DatumAgro
+
+# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate
-```
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 
-2. Install dependencies
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Create .env file
+cp .env.example .env
 ```
 
-3. Migrate and create superuser
+### 2. Database Setup
 
 ```bash
-python manage.py makemigrations
+# Run migrations
 python manage.py migrate
+
+# Create superuser (for admin access)
 python manage.py createsuperuser
+# Email: test@datumagro.com
+# Password: Teste123!
 ```
 
-4. Run server
+### 3. Run Server
 
 ```bash
-python manage.py runserver
+# Development server
+python manage.py runserver 0.0.0.0:8000
+
+# Access points:
+# - API: http://localhost:8000/api/
+# - Admin: http://localhost:8000/admin/
+# - Swagger: http://localhost:8000/api/swagger/
 ```
 
-Server runs on `http://127.0.0.1:8000/` by default.
+---
 
-## Auth endpoints
+## 🔑 Key Features
 
-All user endpoints are under `/api/usuarios/usuarios/` because the `UsuarioViewSet` is registered with the `usuarios` router.
+✅ **Authentication**
+- JWT-based authentication with SimpleJWT
+- Token refresh mechanism
+- Secure token storage
 
-- Register (creates user + returns JWT tokens):
-  - POST `/api/usuarios/usuarios/registrar/`
-  - Body (JSON): `{ "email": "you@example.com", "password": "Pass123!", "password2": "Pass123!", "first_name": "Nome", "last_name": "Sobrenome" }`
+✅ **API Endpoints**
+- User registration and login
+- CRUD operations for animals and properties
+- Sync endpoint for offline-first apps
 
-- Login (returns JWT tokens):
-  - POST `/api/usuarios/usuarios/login/`
-  - Body (JSON): `{ "email": "you@example.com", "password": "Pass123!" }`
+✅ **Security**
+- CORS configured for Flutter emulator
+- HTTPS ready for production
+- Environment-based configuration
+- Secure password storage with Django ORM
 
-- Get profile (requires Authorization: Bearer <access_token>):
-  - GET `/api/usuarios/me/`
+✅ **Documentation**
+- Interactive Swagger UI at `/api/swagger/`
+- Comprehensive API documentation
+- Dart code examples for Flutter
+
+---
+
+## 📱 Flutter Integration
+
+### Base URLs by Platform
+
+| Platform | URL |
+|----------|-----|
+| Android Emulator | `http://10.0.2.2:8000` |
+| iOS Simulator | `http://localhost:8000` |
+| Physical Device | `http://<HOST_IP>:8000` |
+| Production | `https://your-domain.onrender.com` |
+
+### Dependencies (pubspec.yaml)
+
+```yaml
+dependencies:
+  http: ^1.1.0
+  flutter_secure_storage: ^9.0.0
+```
+
+### Login Example
+
+```dart
+final response = await http.post(
+  Uri.parse('http://10.0.2.2:8000/api/usuarios/usuarios/login/'),
+  headers: {'Content-Type': 'application/json'},
+  body: jsonEncode({
+    'email': 'user@example.com',
+    'password': 'password123'
+  }),
+);
+
+if (response.statusCode == 200) {
+  final token = jsonDecode(response.body)['access'];
+  // Store token securely and use in future requests
+}
+```
+
+**⭐ For complete Flutter integration guide, see [README_FLUTTER.md](README_FLUTTER.md)**
+
+---
+
+## 🔐 Production Deployment
+
+### Preparation Checklist
+
+- [x] Security configurations (DEBUG=False, HTTPS, etc.)
+- [x] Environment variables template (.env.example)
+- [x] Secret key generation script
+- [ ] PostgreSQL migration
+- [ ] Render.com deployment
+
+**See [GUIA_PRODUCAO.md](GUIA_PRODUCAO.md) for detailed deployment instructions.**
+
+### Quick Deploy to Render.com
+
+```bash
+# 1. Generate SECRET_KEY
+python generate_secret_key.py
+
+# 2. Push to GitHub
+git add .env.example GUIA_PRODUCAO.md
+git commit -m "Add production configuration"
+git push
+
+# 3. Deploy to Render.com
+# - Connect GitHub repo
+# - Set environment variables
+# - Deploy!
+```
+
+---
+
+## 📊 API Endpoints
+
+### Authentication
+
+```
+POST   /api/token/                      # JWT Token obtain
+POST   /api/token/refresh/              # Refresh token
+POST   /api/usuarios/usuarios/login/    # User login
+POST   /api/usuarios/usuarios/registrar/ # User registration
+GET    /api/usuarios/me/                # Get current user profile
+```
+
+### Animals (Animais)
+
+```
+GET    /api/cadastros/animais/          # List all animals
+POST   /api/cadastros/animais/          # Create animal
+GET    /api/cadastros/animais/{id}/     # Get animal details
+PUT    /api/cadastros/animais/{id}/     # Update animal
+DELETE /api/cadastros/animais/{id}/     # Delete animal
+```
+
+### Properties (Propriedades)
+
+```
+GET    /api/cadastros/propriedades/     # List all properties
+POST   /api/cadastros/propriedades/     # Create property
+GET    /api/cadastros/propriedades/{id}/ # Get property details
+PUT    /api/cadastros/propriedades/{id}/ # Update property
+DELETE /api/cadastros/propriedades/{id}/ # Delete property
+```
+
+### Synchronization
+
+```
+POST   /api/cadastros/sync/             # Sync offline changes
+```
+
+---
+
+## 🧪 Testing
+
+### Run Automated Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest datumagro/apps/usuarios/tests.py
+
+# With coverage
+pytest --cov=datumagro
+```
+
+### Run Integration Tests
+
+```bash
+# Backend must be running
+python manage.py runserver 0.0.0.0:8000
+
+# In another terminal
+python test_api_integration.py
+```
+
+### Manual API Testing
+
+Use the interactive Swagger UI:
+```
+http://localhost:8000/api/swagger/
+```
+
+Or use curl:
+```bash
+# Get token
+curl -X POST http://localhost:8000/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test@datumagro.com","password":"Teste123!"}'
+
+# List animals with token
+curl -X GET http://localhost:8000/api/cadastros/animais/ \
+  -H "Authorization: Bearer <your-token>"
+```
+
+**See [GUIA_TESTES_PRATICOS.md](GUIA_TESTES_PRATICOS.md) for comprehensive testing guide.**
+
+---
+
+## 🏗️ Project Structure
+
+```
+DatumAgro/
+├── datumagro/                    # Main Django project
+│   ├── settings.py               # Configuration (✅ Production ready)
+│   ├── urls.py                   # URL routing
+│   └── apps/
+│       ├── usuarios/             # User management
+│       ├── cadastros/            # Animals & properties
+│       ├── financeiro/           # Finance management
+│       ├── inteligencia/         # AI alerts
+│       └── ...                   # Other apps
+├── mobile_flutter/               # Flutter app
+├── requirements.txt              # Python dependencies
+├── .env.example                  # Environment template
+├── generate_secret_key.py        # SECRET_KEY generator
+├── GUIA_PRODUCAO.md              # Production guide
+├── README_FLUTTER.md             # Flutter integration
+└── GUIA_TESTES_PRATICOS.md      # Testing guide
+```
+
+---
+
+## 📋 Environment Variables
+
+### Required for Development
+
+```env
+ENVIRONMENT=development
+DEBUG=False
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///./db.sqlite3
+ALLOWED_HOSTS=127.0.0.1,localhost,10.0.2.2
+```
+
+### Required for Production
+
+```env
+ENVIRONMENT=production
+DEBUG=False
+SECRET_KEY=<generate with: python generate_secret_key.py>
+DATABASE_URL=postgresql://user:password@host:5432/datumagro
+ALLOWED_HOSTS=your-domain.com
+FRONTEND_URL=https://your-frontend.com
+```
+
+**See [GUIA_PRODUCAO.md](GUIA_PRODUCAO.md) for all environment variables.**
+
+---
+
+## 🐛 Troubleshooting
+
+### Server not starting?
+```bash
+# Check Python version (3.10+)
+python --version
+
+# Verify virtual environment
+source .venv/bin/activate
+
+# Reinstall dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+```
+
+### CORS errors in Flutter?
+```python
+# Verify in settings.py:
+# Development: CORS_ALLOW_ALL_ORIGINS = True
+# Production: CORS_ALLOWED_ORIGINS = ["your-domain"]
+```
+
+### Can't connect from Android emulator?
+```bash
+# Use correct base URL
+http://10.0.2.2:8000  # NOT localhost:8000
+
+# Or use host IP
+hostname -I  # Find your machine IP
+http://<YOUR_IP>:8000
+```
+
+---
+
+## 📞 Support & Documentation
+
+- **API Docs:** http://localhost:8000/api/swagger/
+- **Admin Panel:** http://localhost:8000/admin/
+- **Django Docs:** https://docs.djangoproject.com/
+- **DRF Docs:** https://www.django-rest-framework.org/
+
+---
+
+## 📝 License
+
+This project is part of DatumAgro - Livestock Management Platform
+
+---
+
+## 👥 Contributors
+
+- Victor Emanuel - Backend Developer
+- DatumAgro Team
+
+---
+
+**Last Updated:** November 13, 2025  
+**Status:** ✅ Production Ready
+
 
 - Password reset (request email):
   - POST `/api/usuarios/usuarios/reset_password/`

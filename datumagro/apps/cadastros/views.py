@@ -1,16 +1,26 @@
 # datumagro/apps/cadastros/views.py
+"""
+Views otimizadas para cadastros com query optimization máxima.
+"""
 
-from rest_framework import viewsets, permissions
-from .models import Propriedade, Animal, RegistroPesagem
-from .serializers import PropriedadeSerializer, AnimalSerializer, RegistroPesagemSerializer
-from rest_framework.decorators import api_view, permission_classes
+import logging
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Prefetch, Count, Q, F
+from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-import uuid
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
+
+from .models import (Propriedade, Animal, RegistroPesagem, Cliente,
+                     Piquete, Vacina, AplicacaoVacina, InformacaoGenetica, FichaTecnicaAnimal)
+from .serializers import (PropriedadeSerializer, AnimalSerializer, RegistroPesagemSerializer,
+                          PiqueteSerializer, VacinaSerializer, AplicacaoVacinaSerializer,
+                          InformacaoGeneticaSerializer, FichaTecnicaAnimalSerializer)
+
+logger = logging.getLogger(__name__)
 
 
 class BaseViewSet(viewsets.ModelViewSet):
@@ -23,18 +33,17 @@ class BaseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Protege contra usuários sem perfil/cliente associado
         user = getattr(self.request, 'user', None)
-        perfil = getattr(user, 'perfilusuario', None)
-        cliente = getattr(perfil, 'cliente', None)
-        # Fallback: se a relação direta não existe (models/migration divergência), tente achar por email
-        if cliente is None:
-            try:
-                from .models import Cliente
-                if user and getattr(user, 'email', None):
-                    cliente = Cliente.objects.filter(email_contato=user.email).first()
-                if cliente is None:
-                    cliente = Cliente.objects.first()
-            except Exception:
-                cliente = None
+        cliente = None
+        
+        # Fallback: tente achar cliente por email do usuário
+        try:
+            if user and getattr(user, 'email', None):
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+            if cliente is None:
+                # Se não encontrar por email, pega o primeiro cliente (dev only)
+                cliente = Cliente.objects.first()
+        except Exception:
+            cliente = None
 
         if cliente is None:
             # Retorna queryset vazio quando não há cliente associado para evitar 500
@@ -50,7 +59,6 @@ class BaseViewSet(viewsets.ModelViewSet):
         # fallback: tentar encontrar por e-mail do usuário ou pegar primeiro cliente disponível
         if cliente is None:
             try:
-                from .models import Cliente
                 if user and getattr(user, 'email', None):
                     cliente = Cliente.objects.filter(email_contato=user.email).first()
                 if cliente is None:
@@ -65,22 +73,184 @@ class BaseViewSet(viewsets.ModelViewSet):
         serializer.save(cliente=cliente)
 
 
-class PropriedadeViewSet(BaseViewSet):
-    queryset = Propriedade.objects.all()
-    serializer_class = PropriedadeSerializer
+class ClienteViewSet(viewsets.ModelViewSet):
+    """ViewSet otimizado para clientes"""
+    queryset = Cliente.objects.prefetch_related('propriedade_set').all()
+    serializer_class = None  # Será definido no método get_serializer_class
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = []
+    search_fields = ['nome_empresa', 'cpf_cnpj', 'email_contato']
 
-    # Sobrescreve o get_queryset para filtrar direto no cliente
+    def get_serializer_class(self):
+        from .serializers import ClienteSerializer
+        return ClienteSerializer
+
+
+class PropriedadeViewSet(BaseViewSet):
+    """ViewSet otimizado para propriedades com performance máxima"""
+    serializer_class = PropriedadeSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['cliente', 'estado', 'objetivo_producao']
+    search_fields = ['nome_propriedade', 'cidade', 'endereco']
+    ordering_fields = ['hectares', 'nome_propriedade']
+    ordering = ['nome_propriedade']
+    
     def get_queryset(self):
-        return super().get_queryset()
+        """
+        ✅ OTIMIZAÇÃO MÁXIMA: select_related + prefetch_related otimizado
+        """
+        return Propriedade.objects.select_related(
+            'cliente'
+        ).prefetch_related(
+            Prefetch(
+                'animais',
+                queryset=Animal.objects.filter(ativo=True)
+                         .only('id', 'brinco', 'raca', 'sexo', 'categoria', 'propriedade')
+            )
+        ).all()
+
+    @action(detail=True, methods=['get'])
+    def resumo(self, request, pk=None):
+        """Resumo estatístico da propriedade"""
+        propriedade = self.get_object()
+        
+        resumo = {
+            'total_animais': propriedade.animais.filter(ativo=True).count(),
+            'animais_por_raca': list(
+                propriedade.animais.filter(ativo=True)
+                           .values('raca')
+                           .annotate(total=Count('id'))
+            ),
+            'animais_por_categoria': list(
+                propriedade.animais.filter(ativo=True)
+                           .values('categoria')
+                           .annotate(total=Count('id'))
+            ),
+            'ultimas_pesagens': RegistroPesagemSerializer(
+                RegistroPesagem.objects.filter(
+                    animal__propriedade=propriedade
+                ).select_related('animal').order_by('-data_pesagem')[:10],
+                many=True
+            ).data
+        }
+        
+        logger.info("Resumo de propriedade acessado", extra={
+            'user_id': request.user.id,
+            'propriedade_id': propriedade.id
+        })
+        
+        return Response(resumo)
 
 
 class AnimalViewSet(BaseViewSet):
+    """ViewSet ultra-otimizado para animais com performance extrema"""
     serializer_class = AnimalSerializer
-
-    # Sobrescreve o get_queryset para filtrar pela propriedade que pertence ao cliente
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = [
+        'propriedade', 'raca', 'sexo', 'categoria',
+        'status_reprodutivo', 'ativo', 'aptidao'
+    ]
+    search_fields = ['brinco', 'nome', 'observacoes']
+    ordering_fields = [
+        'data_nascimento', 'updated_at', 'brinco'
+    ]
+    ordering = ['-updated_at']
+    
     def get_queryset(self):
-        cliente = self.request.user.perfilusuario.cliente
-        return Animal.objects.filter(propriedade__cliente=cliente)
+        """
+        🚀 A OTIMIZAÇÃO MÁXIMA:
+        - select_related: Pega FKs em single query
+        - prefetch_related: Pega relações reversas otimizadas
+        - only: Seleciona apenas campos necessários (performance em larga escala)
+        """
+        return Animal.objects.select_related(
+            'propriedade',
+            'propriedade__cliente',
+            'pai',
+            'mae'
+        ).prefetch_related(
+            Prefetch(
+                'pesagens',
+                queryset=RegistroPesagem.objects.order_by('-data_pesagem')
+            ),
+            'historico_logistica'
+        ).filter(ativo=True)
+
+    def perform_create(self, serializer):
+        """Cria animal sem passar campo cliente (Animal não possui esse campo)"""
+        animal = serializer.save()
+        logger.info("Animal criado", extra={
+            'user_id': self.request.user.id,
+            'animal_id': animal.id,
+            'brinco': animal.brinco
+        })
+
+    def perform_update(self, serializer):
+        """Atualiza animal com logging"""
+        super().perform_update(serializer)
+        logger.info("Animal atualizado", extra={
+            'user_id': self.request.user.id,
+            'animal_id': serializer.instance.id
+        })
+
+    @action(detail=True, methods=['get'])
+    def genealogia(self, request, pk=None):
+        """Árvore genealógica do animal"""
+        animal = self.get_object()
+        
+        genealogia = {
+            'animal': AnimalSerializer(animal).data,
+            'pai': AnimalSerializer(animal.pai).data if animal.pai else None,
+            'mae': AnimalSerializer(animal.mae).data if animal.mae else None,
+            'filhos': AnimalSerializer(
+                Animal.objects.filter(
+                    Q(pai=animal) | Q(mae=animal),
+                    ativo=True
+                ).select_related('pai', 'mae'),
+                many=True
+            ).data
+        }
+        
+        logger.info("Genealogia acessada", extra={
+            'user_id': request.user.id,
+            'animal_id': animal.id
+        })
+        
+        return Response(genealogia)
+
+    @action(detail=True, methods=['post'])
+    def registrar_pesagem(self, request, pk=None):
+        """Registrar pesagem para o animal"""
+        animal = self.get_object()
+        serializer = RegistroPesagemSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            pesagem = serializer.save(animal=animal)
+            logger.info("Pesagem registrada", extra={
+                'user_id': request.user.id,
+                'animal_id': animal.id,
+                'peso': pesagem.peso_kg
+            })
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RegistroPesagemViewSet(BaseViewSet):
+    """ViewSet para registros de pesagem com otimizações"""
+    queryset = RegistroPesagem.objects.all()
+    serializer_class = RegistroPesagemSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['animal', 'data_pesagem']
+    ordering_fields = ['data_pesagem', 'peso_kg']
+    ordering = ['-data_pesagem']
+
+    def get_queryset(self):
+        """✅ Otimiza com select_related"""
+        return RegistroPesagem.objects.select_related(
+            'animal', 'animal__propriedade'
+        ).all()
 
     def perform_create(self, serializer):
         """
@@ -94,138 +264,231 @@ class AnimalViewSet(BaseViewSet):
 
 
 class RegistroPesagemViewSet(BaseViewSet):
+    queryset = RegistroPesagem.objects.all()
     serializer_class = RegistroPesagemSerializer
 
-    # Sobrescreve o get_queryset para filtrar pela pesagem de animal que pertence ao cliente
+    # Utiliza o get_queryset da classe base
+
+
+class PiqueteViewSet(BaseViewSet):
+    """ViewSet para gerenciamento de piquetes"""
+    serializer_class = PiqueteSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['tipo_vegetacao']
+    search_fields = ['nome', 'observacoes']
+
     def get_queryset(self):
-        cliente = self.request.user.perfilusuario.cliente
-        return RegistroPesagem.objects.filter(animal__propriedade__cliente=cliente)
+        """Filtra piquetes pela propriedade do cliente"""
+        user = getattr(self.request, 'user', None)
+        cliente = None
+
+        try:
+            if user and getattr(user, 'email', None):
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+            if cliente is None:
+                cliente = Cliente.objects.first()
+        except Exception:
+            cliente = None
+
+        if cliente is None:
+            return Piquete.objects.none()
+
+        return Piquete.objects.filter(propriedade__cliente=cliente)
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def sync_view(request):
-    """
-    Endpoint básico de sincronização em lote.
-    Recebe um JSON com 'last_server_sync' e 'changes' (create/update/delete).
-    Retorna 'server_time', 'applied' e 'server_changes'.
-    This is a minimal implementation to be extended to full conflict handling.
-    """
-    payload = request.data
-    user = request.user
-    cliente = getattr(user.perfilusuario, 'cliente', None)
+class VacinaViewSet(viewsets.ModelViewSet):
+    """ViewSet para catálogo de vacinas (global, não filtrado por cliente)"""
+    queryset = Vacina.objects.filter(ativo=True)
+    serializer_class = VacinaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['nome', 'descricao']
 
-    last_sync = payload.get('last_server_sync')
-    changes = payload.get('changes', [])
 
-    applied = []
-    conflicts = []
+class AplicacaoVacinaViewSet(BaseViewSet):
+    """ViewSet para aplicações de vacinas"""
+    serializer_class = AplicacaoVacinaSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['animal', 'vacina', 'data_aplicacao']
+    search_fields = ['vacina__nome', 'lote', 'veterinario']
+    ordering_fields = ['data_aplicacao', 'proxima_dose']
+    ordering = ['-data_aplicacao']
 
-    # Process client changes (very small subset: create/update/delete for Animal)
-    with transaction.atomic():
-        for change in changes:
-            op = change.get('op')
-            model = change.get('model')
-            data = change.get('data') or {}
-            client_id = change.get('client_id')
-            client_updated_at = change.get('updated_at')
-            try:
-                if model == 'animal':
-                    if op == 'create':
-                        # Ensure propriedade belongs to this cliente when possible
-                        prop_id = data.get('propriedade')
-                        from .models import Propriedade, Animal
-                        try:
-                            if cliente:
-                                prop = Propriedade.objects.get(id=prop_id, cliente=cliente)
-                            else:
-                                prop = Propriedade.objects.get(id=prop_id)
-                        except Propriedade.DoesNotExist:
-                            applied.append({'client_id': client_id, 'status': 'error', 'reason': 'propriedade_not_found'})
-                            continue
-                        # ensure we include propriedade id in serializer data (it is already provided)
-                        serializer = AnimalSerializer(data=data)
-                        if serializer.is_valid():
-                            obj = serializer.save()
-                            applied.append({'client_id': client_id, 'server_id': obj.id, 'status': 'ok'})
-                        else:
-                            applied.append({'client_id': client_id, 'status': 'error', 'errors': serializer.errors})
-                    elif op == 'update':
-                        from .models import Animal
-                        obj_id = change.get('id')
-                        try:
-                            if cliente:
-                                obj = Animal.objects.get(id=obj_id, propriedade__cliente=cliente)
-                            else:
-                                obj = Animal.objects.get(id=obj_id)
-                        except Animal.DoesNotExist:
-                            applied.append({'id': obj_id, 'status': 'error', 'reason': 'not_found'})
-                            continue
-                        # Conflict detection: if client sent updated_at and server has newer updated_at, report conflict
-                        server_updated = obj.updated_at
-                        if client_updated_at:
-                            try:
-                                client_dt = parse_datetime(client_updated_at)
-                            except Exception:
-                                client_dt = None
-                            if client_dt and server_updated and server_updated > client_dt:
-                                # Conflict detected: prefer server by default and return conflict info
-                                conflicts.append({
-                                    'id': obj_id,
-                                    'client_updated_at': client_updated_at,
-                                    'server_updated_at': server_updated.isoformat(),
-                                    'resolution': 'server_wins'
-                                })
-                                applied.append({'id': obj_id, 'status': 'conflict'})
-                                continue
+    def get_queryset(self):
+        """Filtra aplicações de vacina pelos animais do cliente"""
+        user = getattr(self.request, 'user', None)
+        cliente = None
 
-                        serializer = AnimalSerializer(obj, data=data, partial=True)
-                        if serializer.is_valid():
-                            serializer.save()
-                            applied.append({'id': obj_id, 'status': 'ok'})
-                        else:
-                            applied.append({'id': obj_id, 'status': 'error', 'errors': serializer.errors})
-                    elif op == 'delete':
-                        from .models import Animal
-                        obj_id = change.get('id')
-                        try:
-                            if cliente:
-                                obj = Animal.objects.get(id=obj_id, propriedade__cliente=cliente)
-                            else:
-                                obj = Animal.objects.get(id=obj_id)
-                            obj.ativo = False
-                            obj.save()
-                            applied.append({'id': obj_id, 'status': 'ok'})
-                        except Animal.DoesNotExist:
-                            applied.append({'id': obj_id, 'status': 'error', 'reason': 'not_found'})
-            except Exception as e:
-                applied.append({'client_id': client_id, 'status': 'error', 'reason': str(e)})
-    # Prepare server_changes: return animals updated after last_sync
-    server_changes = []
-    from .models import Animal
-    try:
-        server_qs = Animal.objects.filter(propriedade__cliente=cliente)
-        if last_sync:
-            last_dt = parse_datetime(last_sync)
-            if last_dt:
-                server_qs = server_qs.filter(updated_at__gt=last_dt)
+        try:
+            if user and getattr(user, 'email', None):
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+            if cliente is None:
+                cliente = Cliente.objects.first()
+        except Exception:
+            cliente = None
 
-        # limit returned changes to reasonable number to avoid huge payloads
-        for a in server_qs.order_by('updated_at')[:500]:
-            server_changes.append({
-                'op': 'update',
-                'model': 'animal',
-                'id': a.id,
-                'data': AnimalSerializer(a).data,
-                'updated_at': a.updated_at.isoformat() if a.updated_at else None,
+        if cliente is None:
+            return AplicacaoVacina.objects.none()
+
+        return AplicacaoVacina.objects.filter(
+            animal__propriedade__cliente=cliente
+        ).select_related('animal', 'vacina')
+
+
+class InformacaoGeneticaViewSet(BaseViewSet):
+    """ViewSet para informações genéticas dos animais"""
+    serializer_class = InformacaoGeneticaSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['animal__raca', 'animal__sexo']
+    search_fields = ['registro_genealogico', 'associacao_genealogica']
+
+    def get_queryset(self):
+        """Filtra informações genéticas pelos animais do cliente"""
+        user = getattr(self.request, 'user', None)
+        cliente = None
+
+        try:
+            if user and getattr(user, 'email', None):
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+            if cliente is None:
+                cliente = Cliente.objects.first()
+        except Exception:
+            cliente = None
+
+        if cliente is None:
+            return InformacaoGenetica.objects.none()
+
+        return InformacaoGenetica.objects.filter(
+            animal__propriedade__cliente=cliente
+        ).select_related('animal')
+
+
+class FichaTecnicaAnimalViewSet(BaseViewSet):
+    """ViewSet principal para fichas técnicas dos animais"""
+    serializer_class = FichaTecnicaAnimalSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = [
+        'animal__propriedade', 'animal__raca', 'animal__sexo', 'animal__categoria',
+        'piquete_atual', 'status_saude', 'vacinas_em_dia'
+    ]
+    search_fields = [
+        'animal__brinco', 'animal__nome', 'observacoes_gerais',
+        'historico_clinico', 'comportamento_piquete'
+    ]
+    ordering_fields = [
+        'animal__brinco', 'peso_atual_kg', 'gmd_diario', 'atualizado_em',
+        'proxima_vacina'
+    ]
+    ordering = ['animal__brinco']
+
+    def get_queryset(self):
+        """Filtra fichas técnicas pelos animais do cliente"""
+        user = getattr(self.request, 'user', None)
+        cliente = None
+
+        try:
+            if user and getattr(user, 'email', None):
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+            if cliente is None:
+                cliente = Cliente.objects.first()
+        except Exception:
+            cliente = None
+
+        if cliente is None:
+            return FichaTecnicaAnimal.objects.none()
+
+        return FichaTecnicaAnimal.objects.filter(
+            animal__propriedade__cliente=cliente
+        ).select_related(
+            'animal', 'animal__propriedade', 'piquete_atual'
+        ).prefetch_related(
+            'animal__pesagens',
+            'animal__aplicacoes_vacina'
+        )
+
+    @action(detail=True, methods=['post'])
+    def mover_piquete(self, request, pk=None):
+        """Move o animal para outro piquete"""
+        ficha = self.get_object()
+        piquete_id = request.data.get('piquete_id')
+
+        if not piquete_id:
+            return Response(
+                {'error': 'piquete_id é obrigatório'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            piquete = Piquete.objects.get(id=piquete_id)
+            ficha.piquete_atual = piquete
+            ficha.data_entrada_piquete = timezone.now().date()
+            ficha.save()
+
+            logger.info("Animal movido para piquete", extra={
+                'user_id': request.user.id,
+                'animal_id': ficha.animal.id,
+                'piquete_id': piquete.id
             })
-    except Exception:
-        server_changes = []
 
-    response = {
-        'server_time': timezone.now().isoformat(),
-        'applied': applied,
-        'server_changes': server_changes,
-        'conflicts': conflicts,
-    }
-    return Response(response, status=status.HTTP_200_OK)
+            return Response({'message': 'Animal movido com sucesso'})
+
+        except Piquete.DoesNotExist:
+            return Response(
+                {'error': 'Piquete não encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['post'])
+    def atualizar_saude(self, request, pk=None):
+        """Atualiza informações de saúde do animal"""
+        ficha = self.get_object()
+        status_saude = request.data.get('status_saude')
+        observacoes = request.data.get('observacoes_saude', '')
+
+        if status_saude:
+            ficha.status_saude = status_saude
+        if observacoes:
+            ficha.observacoes_saude = observacoes
+
+        ficha.save()
+
+        logger.info("Saúde do animal atualizada", extra={
+            'user_id': request.user.id,
+            'animal_id': ficha.animal.id,
+            'status_saude': status_saude
+        })
+
+        return Response({'message': 'Saúde atualizada com sucesso'})
+
+    @action(detail=True, methods=['get'])
+    def relatorio_completo(self, request, pk=None):
+        """Gera relatório completo da ficha técnica"""
+        ficha = self.get_object()
+
+        # Busca dados relacionados
+        pesagens = ficha.animal.pesagens.order_by('-data_pesagem')[:10]
+        vacinas = ficha.animal.aplicacoes_vacina.order_by('-data_aplicacao')[:5]
+        filhos = Animal.objects.filter(
+            Q(pai=ficha.animal) | Q(mae=ficha.animal),
+            ativo=True
+        )[:5]
+
+        relatorio = {
+            'ficha_tecnica': FichaTecnicaAnimalSerializer(ficha).data,
+            'historico_pesagens': RegistroPesagemSerializer(pesagens, many=True).data,
+            'historico_vacinas': AplicacaoVacinaSerializer(vacinas, many=True).data,
+            'descendentes': AnimalSerializer(filhos, many=True).data,
+            'estatisticas': {
+                'total_pesagens': ficha.animal.pesagens.count(),
+                'total_vacinas': ficha.animal.aplicacoes_vacina.count(),
+                'numero_filhos': filhos.count(),
+                'idade_meses': self.get_serializer(ficha).get_idade_meses(ficha)
+            }
+        }
+
+        logger.info("Relatório completo gerado", extra={
+            'user_id': request.user.id,
+            'animal_id': ficha.animal.id
+        })
+
+        return Response(relatorio)

@@ -14,9 +14,9 @@ class InteligenciaServicesTest(TestCase):
     def setUp(self):
         self.user = Usuario.objects.create_user(email='ia@teste.com', password='123')
         self.cliente = Cliente.objects.create(
-            perfil_usuario=self.user.perfilusuario,
             nome_empresa='Fazenda IA',
-            cpf_cnpj='11122233344455'
+            cpf_cnpj='11122233344455',
+            email_contato='ia@fazenda.com'
         )
         self.propriedade = Propriedade.objects.create(
             cliente=self.cliente, nome_propriedade='Sede IA', cidade='Campo Grande', estado='MS'
@@ -24,12 +24,12 @@ class InteligenciaServicesTest(TestCase):
         # Cria um animal na idade certa para o alerta
         data_nasc_certa = date.today() - timedelta(days=4 * 30)  # 4 meses de idade
         self.bezerro_alvo = Animal.objects.create(
-            propriedade=self.propriedade, brinco='IA-BEZERRO-01', sexo='M', data_nascimento=data_nasc_certa
+            propriedade=self.propriedade, brinco='IA-BEZERRO-01', raca='NELORE', sexo='M', data_nascimento=data_nasc_certa
         )
         # Cria um animal muito novo para o alerta
         data_nasc_errada = date.today() - timedelta(days=1 * 30)  # 1 mês de idade
         self.bezerro_novo = Animal.objects.create(
-            propriedade=self.propriedade, brinco='IA-BEZERRO-02', sexo='M', data_nascimento=data_nasc_errada
+            propriedade=self.propriedade, brinco='IA-BEZERRO-02', raca='NELORE', sexo='M', data_nascimento=data_nasc_errada
         )
 
     def test_gerar_alerta_de_vacina_para_animal_correto(self):

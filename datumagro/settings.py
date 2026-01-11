@@ -1,17 +1,45 @@
 # datumagro/settings.py
+"""
+Django settings for datumagro project.
+Production-grade configuration with global performance improvements.
+"""
 
 import os
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
+import logging.config
 
 load_dotenv()
 
+# Optional: initialize Sentry if SENTRY_DSN is provided in the environment
+try:
+    import sentry_sdk  # type: ignore
+    from sentry_sdk.integrations.django import DjangoIntegration  # type: ignore
+
+    SENTRY_DSN = os.getenv('SENTRY_DSN')
+    if SENTRY_DSN:
+        try:
+            traces_rate = float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0.0'))
+        except Exception:
+            traces_rate = 0.0
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration()],
+            traces_sample_rate=traces_rate,
+            send_default_pii=os.getenv('SENTRY_SEND_PII', 'False') == 'True'
+        )
+except ImportError:
+    # If sentry-sdk is not installed or initialization fails, continue without Sentry
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 🚀 SECURITY: Use environment variables for sensitive data
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-for-local-dev-only')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'production') == 'production' or bool(os.getenv('RENDER'))
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,10.0.2.2').split(',')
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
@@ -27,7 +55,7 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
 
-    # Libs de Terceiros
+    # 🚀 Libs de Terceiros
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -35,7 +63,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
 
-    # Nossos Apps
+    # 🎯 Nossos Apps (Todos eles)
     'datumagro.apps.usuarios.apps.UsuariosConfig',
     'datumagro.apps.core.apps.CoreConfig',
     'datumagro.apps.assinaturas.apps.AssinaturasConfig',
@@ -47,13 +75,15 @@ INSTALLED_APPS = [
     'datumagro.apps.operacional.apps.OperacionalConfig',
     'datumagro.apps.rastreabilidade.apps.RastreabilidadeConfig',
     'datumagro.apps.relatorios.apps.RelatoriosConfig',
+    'datumagro.apps.logistica.apps.LogisticaConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # CORS middleware must be high in the list (before CommonMiddleware)
-    'corsheaders.middleware.CorsMiddleware',
+    # 🚀 WhiteNoise para arquivos estáticos comprimidos
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    # 🚀 CORS primeiro na chain
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -108,9 +138,42 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# 🚀 MELHORIA DE PERFORMANCE: CACHE
+# Em produção, use Redis. Em desenvolvimento, use cache em memória.
+if IS_PRODUCTION:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "SOCKET_CONNECT_TIMEOUT": 5,
+                "SOCKET_TIMEOUT": 5,
+                "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+            },
+            "KEY_PREFIX": "datumagro",
+            "TIMEOUT": 300,  # 5 minutos padrão
+        }
+    }
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
+else:
+    # Desenvolvimento: Cache em memória
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "datumagro-cache",
+        }
+    }
+    SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
+# 🚀 CONFIGURAÇÕES DRF (Segurança + Performance)
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -120,6 +183,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_FILTER_BACKENDS': [
@@ -127,49 +193,108 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+    
+    # 🚀 RATE LIMITING (Proteção contra ataques)
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',    # Visitantes: 100 requests/hora
+        'user': '1000/hour'    # Usuários: 1000 requests/hora
+    },
+    
+    # 🚀 VALIDAÇÃO E TRATAMENTO DE ERROS
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
 }
 
-# JWT Settings
+# 🚀 CONFIGURAÇÃO JWT (Autenticação)
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
 }
 
-# CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
-CORS_ALLOW_CREDENTIALS = True
+# 🚀 LOGGING JSON PROFISSIONAL (Observabilidade)
+LOGGING_CONFIG = None
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s %(filename)s %(funcName)s %(lineno)s %(module)s %(pathname)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json' if not DEBUG else 'verbose',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 10,
+            'formatter': 'json',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'datumagro': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+})
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://10.0.2.2:8000",  # Android emulator
-]
+# 🚀 WHITENOISE CONFIG (Arquivos estáticos otimizados)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Configurações de E-mail (do .env)
+# 🚀 CONFIGURAÇÕES DE EMAIL (Notificações)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Exemplo para Gmail
-EMAIL_PORT = 587
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-# Credenciais Twilio (do .env)
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER')
-
-# FRONTEND URL usado nos e-mails de recuperação
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = 'DatumAgro <noreply@datumagro.com>'
 
 # Se não houver credenciais de email, usar backend de console para dev
 if not EMAIL_HOST_USER:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 
 # Configurações do drf-spectacular (OpenAPI / Swagger)
 SPECTACULAR_SETTINGS = {
@@ -200,3 +325,54 @@ Características principais:
     'COMPONENT_SPLIT_REQUEST': True,
     'SORT_OPERATIONS': False,
 }
+
+# 🚀 CORS Configuration
+if IS_PRODUCTION:
+    # Restringir em produção
+    CORS_ALLOWED_ORIGINS = [
+        os.getenv('FRONTEND_URL', 'https://datumagro.com'),
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+else:
+    # Desenvolvimento: Permitir todos os origins
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://10.0.2.2:8000",  # Android emulator
+        "http://10.0.2.2:8080",  # Android emulator
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Credenciais Twilio (do .env)
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER')
+
+# FRONTEND URL usado nos e-mails de recuperação
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
+# ============================================================================
+# SECURITY SETTINGS FOR PRODUCTION
+# ============================================================================
+
+if IS_PRODUCTION:
+    # HTTPS and SSL Configuration (only in production)
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+else:
+    # Development mode - less strict
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False

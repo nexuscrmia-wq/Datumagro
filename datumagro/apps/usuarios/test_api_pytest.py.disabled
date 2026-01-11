@@ -1,0 +1,245 @@
+"""
+Comprehensive test suite for DatumAgro API
+Tests authentication, CRUD operations, and synchronization
+"""
+
+import pytest
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase, APIClient
+from rest_framework import status
+from datumagro.apps.usuarios.models import Usuario
+from datumagro.apps.cadastros.models import Cliente, Propriedade, Animal
+
+User = get_user_model()
+
+
+class AuthenticationTestCase(APITestCase):
+    """Test JWT authentication endpoints"""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user_data = {
+            'email': 'test@example.com',
+            'password': 'TestPassword123!',
+            'primeiro_nome': 'Test',
+            'ultimo_nome': 'User'
+        }
+        # Create a test user
+        self.user = Usuario.objects.create_user(
+            email=self.user_data['email'],
+            password=self.user_data['password'],
+            primeiro_nome=self.user_data['primeiro_nome'],
+            ultimo_nome=self.user_data['ultimo_nome']
+        )
+
+    def test_login_success(self):
+        """Test successful login with valid credentials"""
+        response = self.client.post('/api/token/', {
+            'username': self.user_data['email'],
+            'password': self.user_data['password']
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+    def test_login_invalid_credentials(self):
+        """Test login with invalid credentials"""
+        response = self.client.post('/api/token/', {
+            'username': self.user_data['email'],
+            'password': 'WrongPassword123!'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_token_refresh(self):
+        """Test token refresh endpoint"""
+        # First get tokens
+        login_response = self.client.post('/api/token/', {
+            'username': self.user_data['email'],
+            'password': self.user_data['password']
+        }, format='json')
+
+        refresh_token = login_response.data['refresh']
+
+        # Refresh token
+        refresh_response = self.client.post('/api/token/refresh/', {
+            'refresh': refresh_token
+        }, format='json')
+
+        self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', refresh_response.data)
+
+    def test_protected_endpoint_without_token(self):
+        """Test accessing protected endpoint without token"""
+        response = self.client.get('/api/cadastros/animais/')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_protected_endpoint_with_valid_token(self):
+        """Test accessing protected endpoint with valid token"""
+        # Get token
+        login_response = self.client.post('/api/token/', {
+            'username': self.user_data['email'],
+            'password': self.user_data['password']
+        }, format='json')
+
+        token = login_response.data['access']
+
+        # Access protected endpoint
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        response = self.client.get('/api/cadastros/animais/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class UserRegistrationTestCase(APITestCase):
+    """Test user registration endpoint"""
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_register_success(self):
+        """Test successful user registration"""
+        response = self.client.post('/api/usuarios/usuarios/registrar/', {
+            'email': 'newuser@example.com',
+            'password': 'NewPassword123!',
+            'primeiro_nome': 'New',
+            'ultimo_nome': 'User'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+    def test_register_duplicate_email(self):
+        """Test registration with duplicate email"""
+        # Create first user
+        Usuario.objects.create_user(
+            email='test@example.com',
+            password='TestPassword123!',
+            primeiro_nome='Test',
+            ultimo_nome='User'
+        )
+
+        # Try to register with same email
+        response = self.client.post('/api/usuarios/usuarios/registrar/', {
+            'email': 'test@example.com',
+            'password': 'Password123!',
+            'primeiro_nome': 'Test2',
+            'ultimo_nome': 'User2'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class AnimalCRUDTestCase(APITestCase):
+    """Test CRUD operations for Animals"""
+
+    def setUp(self):
+        self.client = APIClient()
+
+        # Create test user
+        self.user = Usuario.objects.create_user(
+            email='test@example.com',
+            password='TestPassword123!',
+            primeiro_nome='Test',
+            ultimo_nome='User'
+        )
+
+        # Create test cliente
+        self.cliente = Cliente.objects.create(
+            usuario=self.user,
+            nome_empresa='Test Company',
+            cpf_cnpj='12345678901234'
+        )
+
+        # Create test propriedade
+        self.propriedade = Propriedade.objects.create(
+            cliente=self.cliente,
+            nome='Test Farm',
+            cidade='Test City'
+        )
+
+        # Get token
+        response = self.client.post('/api/token/', {
+            'username': 'test@example.com',
+            'password': 'TestPassword123!'
+        }, format='json')
+
+        self.token = response.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+
+    def test_list_animals(self):
+        """Test listing animals"""
+        response = self.client.get('/api/cadastros/animais/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('count', response.data)
+        self.assertIn('results', response.data)
+
+    def test_create_animal_success(self):
+        """Test creating an animal"""
+        response = self.client.post('/api/cadastros/animais/', {
+            'propriedade': self.propriedade.id,
+            'brinco': 'TEST-001',
+            'raca': 'NELORE',
+            'sexo': 'F',
+            'data_nascimento': '2023-01-15'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['brinco'], 'TEST-001')
+
+    def test_create_animal_invalid_data(self):
+        """Test creating animal with invalid data"""
+        response = self.client.post('/api/cadastros/animais/', {
+            'propriedade': self.propriedade.id,
+            'brinco': 'TEST-001'
+            # Missing required fields: raca, sexo
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_animal(self):
+        """Test updating an animal"""
+        # Create an animal
+        animal = Animal.objects.create(
+            propriedade=self.propriedade,
+            brinco='TEST-001',
+            raca='NELORE',
+            sexo='F'
+        )
+
+        response = self.client.put(f'/api/cadastros/animais/{animal.id}/', {
+            'propriedade': self.propriedade.id,
+            'brinco': 'TEST-001-UPDATED',
+            'raca': 'ANGUS',
+            'sexo': 'F'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['raca'], 'ANGUS')
+
+    def test_delete_animal(self):
+        """Test deleting an animal"""
+        # Create an animal
+        animal = Animal.objects.create(
+            propriedade=self.propriedade,
+            brinco='TEST-001',
+            raca='NELORE',
+            sexo='F'
+        )
+
+        response = self.client.delete(f'/api/cadastros/animais/{animal.id}/')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Verify animal was deleted
+        animal_exists = Animal.objects.filter(id=animal.id).exists()
+        self.assertFalse(animal_exists)
+
+
+if __name__ == '__main__':
+    pytest.main([__file__, '-v'])

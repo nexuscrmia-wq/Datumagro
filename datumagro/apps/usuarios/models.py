@@ -4,6 +4,13 @@ from django.utils import timezone
 from .managers import UsuarioManager
 
 
+class TipoUsuario(models.TextChoices):
+    """Tipos de usuários no sistema com permissões diferentes."""
+    PROPRIETARIO = 'proprietario', 'Proprietário'
+    GERENTE = 'gerente', 'Gerente'
+    FUNCIONARIO = 'funcionario', 'Funcionário'
+
+
 class Usuario(AbstractBaseUser, PermissionsMixin):
     """Modelo de usuário customizado usado pelo projeto."""
     email = models.EmailField('E-mail', unique=True)
@@ -14,6 +21,21 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     telefone = models.CharField('Telefone', max_length=15, blank=True, null=True)
     data_nascimento = models.DateField('Data de Nascimento', blank=True, null=True)
     foto_perfil = models.ImageField('Foto de Perfil', upload_to='perfis/', blank=True, null=True)
+
+    # Tipo de usuário e permissões
+    tipo_usuario = models.CharField(
+        'Tipo de Usuário',
+        max_length=20,
+        choices=TipoUsuario.choices,
+        default=TipoUsuario.PROPRIETARIO,
+        help_text='Define nível de acesso e permissões no sistema'
+    )
+    propriedades = models.ManyToManyField(
+        'cadastros.Propriedade',
+        blank=True,
+        related_name='usuarios_acesso',
+        help_text='Propriedades a que o funcionário tem acesso'
+    )
 
     # Controle
     is_active = models.BooleanField('Ativo', default=True)
@@ -32,13 +54,113 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['tipo_usuario']),
+            models.Index(fields=['is_active']),
+        ]
 
     def __str__(self):
         return f"{self.email}"
 
+    # Métodos para verificar tipo de usuário
+    def is_proprietario(self):
+        """Verifica se é proprietário (acesso total)."""
+        return self.tipo_usuario == TipoUsuario.PROPRIETARIO
+
+    def is_gerente(self):
+        """Verifica se é gerente (acesso parcial)."""
+        return self.tipo_usuario == TipoUsuario.GERENTE
+
+    def is_funcionario(self):
+        """Verifica se é funcionário (acesso limitado)."""
+        return self.tipo_usuario == TipoUsuario.FUNCIONARIO
+
+    def get_permissoes(self):
+        """Retorna as permissões disponíveis baseado no tipo de usuário."""
+        permissoes_por_tipo = {
+            TipoUsuario.PROPRIETARIO: {
+                'can_view_animais': True,
+                'can_edit_animais': True,
+                'can_view_propriedades': True,
+                'can_edit_propriedades': True,
+                'can_view_financeiro': True,
+                'can_edit_financeiro': True,
+                'can_view_alertas': True,
+                'can_view_vacinas': True,
+                'can_edit_vacinas': True,
+                'can_view_relatorios': True,
+                'can_manage_usuarios': True,
+                'can_manage_lotes': True,
+                'can_delete_dados': True,
+            },
+            TipoUsuario.GERENTE: {
+                'can_view_animais': True,
+                'can_edit_animais': True,
+                'can_view_propriedades': True,
+                'can_edit_propriedades': False,
+                'can_view_financeiro': True,
+                'can_edit_financeiro': False,
+                'can_view_alertas': True,
+                'can_view_vacinas': True,
+                'can_edit_vacinas': True,
+                'can_view_relatorios': True,
+                'can_manage_usuarios': False,
+                'can_manage_lotes': True,
+                'can_delete_dados': False,
+            },
+            TipoUsuario.FUNCIONARIO: {
+                'can_view_animais': True,
+                'can_edit_animais': False,
+                'can_view_propriedades': False,
+                'can_edit_propriedades': False,
+                'can_view_financeiro': False,
+                'can_edit_financeiro': False,
+                'can_view_alertas': True,
+                'can_view_vacinas': True,
+                'can_edit_vacinas': False,
+                'can_view_relatorios': False,
+                'can_manage_usuarios': False,
+                'can_manage_lotes': False,
+                'can_delete_dados': False,
+            },
+        }
+        return permissoes_por_tipo.get(self.tipo_usuario, {})
+
 
 class PerfilUsuario(models.Model):
+    """Perfil adicional do usuário com informações complementares."""
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='perfilusuario')
+    bio = models.TextField('Biografia', blank=True, default='')
+    endereco = models.CharField('Endereço', max_length=255, blank=True, default='')
+    cidade = models.CharField('Cidade', max_length=100, blank=True, default='')
+    estado = models.CharField('Estado', max_length=2, blank=True, default='')
+    cargo = models.CharField(
+        'Cargo',
+        max_length=100,
+        blank=True,
+        help_text='Cargo/posição do funcionário na propriedade'
+    )
+    setor = models.CharField(
+        'Setor',
+        max_length=100,
+        blank=True,
+        choices=[
+            ('producao', 'Produção'),
+            ('reprodução', 'Reprodução'),
+            ('sanidade', 'Sanidade'),
+            ('alimentos', 'Alimentos'),
+            ('administrativo', 'Administrativo'),
+            ('outro', 'Outro'),
+        ],
+        help_text='Setor de trabalho do funcionário'
+    )
+    data_admissao = models.DateField('Data de Admissão', blank=True, null=True)
+    ativo = models.BooleanField('Ativo', default=True)
+
+    class Meta:
+        verbose_name = 'Perfil de Usuário'
+        verbose_name_plural = 'Perfis de Usuário'
 
     def __str__(self):
         return f"Perfil de {self.usuario.email}"

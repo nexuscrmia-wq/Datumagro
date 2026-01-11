@@ -5,8 +5,22 @@ from .models import Plano, Assinatura
 
 @admin.register(Plano)
 class PlanoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'valor_base_mensal', 'limite_animais', 'hardware_incluso', 'suporte_especialista', 'ativo')
-    list_filter = ('ativo', 'hardware_incluso', 'suporte_especialista')
+    list_display = (
+        'nome',
+        'valor_base_mensal',
+        'limite_animais',
+        'max_funcionarios',
+        'acesso_importacao_internacional',
+        'hardware_incluso',
+        'suporte_especialista',
+        'ativo',
+    )
+    list_filter = (
+        'ativo',
+        'hardware_incluso',
+        'suporte_especialista',
+        'acesso_importacao_internacional',
+    )
     search_fields = ('nome', 'descricao')
     ordering = ('valor_base_mensal',)
 

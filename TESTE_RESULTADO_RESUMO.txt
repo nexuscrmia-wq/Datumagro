@@ -1,0 +1,128 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                  RESULTADO COMPLETO DOS TESTES - BACKEND                   ║
+║                         DatumAgro - 17/11/2025                             ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ESTATÍSTICAS GERAIS                                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Total de Testes Executados:        35                                   │
+│ ✅ Passou:                         3  (8.57%)                           │
+│ ❌ Falhou:                         4  (11.43%)                          │
+│ 🔴 Erro:                          28  (80%)                             │
+│ ⏱️  Tempo Total:                   6.14 segundos                         │
+│ 📊 Status Geral:                   CRÍTICO - AÇÃO NECESSÁRIA             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMAS IDENTIFICADOS                                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│ 🔴 CRÍTICO - Modelo Cliente com Argumentos Inválidos (28 testes)       │
+│    └─ Erro: TypeError: Cliente() got unexpected keyword arguments:     │
+│              'perfil_usuario'                                           │
+│    └─ Causa: Mudança na estrutura do modelo Cliente                    │
+│    └─ Afeta: 8 arquivos de teste                                        │
+│                                                                          │
+│ ⚠️  AVISO - Conexão Redis Recusada                                      │
+│    └─ Erro: Error 111 connecting to 127.0.0.1:6379                     │
+│    └─ Solução: Iniciar Redis (redis-server ou Docker)                  │
+│                                                                          │
+│ ❌ FALHA - Endpoints de Sincronização (3 testes)                       │
+│    └─ test_create_animal_via_sync (404)                                │
+│    └─ test_delete_animal_via_sync (404)                                │
+│    └─ test_update_conflict_detected (404)                              │
+│    └─ Arquivo: datumagro/apps/cadastros/tests_sync.py                 │
+│                                                                          │
+│ ❌ FALHA - Movimento de Lotes (1 teste)                                │
+│    └─ test_mover_lote_para_piquete_atualiza_status_corretamente       │
+│    └─ Arquivo: datumagro/apps/operacional/tests.py                    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ DETALHES DOS ERROS CRÍTICOS (28 TESTES)                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│ Módulo: financeiro                                                      │
+│  └─ test_get_fluxo_caixa_calcula_corretamente                          │
+│                                                                          │
+│ Módulo: integracoes                                                     │
+│  ├─ test_acesso_nao_autenticado_e_bloqueado                            │
+│  ├─ test_registrar_pesagem_automatica_com_sucesso                      │
+│  ├─ test_registrar_pesagem_com_dados_invalidos                         │
+│  └─ test_registrar_pesagem_para_animal_inexistente                     │
+│                                                                          │
+│ Módulo: inteligencia                                                    │
+│  ├─ test_gerar_alerta_de_vacina_para_animal_correto                    │
+│  └─ test_nao_gerar_alerta_para_animal_fora_da_idade                    │
+│                                                                          │
+│ Módulo: notificacoes                                                    │
+│  ├─ test_envia_notificacao_por_email_com_sucesso                       │
+│  └─ test_envia_notificacao_por_whatsapp_com_sucesso                    │
+│                                                                          │
+│ Módulo: rastreabilidade                                                 │
+│  ├─ test_geracao_de_qr_code_chama_biblioteca_correta                   │
+│  ├─ test_view_publica_acessivel                                         │
+│  └─ test_view_publica_inativa_retorna_404                              │
+│                                                                          │
+│ Módulo: relatorios                                                      │
+│  ├─ test_disparar_geracao_de_relatorio_com_sucesso                     │
+│  └─ test_lista_relatorios_view_requer_login                            │
+│                                                                          │
+│ Módulo: usuarios                                                        │
+│  └─ test_criar_novo_cliente_e_usuario_com_sucesso                      │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PLANO DE AÇÃO                                                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│ [P1] CRÍTICA - Corrigir Modelo Cliente                                 │
+│      • Verificar estrutura atual do modelo Cliente                      │
+│      • Ajustar inicialização em 8 arquivos de teste                    │
+│      • Executar: datumagro/apps/usuarios/models.py                    │
+│                                                                          │
+│ [P2] ALTA - Endpoints de Sincronização                                 │
+│      • Verificar rotas de sincronização em urls.py                      │
+│      • Confirmar que endpoints /sync/ existem                          │
+│      • Debugar testes de sincronização                                  │
+│                                                                          │
+│ [P3] MÉDIA - Movimento de Lotes                                        │
+│      • Verificar lógica em operacional/services.py                      │
+│      • Validar campo piquete_atual                                      │
+│                                                                          │
+│ [P4] RECOMENDADA - Configurar Redis                                    │
+│      • Iniciar Redis: redis-server                                      │
+│      • Ou via Docker: docker run -d -p 6379:6379 redis:latest         │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ COMANDOS ÚTEIS PARA PRÓXIMOS PASSOS                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│ # Verificar modelo Cliente                                              │
+│ $ grep -r "class Cliente" datumagro/apps/                              │
+│                                                                          │
+│ # Rodar teste específico                                               │
+│ $ python manage.py test datumagro.apps.cadastros.tests_sync \          │
+│   -v 2                                                                  │
+│                                                                          │
+│ # Rodar testes de um módulo                                            │
+│ $ python manage.py test datumagro.apps.usuarios -v 2                   │
+│                                                                          │
+│ # Iniciar Redis                                                         │
+│ $ redis-server                                                          │
+│                                                                          │
+│ # Fazer migrations                                                      │
+│ $ python manage.py migrate --run-syncdb                                │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+📄 Relatório completo: RELATORIO_TESTES_COMPLETOS.md
+🔍 Detalhes técnicos: Veja o arquivo de relatório em Markdown
+⏰ Gerado em: 17/11/2025
+✍️  Ambiente: Python 3.12.3 | Django 5.0+ | Linux
+

@@ -11,8 +11,8 @@ def mover_lote_para_piquete(lote: Lote, novo_piquete: Piquete, dias_ocupacao: in
     hoje = date.today()
 
     # 1. Libera o piquete antigo, se houver
-    if lote.piquete_atual:
-        piquete_antigo = lote.piquete_atual
+    piquete_antigo = novo_piquete.propriedade.piquetes.filter(lote_atual=lote).first()
+    if piquete_antigo:
         piquete_antigo.status = 'DESCANSANDO'
         piquete_antigo.lote_atual = None
         piquete_antigo.save()

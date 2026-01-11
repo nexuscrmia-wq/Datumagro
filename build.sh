@@ -1,12 +1,25 @@
 #!/usr/bin/env bash
-# exit on error
+# Build script for Render.com deployment
+# This script runs during the build phase on Render
+
 set -o errexit
 
-# Instala todas as dependências do requirements.txt
+echo "🔧 Starting build process for DatumAgro..."
+
+# Install dependencies
+echo "📦 Installing Python dependencies..."
 pip install -r requirements.txt
 
-# Coleta todos os arquivos estáticos para um único lugar
-python manage.py collectstatic --no-input
+# Create logs directory
+echo "📁 Creating logs directory..."
+mkdir -p logs
 
-# Aplica as migrações do banco de dados para criar/atualizar as tabelas
-python manage.py migrate
+# Collect static files
+echo "🎨 Collecting static files..."
+python manage.py collectstatic --noinput
+
+# Run migrations
+echo "🗄️  Running database migrations..."
+python manage.py migrate --noinput
+
+echo "✅ Build completed successfully!"

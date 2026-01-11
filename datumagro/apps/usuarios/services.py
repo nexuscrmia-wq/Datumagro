@@ -27,7 +27,6 @@ def criar_novo_cliente_e_usuario(
     perfil = usuario.perfilusuario
 
     cliente = Cliente.objects.create(
-        perfil_usuario=perfil,
         nome_empresa=nome_empresa,
         cpf_cnpj=cpf_cnpj,
         telefone=telefone,
