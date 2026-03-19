@@ -64,4 +64,4 @@ logs/
 .coverage.*
 coverage.xml
 htmlcov/
-.tox/
+.tox/flutter_backup/
