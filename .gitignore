@@ -1,29 +1,7 @@
-# Arquivo .gitignore
-
-# 1. Arquivos de Ambiente e Credenciais (MAIS IMPORTANTE)
-# Nunca envie suas senhas e variáveis secretas para o repositório!
-.env
-.env.*
-
-# 2. Ambiente Virtual Python
-# A pasta .venv é específica do seu computador e não deve ser versionada.
-.venv/
-venv/
-ENV/
-env/
-virtual/
-__pypackages__/
-
-# 3. Arquivos do Banco de Dados
-# O banco de dados de desenvolvimento não deve ir para o repositório.
-db.sqlite3
-db.sqlite3-journal
-
-# 4. Arquivos Temporários e Cache do Python
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 *.so
 .Python
 build/
@@ -38,30 +16,81 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
+.venv/
+venv/
+ENV/
+env/
+.env
 
-# 5. Arquivos de Configuração de Editores e IDEs
-# Ignora arquivos específicos do PyCharm, VS Code, etc.
-.idea/
+# IDE
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
+.DS_Store
+out/
 
-# 6. Arquivos Estáticos Compilados (se aplicável no futuro)
-# Se você usar ferramentas como Sass, os arquivos compilados não precisam ser versionados.
-.sass-cache/
-*.css.map
+# Flutter
+/ios
+/android
+/build
+/.dart_tool
+/.flutter-plugins
+/.flutter-plugins-dependencies
+/pubspec.lock
 
-# 7. Arquivos de Log e Cobertura de Testes
-logs/
+# Node
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+.npm/
+
+# Django
 *.log
+local_settings.py
+/media
+/staticfiles
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.bak
+*.zip
+*.tar.gz
+.temp/
+temp/
+
+# OS
+Thumbs.db
+.vagrant
+.cache/
+
+# IDE/Tool
+.pyc
+.pytest_cache/
 .coverage
-.coverage.*
-coverage.xml
 htmlcov/
-.tox/flutter_backup/
+.tox/
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+$RECYCLE.BIN/
