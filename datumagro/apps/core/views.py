@@ -70,43 +70,54 @@ def health(request):
 @permission_classes([IsAuthenticated])
 def create_cliente_for_user(request):
     """
-    Debug helper (development only): cria um Cliente e associa ao PerfilUsuario do usuário autenticado.
-    Útil para testes locais/integração (não recomendado em produção).
+    Debug / onboarding helper: cria um Cliente + Propriedade padrão e associa ao usuário.
+    Necessário para que novos Proprietários possam usar o sistema sem passar pelo admin.
     """
-    user = request.user
-    perfil = getattr(user, 'perfilusuario', None)
-    if not perfil:
-        return Response({'detail': 'Perfil do usuário não encontrado.'}, status=status.HTTP_400_BAD_REQUEST)
+    from datumagro.apps.cadastros.models import Propriedade
 
-    nome_empresa = request.data.get('nome_empresa') or f'Empresa {user.email}'
+    user = request.user
+
+    # Idempotente: se já tem um cliente via propriedade, retorna ele
+    existing = _get_cliente_for_user(user)
+    if existing:
+        return Response({'id': existing.id, 'nome_empresa': existing.nome_empresa}, status=status.HTTP_200_OK)
+
+    nome_empresa = request.data.get('nome_empresa') or f'Empresa de {user.first_name or user.email.split("@")[0]}'
     cpf_cnpj = request.data.get('cpf_cnpj') or str(uuid.uuid4())[:14]
     telefone = request.data.get('telefone') or ''
+    nome_propriedade = request.data.get('nome_propriedade') or f'Propriedade de {nome_empresa}'
 
     cliente = Cliente.objects.create(
-        perfil_usuario=perfil,
         nome_empresa=nome_empresa,
         cpf_cnpj=cpf_cnpj,
         telefone=telefone,
-        email_contato=user.email
+        email_contato=user.email,
     )
 
-    perfil.cliente = cliente
-    perfil.save()
+    # Cria uma Propriedade padrão e associa o usuário a ela
+    prop = Propriedade.objects.create(
+        cliente=cliente,
+        nome_propriedade=nome_propriedade,
+        cidade=request.data.get('cidade', ''),
+        estado=request.data.get('estado', ''),
+    )
+    user.propriedades.add(prop)
 
-    return Response({'id': cliente.id, 'nome_empresa': cliente.nome_empresa}, status=status.HTTP_201_CREATED)
+    return Response({
+        'id': cliente.id,
+        'nome_empresa': cliente.nome_empresa,
+        'propriedade_id': prop.id,
+    }, status=status.HTTP_201_CREATED)
 
 
 def _get_cliente_for_user(user):
-    """Resolve the Cliente for a given user, with fallbacks."""
-    try:
-        if hasattr(user, 'perfilusuario') and user.perfilusuario.cliente:
-            return user.perfilusuario.cliente
-    except Exception:
-        pass
-    cliente = Cliente.objects.filter(email_contato=user.email).first()
-    if cliente:
-        return cliente
-    return Cliente.objects.first()
+    """Resolve o Cliente do usuário via propriedades ou email_contato."""
+    # Caminho principal: usuário → propriedades → cliente
+    prop = user.propriedades.select_related('cliente').first()
+    if prop:
+        return prop.cliente
+    # Fallback: cliente cadastrado com o email do usuário (ex: Proprietário recém-criado)
+    return Cliente.objects.filter(email_contato=user.email).first()
 
 
 @api_view(['GET'])

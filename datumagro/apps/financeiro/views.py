@@ -175,8 +175,8 @@ class TransacaoViewSet(viewsets.ModelViewSet):
         logger.info("Transação criada", extra={
             'user_id': self.request.user.id,
             'transacao_id': instance.id,
-            'valor': instance.valor,
-            'tipo': instance.tipo
+            'valor': str(instance.valor),
+            'tipo': instance.categoria.tipo if instance.categoria_id else 'N/A',
         })
 
     def perform_update(self, serializer):

@@ -120,7 +120,7 @@ class UsuarioLoginSerializer(serializers.Serializer):
         usuario = obj.get('usuario_obj')
         if usuario:
             return [
-                {'id': p.id, 'nome': p.nome}
+                {'id': p.id, 'nome': p.nome_propriedade}
                 for p in usuario.propriedades.all()
             ] if usuario.tipo_usuario != TipoUsuario.PROPRIETARIO else []
         return []
