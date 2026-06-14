@@ -648,3 +648,140 @@ class FichaTecnicaAnimalViewSet(BaseViewSet):
 
         return Response(relatorio)
 
+
+# ─────────────────────────────────────────────
+#  ROMANEIO DE PESAGEM / CALCULADORA DE ARROBA
+# ─────────────────────────────────────────────
+
+def _calc_arroba(peso_kg: float, preco_arroba: float) -> dict:
+    """Aplica a fórmula padrão de mercado: peso vivo / 30 = arrobas."""
+    arrobas = peso_kg / 30.0
+    valor = arrobas * preco_arroba
+    return {
+        'arrobas': round(arrobas, 3),
+        'valor_rs': round(valor, 2),
+    }
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def romaneio_calcular(request):
+    """
+    POST /api/cadastros/romaneio/calcular/
+
+    Recebe lista de animais + preço da @ e devolve o resumo completo.
+    Corpo esperado:
+    {
+        "preco_arroba": 280.00,
+        "animais": [
+            {"brinco": "B001", "peso_kg": 450.0},
+            {"brinco": "B002", "peso_kg": 380.5}
+        ],
+        "nome_fazenda": "Fazenda São João",  // opcional
+        "vendedor":  "João Silva",            // opcional
+        "comprador": "Maria Souza",           // opcional
+        "gerar_pdf": false                    // se true, retorna pdf_base64
+    }
+    """
+    preco_arroba = float(request.data.get('preco_arroba', 0))
+    animais_input = request.data.get('animais', [])
+    nome_fazenda = request.data.get('nome_fazenda', '')
+    vendedor = request.data.get('vendedor', '')
+    comprador = request.data.get('comprador', '')
+    gerar_pdf = request.data.get('gerar_pdf', False)
+
+    if preco_arroba <= 0:
+        return Response({'detail': 'preco_arroba deve ser maior que zero.'}, status=400)
+    if not animais_input:
+        return Response({'detail': 'Lista de animais vazia.'}, status=400)
+
+    # Busca dados reais do banco para enriquecer (raca, categoria)
+    cliente = None
+    prop = request.user.propriedades.select_related('cliente').first()
+    if prop:
+        cliente = prop.cliente
+    if not cliente:
+        cliente = Cliente.objects.filter(email_contato=request.user.email).first()
+
+    brincos = [str(a.get('brinco', '')).strip() for a in animais_input]
+    db_animais = {}
+    if cliente:
+        qs = Animal.objects.filter(
+            propriedade__cliente=cliente,
+            brinco__in=brincos,
+            ativo=True,
+        ).values('brinco', 'raca', 'categoria', 'sexo')
+        db_animais = {a['brinco']: a for a in qs}
+
+    itens = []
+    total_peso = 0.0
+    total_arrobas = 0.0
+    total_valor = 0.0
+
+    for entry in animais_input:
+        brinco = str(entry.get('brinco', '')).strip()
+        try:
+            peso_kg = float(entry.get('peso_kg', 0))
+        except (TypeError, ValueError):
+            peso_kg = 0.0
+
+        calc = _calc_arroba(peso_kg, preco_arroba)
+        db_info = db_animais.get(brinco, {})
+
+        itens.append({
+            'brinco': brinco,
+            'raca': db_info.get('raca', entry.get('raca', '')),
+            'categoria': db_info.get('categoria', entry.get('categoria', '')),
+            'sexo': db_info.get('sexo', entry.get('sexo', '')),
+            'peso_kg': round(peso_kg, 2),
+            'arrobas': calc['arrobas'],
+            'valor_rs': calc['valor_rs'],
+        })
+
+        total_peso += peso_kg
+        total_arrobas += calc['arrobas']
+        total_valor += calc['valor_rs']
+
+    from django.utils import timezone as tz
+    agora = tz.now()
+
+    resumo = {
+        'total_animais': len(itens),
+        'total_peso_kg': round(total_peso, 2),
+        'total_arrobas': round(total_arrobas, 3),
+        'total_valor_rs': round(total_valor, 2),
+        'preco_arroba': preco_arroba,
+        'nome_fazenda': nome_fazenda,
+        'vendedor': vendedor,
+        'comprador': comprador,
+        'data_hora': agora.strftime('%d/%m/%Y %H:%M'),
+    }
+
+    payload = {'itens': itens, 'resumo': resumo}
+
+    if gerar_pdf:
+        try:
+            pdf_b64 = _gerar_pdf_romaneio(itens, resumo)
+            payload['pdf_base64'] = pdf_b64
+        except Exception as exc:
+            logger.warning("Falha ao gerar PDF do romaneio: %s", exc)
+            payload['pdf_erro'] = str(exc)
+
+    return Response(payload, status=status.HTTP_200_OK)
+
+
+def _gerar_pdf_romaneio(itens: list, resumo: dict) -> str:
+    """Gera PDF do romaneio via WeasyPrint e retorna como base64."""
+    import base64
+    from io import BytesIO
+    from django.template.loader import render_to_string
+    from weasyprint import HTML
+
+    html_str = render_to_string('cadastros/romaneio_pdf.html', {
+        'itens': itens,
+        'resumo': resumo,
+    })
+    buf = BytesIO()
+    HTML(string=html_str).write_pdf(buf)
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
+

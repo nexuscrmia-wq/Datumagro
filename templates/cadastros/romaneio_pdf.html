@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #1a1a1a; padding: 20px; }
+
+  /* Cabeçalho */
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #2e7d32; padding-bottom: 10px; margin-bottom: 16px; }
+  .header-left h1 { font-size: 20px; color: #2e7d32; font-weight: bold; }
+  .header-left h2 { font-size: 14px; color: #555; margin-top: 2px; }
+  .header-right { text-align: right; font-size: 10px; color: #555; line-height: 1.6; }
+  .badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; display: inline-block; margin-top: 4px; }
+
+  /* Bloco de partes */
+  .parties { display: flex; gap: 16px; margin-bottom: 14px; }
+  .party-box { flex: 1; border: 1px solid #c8e6c9; border-radius: 6px; padding: 8px 12px; background: #f9fbe7; }
+  .party-box label { font-size: 9px; text-transform: uppercase; color: #558b2f; font-weight: bold; letter-spacing: 0.5px; }
+  .party-box .value { font-size: 12px; font-weight: bold; color: #1b5e20; margin-top: 2px; }
+
+  /* Tabela de animais */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  thead tr { background: #2e7d32; color: white; }
+  thead th { padding: 7px 6px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  tbody tr:nth-child(even) { background: #f1f8e9; }
+  tbody tr:nth-child(odd)  { background: #ffffff; }
+  tbody td { padding: 6px; text-align: center; border-bottom: 1px solid #e8f5e9; font-size: 11px; }
+  tbody td:first-child { text-align: left; font-weight: bold; }
+  tfoot tr { background: #1b5e20; color: white; font-weight: bold; }
+  tfoot td { padding: 8px 6px; text-align: center; font-size: 12px; }
+  tfoot td:first-child { text-align: left; }
+
+  /* Resumo financeiro */
+  .summary { display: flex; gap: 12px; margin-bottom: 20px; }
+  .summary-card { flex: 1; border-radius: 8px; padding: 10px 14px; text-align: center; }
+  .summary-card.green  { background: #e8f5e9; border: 1px solid #a5d6a7; }
+  .summary-card.blue   { background: #e3f2fd; border: 1px solid #90caf9; }
+  .summary-card.orange { background: #fff3e0; border: 1px solid #ffcc80; }
+  .summary-card.dark   { background: #2e7d32; color: white; border: none; }
+  .summary-card label  { font-size: 9px; text-transform: uppercase; letter-spacing: 0.4px; display: block; opacity: 0.8; }
+  .summary-card .num   { font-size: 16px; font-weight: bold; margin-top: 4px; }
+
+  /* Assinaturas */
+  .signatures { display: flex; gap: 40px; margin-top: 10px; page-break-inside: avoid; }
+  .sig-box { flex: 1; border-top: 2px solid #333; padding-top: 6px; }
+  .sig-box .sig-label { font-size: 10px; color: #555; }
+  .sig-box .sig-name  { font-weight: bold; font-size: 12px; margin-top: 2px; }
+  .sig-box .sig-role  { font-size: 9px; color: #777; }
+
+  /* Rodapé */
+  .footer { margin-top: 16px; border-top: 1px solid #ccc; padding-top: 8px; font-size: 9px; color: #888; text-align: center; }
+
+  @page { margin: 15mm; size: A4; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>DatumAgro</h1>
+    <h2>Romaneio de Pesagem e Negociação</h2>
+    {% if resumo.nome_fazenda %}<p style="margin-top:4px;color:#2e7d32;font-weight:bold;">{{ resumo.nome_fazenda }}</p>{% endif %}
+  </div>
+  <div class="header-right">
+    <strong>Data/Hora</strong><br>{{ resumo.data_hora }}<br>
+    <span class="badge">DOCUMENTO OFICIAL</span>
+  </div>
+</div>
+
+{% if resumo.vendedor or resumo.comprador %}
+<div class="parties">
+  {% if resumo.vendedor %}
+  <div class="party-box">
+    <label>Vendedor / Produtor</label>
+    <div class="value">{{ resumo.vendedor }}</div>
+  </div>
+  {% endif %}
+  {% if resumo.comprador %}
+  <div class="party-box">
+    <label>Comprador</label>
+    <div class="value">{{ resumo.comprador }}</div>
+  </div>
+  {% endif %}
+  <div class="party-box">
+    <label>Preço da Arroba (@)</label>
+    <div class="value">R$ {{ resumo.preco_arroba|floatformat:2 }}</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Tabela de animais -->
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:left">Brinco / ID</th>
+      <th>Raça</th>
+      <th>Categoria</th>
+      <th>Peso Vivo (kg)</th>
+      <th>Arrobas (@)</th>
+      <th>Valor (R$)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in itens %}
+    <tr>
+      <td>{{ item.brinco }}</td>
+      <td>{{ item.raca|default:"–" }}</td>
+      <td>{{ item.categoria|default:"–" }}</td>
+      <td>{{ item.peso_kg|floatformat:1 }}</td>
+      <td>{{ item.arrobas|floatformat:2 }}</td>
+      <td><strong>{{ item.valor_rs|floatformat:2 }}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3">TOTAL — {{ resumo.total_animais }} ANIMAL(IS)</td>
+      <td>{{ resumo.total_peso_kg|floatformat:1 }} kg</td>
+      <td>{{ resumo.total_arrobas|floatformat:2 }} @</td>
+      <td>R$ {{ resumo.total_valor_rs|floatformat:2 }}</td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- Resumo financeiro -->
+<div class="summary">
+  <div class="summary-card green">
+    <label>Total de Animais</label>
+    <div class="num">{{ resumo.total_animais }}</div>
+  </div>
+  <div class="summary-card blue">
+    <label>Peso Total (kg)</label>
+    <div class="num">{{ resumo.total_peso_kg|floatformat:0 }} kg</div>
+  </div>
+  <div class="summary-card orange">
+    <label>Total em Arrobas</label>
+    <div class="num">{{ resumo.total_arrobas|floatformat:1 }} @</div>
+  </div>
+  <div class="summary-card dark">
+    <label>Valor Total da Negociação</label>
+    <div class="num">R$ {{ resumo.total_valor_rs|floatformat:2 }}</div>
+  </div>
+</div>
+
+<!-- Assinaturas -->
+<div class="signatures">
+  <div class="sig-box">
+    <div class="sig-name">{{ resumo.vendedor|default:"_________________________________" }}</div>
+    <div class="sig-label">Assinatura</div>
+    <div class="sig-role">Vendedor / Produtor</div>
+  </div>
+  <div class="sig-box">
+    <div class="sig-name">{{ resumo.comprador|default:"_________________________________" }}</div>
+    <div class="sig-label">Assinatura</div>
+    <div class="sig-role">Comprador</div>
+  </div>
+  <div class="sig-box">
+    <div class="sig-name">_________________________________</div>
+    <div class="sig-label">Assinatura</div>
+    <div class="sig-role">Testemunha (opcional)</div>
+  </div>
+</div>
+
+<div class="footer">
+  Documento gerado pelo sistema DatumAgro · {{ resumo.data_hora }} ·
+  Fórmula aplicada: Arrobas = Peso Vivo ÷ 30 (rendimento padrão 50% de carcaça) ·
+  Este documento tem validade jurídica quando assinado pelas partes.
+</div>
+
+</body>
+</html>

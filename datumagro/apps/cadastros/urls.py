@@ -11,6 +11,9 @@ from .views import (ClienteViewSet,
                     InformacaoGeneticaViewSet, 
                     FichaTecnicaAnimalViewSet)
 
+from django.urls import path
+from .views import romaneio_calcular
+
 app_name = 'cadastros'
 
 router = DefaultRouter()
@@ -22,4 +25,7 @@ router.register(r'piquetes', PiqueteViewSet, basename='piquete')
 router.register(r'vacinas', VacinaViewSet, basename='vacina')
 router.register(r'aplicacoes-vacina', AplicacaoVacinaViewSet, basename='aplicacao-vacina')
 router.register(r'informacoes-geneticas', InformacaoGeneticaViewSet, basename='informacao-genetica')
-urlpatterns = router.urls
+
+urlpatterns = router.urls + [
+    path('romaneio/calcular/', romaneio_calcular, name='romaneio-calcular'),
+]
