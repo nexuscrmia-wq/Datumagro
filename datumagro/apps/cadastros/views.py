@@ -655,11 +655,14 @@ class FichaTecnicaAnimalViewSet(BaseViewSet):
 
 def _calc_arroba(peso_kg: float, preco_arroba: float) -> dict:
     """Aplica a fórmula padrão de mercado: peso vivo / 30 = arrobas."""
-    arrobas = peso_kg / 30.0
-    valor = arrobas * preco_arroba
+    from decimal import Decimal, ROUND_HALF_UP
+    p = Decimal(str(peso_kg))
+    pr = Decimal(str(preco_arroba))
+    arrobas = p / Decimal('30')
+    valor = arrobas * pr
     return {
-        'arrobas': round(arrobas, 3),
-        'valor_rs': round(valor, 2),
+        'arrobas': float(arrobas.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)),
+        'valor_rs': float(valor.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
     }
 
 

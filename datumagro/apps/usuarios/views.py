@@ -153,50 +153,32 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validação de limite de funcionários do plano do cliente
+        # Resolve o cliente do proprietário via M2M (único caminho correto)
         owner = request.user
-        owner_perfil = getattr(owner, 'perfilusuario', None)
-        cliente = getattr(owner_perfil, 'cliente', None)
+        from datumagro.apps.cadastros.models import Cliente as ClienteModel
+        prop = owner.propriedades.select_related('cliente').first()
+        cliente = prop.cliente if prop else ClienteModel.objects.filter(email_contato=owner.email).first()
         if not cliente:
-            return Response({'detail': 'Cliente não associado ao proprietário. Crie/associe um cliente primeiro.'}, status=400)
+            return Response({'detail': 'Cliente não associado ao proprietário. Crie um cliente primeiro via /api/debug/create_cliente/.'}, status=400)
 
+        # Validação de limite de funcionários (apenas se plano configurado)
         assinatura = getattr(cliente, 'assinatura', None)
-        if not assinatura or not getattr(assinatura, 'plano', None):
-            return Response({'detail': 'Assinatura/plano não encontrado para o cliente.'}, status=403)
+        plano = getattr(assinatura, 'plano', None) if assinatura else None
+        if plano is not None:
+            max_func = getattr(plano, 'max_funcionarios', 0)
+            current_count = Usuario.objects.filter(
+                tipo_usuario=TipoUsuario.FUNCIONARIO,
+                propriedades__cliente=cliente
+            ).distinct().count()
+            if current_count >= max_func:
+                return Response(
+                    {'detail': f"Limite de funcionários atingido para o plano atual ({max_func})."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
-        plano = assinatura.plano
-        max_func = getattr(plano, 'max_funcionarios', 0)
-
-        # Conta funcionários já vinculados às propriedades do cliente
-        current_count = Usuario.objects.filter(
-            tipo_usuario=TipoUsuario.FUNCIONARIO,
-            propriedades__cliente=cliente
-        ).distinct().count()
-
-        if current_count >= max_func:
-            return Response(
-                {'detail': f"Limite de funcionários atingido para o plano atual ({max_func})."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # Cria o usuário e associa perfil/propriedades ao cliente do proprietário
+        # Cria o usuário e vincula às propriedades do cliente
         user = serializer.save()
-
-        # Associa o perfil do novo usuário ao mesmo cliente (em memória)
-        try:
-            perfil = getattr(user, 'perfilusuario', None)
-            if perfil:
-                perfil.cliente = cliente
-                perfil.save()
-        except Exception:
-            # Não é crítico — apenas logamos no debug se necessário
-            pass
-
-        # Copia acessos de propriedades do proprietário para o funcionário
-        try:
-            user.propriedades.set(owner.propriedades.all())
-        except Exception:
-            pass
+        user.propriedades.set(owner.propriedades.all())
 
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -287,38 +269,11 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def create_cliente(self, request):
         """
-        Dev helper: cria um Cliente e o associa ao PerfilUsuario do usuário atual.
-        Útil para testes locais.
+        Dev helper: cria Cliente + Propriedade e vincula ao usuário via M2M.
+        Delega para a view canônica em core para manter a lógica centralizada.
         """
-        from datumagro.apps.cadastros.models import Cliente
-
-        user = request.user
-        perfil = getattr(user, 'perfilusuario', None)
-        if not perfil:
-            return Response(
-                {'detail': 'Perfil do usuário não encontrado.'}, 
-                status=400
-            )
-
-        nome_empresa = request.data.get('nome_empresa') or f'Empresa {user.email}'
-        cpf_cnpj = request.data.get('cpf_cnpj') or str(uuid.uuid4())[:14]
-        telefone = request.data.get('telefone') or ''
-
-        cliente = Cliente.objects.create(
-            perfil_usuario=perfil,
-            nome_empresa=nome_empresa,
-            cpf_cnpj=cpf_cnpj,
-            telefone=telefone,
-            email_contato=user.email
-        )
-
-        perfil.cliente = cliente
-        perfil.save()
-
-        return Response({
-            'id': cliente.id, 
-            'nome_empresa': cliente.nome_empresa
-        }, status=201)
+        from datumagro.apps.core.views import create_cliente_for_user
+        return create_cliente_for_user(request._request)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):

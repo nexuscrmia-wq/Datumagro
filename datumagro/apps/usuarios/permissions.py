@@ -171,8 +171,9 @@ class IsImportacaoInternacional(BasePermission):
         if not (request.user and request.user.is_authenticated):
             return False
 
-        perfil = getattr(request.user, 'perfilusuario', None)
-        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        from datumagro.apps.cadastros.models import Cliente
+        prop = request.user.propriedades.select_related('cliente').first()
+        cliente = prop.cliente if prop else Cliente.objects.filter(email_contato=request.user.email).first()
         if not cliente:
             return False
 

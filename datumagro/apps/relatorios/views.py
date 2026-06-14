@@ -5,21 +5,21 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Relatorio
 from .serializers import RelatorioSerializer
+from datumagro.apps.usuarios.permissions import PermissaoRelatorios
 
 
 def _get_cliente(user):
     from datumagro.apps.cadastros.models import Cliente
-    perfil = getattr(user, 'perfilusuario', None)
-    cliente = getattr(perfil, 'cliente', None) if perfil else None
-    if not cliente:
-        cliente = Cliente.objects.filter(email_contato=user.email).first()
-    return cliente
+    prop = user.propriedades.select_related('cliente').first()
+    if prop:
+        return prop.cliente
+    return Cliente.objects.filter(email_contato=user.email).first()
 
 
 class RelatorioViewSet(viewsets.ModelViewSet):
     """Histórico de relatórios gerados pelo cliente."""
     serializer_class = RelatorioSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, PermissaoRelatorios]
     http_method_names = ['get', 'post', 'delete', 'head', 'options']
 
     def get_queryset(self):
