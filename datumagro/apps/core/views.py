@@ -2,16 +2,16 @@
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-# O import do 'ObjectDoesNotExist' foi REMOVIDO, pois não é mais necessário.
 from datumagro.apps.cadastros.models import Animal, Propriedade
 from datumagro.apps.assinaturas.models import Assinatura
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-import uuid
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
+import uuid
 from datumagro.apps.cadastros.models import Cliente
 
 
@@ -47,6 +47,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             ).count()
 
         return context
+
+
+from django.shortcuts import render
+
+def politica_privacidade(request):
+    """Política de Privacidade pública — obrigatória para aprovação nas lojas."""
+    return render(request, 'privacidade.html')
 
 
 @api_view(["GET"])
@@ -87,3 +94,75 @@ def create_cliente_for_user(request):
     perfil.save()
 
     return Response({'id': cliente.id, 'nome_empresa': cliente.nome_empresa}, status=status.HTTP_201_CREATED)
+
+
+def _get_cliente_for_user(user):
+    """Resolve the Cliente for a given user, with fallbacks."""
+    try:
+        if hasattr(user, 'perfilusuario') and user.perfilusuario.cliente:
+            return user.perfilusuario.cliente
+    except Exception:
+        pass
+    cliente = Cliente.objects.filter(email_contato=user.email).first()
+    if cliente:
+        return cliente
+    return Cliente.objects.first()
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_resumo(request):
+    """
+    Returns all dashboard KPIs in a single query set.
+    GET /api/dashboard/resumo/
+    """
+    from datumagro.apps.inteligencia.models import Alerta
+    from datumagro.apps.operacional.models import ManejoSanitario, RegistroReprodutivo
+    from datumagro.apps.logistica.models import Embarque
+
+    cliente = _get_cliente_for_user(request.user)
+    hoje = timezone.now().date()
+    sete_dias = hoje + timedelta(days=7)
+
+    if cliente:
+        total_animais = Animal.objects.filter(
+            propriedade__cliente=cliente, ativo=True
+        ).count()
+
+        alertas_criticos = Alerta.objects.filter(
+            cliente=cliente, status='PENDENTE'
+        ).count()
+
+        proximos_manejos = ManejoSanitario.objects.filter(
+            animal__propriedade__cliente=cliente,
+            data_aplicacao__gte=hoje,
+            data_aplicacao__lte=sete_dias,
+        ).count()
+
+        nascimentos_mes = RegistroReprodutivo.objects.filter(
+            matriz__propriedade__cliente=cliente,
+            tipo_evento='PARTO',
+            data_evento__year=hoje.year,
+            data_evento__month=hoje.month,
+        ).count()
+
+        embarques_ativos = Embarque.objects.filter(
+            status__in=['PLA', 'PRE', 'NAV', 'POR']
+        ).count()
+
+        pesagens_hoje = Animal.objects.filter(
+            propriedade__cliente=cliente,
+            pesagens__data_pesagem=hoje,
+        ).distinct().count()
+    else:
+        total_animais = alertas_criticos = proximos_manejos = 0
+        nascimentos_mes = embarques_ativos = pesagens_hoje = 0
+
+    return Response({
+        'total_animais': total_animais,
+        'alertas_criticos': alertas_criticos,
+        'proximos_manejos_7_dias': proximos_manejos,
+        'nascimentos_mes': nascimentos_mes,
+        'embarques_ativos': embarques_ativos,
+        'pesagens_hoje': pesagens_hoje,
+    })

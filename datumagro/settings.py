@@ -42,9 +42,14 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'production') == 'production' or bool(os.getenv('RENDER'))
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,10.0.2.2').split(',')
+# Render
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# Railway — adiciona o domínio público gerado automaticamente
+RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -146,19 +151,18 @@ AUTHENTICATION_BACKENDS = [
 
 # 🚀 MELHORIA DE PERFORMANCE: CACHE
 # Em produção, use Redis. Em desenvolvimento, use cache em memória.
-if IS_PRODUCTION:
+if IS_PRODUCTION and os.getenv('REDIS_URL'):
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            "LOCATION": os.getenv('REDIS_URL'),
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 "SOCKET_CONNECT_TIMEOUT": 5,
                 "SOCKET_TIMEOUT": 5,
-                "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
             },
             "KEY_PREFIX": "datumagro",
-            "TIMEOUT": 300,  # 5 minutos padrão
+            "TIMEOUT": 300,
         }
     }
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -247,28 +251,21 @@ logging.config.dictConfig({
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'json' if not DEBUG else 'verbose',
-        },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'maxBytes': 1024 * 1024 * 10,  # 10MB
-            'backupCount': 10,
-            'formatter': 'json',
+            'formatter': 'json' if IS_PRODUCTION else 'verbose',
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
         'datumagro': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
@@ -328,11 +325,10 @@ Características principais:
 
 # 🚀 CORS Configuration
 if IS_PRODUCTION:
-    # Restringir em produção
-    CORS_ALLOWED_ORIGINS = [
-        os.getenv('FRONTEND_URL', 'https://datumagro.com'),
-    ]
-    CORS_ALLOW_ALL_ORIGINS = False
+    # Apps mobile não enviam Origin header — CORS não se aplica a eles.
+    # Liberar todas as origens é seguro aqui porque a autenticação é via JWT.
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = []
 else:
     # Desenvolvimento: Permitir todos os origins
     CORS_ALLOW_ALL_ORIGINS = True
@@ -362,13 +358,16 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 # ============================================================================
 
 if IS_PRODUCTION:
-    # HTTPS and SSL Configuration (only in production)
-    SECURE_SSL_REDIRECT = True
+    # Railway/Render terminam TLS no edge e encaminham HTTP internamente.
+    # SECURE_PROXY_SSL_HEADER garante que Django saiba que a conexão original era HTTPS.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # Não redirecionar HTTP→HTTPS aqui — o proxy já faz isso.
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 else:

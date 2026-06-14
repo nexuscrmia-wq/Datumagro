@@ -1,6 +1,8 @@
+import secrets
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
+from datetime import timedelta
 from .managers import UsuarioManager
 
 
@@ -164,3 +166,64 @@ class PerfilUsuario(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.usuario.email}"
+
+
+def _gerar_codigo():
+    """6 dígitos alfanuméricos maiúsculos, sem caracteres ambíguos (0/O, 1/I)."""
+    alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    return ''.join(secrets.choice(alfabeto) for _ in range(6))
+
+
+def _gerar_token():
+    return secrets.token_urlsafe(48)
+
+
+def _expira_em():
+    return timezone.now() + timedelta(hours=48)
+
+
+class ConviteEquipe(models.Model):
+    STATUS_PENDENTE = 'PENDENTE'
+    STATUS_ACEITO = 'ACEITO'
+    STATUS_EXPIRADO = 'EXPIRADO'
+    STATUS_CANCELADO = 'CANCELADO'
+    STATUS_CHOICES = [
+        (STATUS_PENDENTE, 'Pendente'),
+        (STATUS_ACEITO, 'Aceito'),
+        (STATUS_EXPIRADO, 'Expirado'),
+        (STATUS_CANCELADO, 'Cancelado'),
+    ]
+
+    token = models.CharField(max_length=72, unique=True, default=_gerar_token)
+    codigo = models.CharField(max_length=6, unique=True, default=_gerar_codigo)
+    email = models.EmailField(blank=True, default='')
+    tipo_usuario = models.CharField(
+        max_length=20,
+        choices=TipoUsuario.choices,
+        default=TipoUsuario.FUNCIONARIO,
+    )
+    criado_por = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name='convites_criados'
+    )
+    cliente = models.ForeignKey(
+        'cadastros.Cliente', on_delete=models.CASCADE, related_name='convites'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDENTE)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    expira_em = models.DateTimeField(default=_expira_em)
+    aceito_por = models.OneToOneField(
+        Usuario, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='convite_aceito'
+    )
+
+    class Meta:
+        verbose_name = 'Convite de Equipe'
+        verbose_name_plural = 'Convites de Equipe'
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f"Convite {self.codigo} → {self.email or 'aberto'} ({self.status})"
+
+    @property
+    def is_valid(self):
+        return self.status == self.STATUS_PENDENTE and timezone.now() < self.expira_em

@@ -1,5 +1,3 @@
-# datumagro/apps/cadastros/serializers.py
-
 from rest_framework import serializers
 from .models import (Cliente, Propriedade, Animal, RegistroPesagem,
                      Piquete, Vacina, AplicacaoVacina, InformacaoGenetica, FichaTecnicaAnimal)
@@ -107,3 +105,4 @@ class FichaTecnicaAnimalSerializer(serializers.ModelSerializer):
                 'observacao': ultima.observacao
             }
         return None
+

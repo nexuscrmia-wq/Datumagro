@@ -10,6 +10,11 @@ class Relatorio(models.Model):
     TIPO_CHOICES = [
         ('PDF_DESEMPENHO_LOTE', 'PDF - Desempenho de Lote'),
         ('EXCEL_LISTA_ANIMAIS', 'Excel - Lista de Animais'),
+        ('DESEMPENHO', 'Relatório de Desempenho'),
+        ('FINANCEIRO', 'Relatório Financeiro'),
+        ('SANITARIO', 'Relatório Sanitário'),
+        ('REPRODUTIVO', 'Relatório Reprodutivo'),
+        ('PRODUCAO', 'Relatório de Produção'),
     ]
     STATUS_CHOICES = [
         ('GERANDO', 'Gerando'),

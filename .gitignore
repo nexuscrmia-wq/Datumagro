@@ -94,3 +94,11 @@ dmypy.json
 
 # Windows
 $RECYCLE.BIN/
+
+# Arquivos de análise temporários (não vão pro repo)
+ANALISE_*.md
+CHECKLIST_*.md
+DIAGRAMA_*.md
+RESUMO_*.md
+VALIDACAO_*.md
+TODO.md

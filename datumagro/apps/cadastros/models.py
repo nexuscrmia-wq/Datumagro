@@ -443,3 +443,4 @@ class FichaTecnicaAnimal(models.Model):
         self.verificar_vacinas()
 
         super().save(*args, **kwargs)
+

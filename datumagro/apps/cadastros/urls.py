@@ -1,9 +1,15 @@
 # datumagro/apps/cadastros/urls.py
 
 from rest_framework.routers import DefaultRouter
-from .views import (PropriedadeViewSet, AnimalViewSet, RegistroPesagemViewSet, ClienteViewSet,
-                    PiqueteViewSet, VacinaViewSet, AplicacaoVacinaViewSet,
-                    InformacaoGeneticaViewSet, FichaTecnicaAnimalViewSet)
+from .views import (ClienteViewSet, 
+                    PropriedadeViewSet, 
+                    AnimalViewSet, 
+                    RegistroPesagemViewSet, 
+                    PiqueteViewSet, 
+                    VacinaViewSet, 
+                    AplicacaoVacinaViewSet, 
+                    InformacaoGeneticaViewSet, 
+                    FichaTecnicaAnimalViewSet)
 
 app_name = 'cadastros'
 
@@ -16,6 +22,4 @@ router.register(r'piquetes', PiqueteViewSet, basename='piquete')
 router.register(r'vacinas', VacinaViewSet, basename='vacina')
 router.register(r'aplicacoes-vacina', AplicacaoVacinaViewSet, basename='aplicacao-vacina')
 router.register(r'informacoes-geneticas', InformacaoGeneticaViewSet, basename='informacao-genetica')
-router.register(r'fichas-tecnicas', FichaTecnicaAnimalViewSet, basename='ficha-tecnica')
-
 urlpatterns = router.urls

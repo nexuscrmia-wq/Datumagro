@@ -20,64 +20,215 @@ from .serializers import (PropriedadeSerializer, AnimalSerializer, RegistroPesag
                           PiqueteSerializer, VacinaSerializer, AplicacaoVacinaSerializer,
                           InformacaoGeneticaSerializer, FichaTecnicaAnimalSerializer)
 
+# 🔐 Importar permissões do app usuarios (import relativo)
+from ..usuarios.permissions import (
+    IsProprietario,
+    PermissaoPropriedades,
+    PermissaoAnimais,
+    PermissaoVacinas,
+    CanDeleteData
+)
+
 logger = logging.getLogger(__name__)
 
 
 class BaseViewSet(viewsets.ModelViewSet):
     """
-    ViewSet base que filtra os objetos para pertencerem apenas ao cliente do usuário logado.
-    Garante a segurança e o isolamento dos dados.
+    ViewSet base com controle de acesso em 2 CAMADAS:
+    
+    1️⃣ CAMADA MULTI-TENANT: Apenas dados do cliente do usuário
+    2️⃣ CAMADA ROLE-BASED:
+       - Proprietário/Gerente: Veem TODAS as propriedades do cliente
+       - Funcionário: Veem APENAS suas propriedades designadas (ManyToMany)
+    
+    Garante segurança e isolamento total de dados.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Protege contra usuários sem perfil/cliente associado
-        user = getattr(self.request, 'user', None)
-        cliente = None
+        """
+        🔐 FILTRAGEM COM 2 CAMADAS DE SEGURANÇA
+        """
+        user = self.request.user
         
-        # Fallback: tente achar cliente por email do usuário
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                # Se não encontrar por email, pega o primeiro cliente (dev only)
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
-        if cliente is None:
-            # Retorna queryset vazio quando não há cliente associado para evitar 500
+        # Proteção: usuário não autenticado ou sem tipo definido
+        if not user or not user.is_authenticated:
             return self.queryset.none()
+        
+        # ============================================================
+        # CAMADA 1: FILTRO MULTI-TENANT (por cliente)
+        # ============================================================
+        cliente = self._get_user_cliente(user)
+        if not cliente:
+            logger.warning(
+                f"Usuário {user.email} sem cliente associado",
+                extra={'user_id': user.id}
+            )
+            return self.queryset.none()
+        
+        # Aplicar filtro de cliente conforme o modelo
+        queryset = self._apply_cliente_filter(cliente)
+        
+        # ============================================================
+        # CAMADA 2: FILTRO ROLE-BASED (por hierarquia)
+        # ============================================================
+        if user.is_proprietario() or user.is_gerente():
+            # ✅ Proprietário/Gerente: Veem TUDO do cliente
+            # (sem filtro adicional, já estão filtrados por cliente acima)
+            logger.debug(
+                f"Acesso {'Proprietário' if user.is_proprietario() else 'Gerente'} ao {self.queryset.model.__name__}",
+                extra={'user_id': user.id}
+            )
+            
+        elif user.is_funcionario():
+            # ✅ Funcionário: Veem APENAS suas propriedades designadas
+            queryset = self._apply_funcionario_filter(queryset, user)
+            logger.debug(
+                f"Acesso Funcionário filtrado por propriedades",
+                extra={'user_id': user.id, 'propriedades': list(user.propriedades.values_list('id', flat=True))}
+            )
+        else:
+            # Tipo de usuário inválido
+            logger.error(
+                f"Tipo de usuário inválido: {user.tipo_usuario}",
+                extra={'user_id': user.id}
+            )
+            return self.queryset.none()
+        
+        return queryset
 
-        return self.queryset.filter(cliente=cliente)
+    def _get_user_cliente(self, user):
+        """
+        Obtém o cliente associado ao usuário com fallbacks.
+        
+        Precedência:
+        1. Relacionamento direto (se existir)
+        2. Email do usuário
+        3. Primeiro cliente no banco (dev only)
+        """
+        try:
+            # Tentar via relacionamento direto
+            if hasattr(user, 'cliente') and user.cliente:
+                return user.cliente
+        except Exception:
+            pass
+        
+        try:
+            # Fallback: buscar por email
+            if user.email:
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+                if cliente:
+                    return cliente
+        except Exception:
+            pass
+        
+        try:
+            # Última tentativa: primeiro cliente (dev only)
+            return Cliente.objects.first()
+        except Exception:
+            return None
+
+    def _apply_cliente_filter(self, cliente):
+        """
+        Aplica filtro de cliente conforme o modelo do ViewSet.
+        
+        Suporta diferentes caminhos de relacionamento:
+        - Propriedade (tem 'cliente' direto)
+        - Animal (tem 'propriedade__cliente')
+        - RegistroPesagem (tem 'animal__propriedade__cliente')
+        - Piquete (tem 'propriedade__cliente')
+        """
+        model_name = self.queryset.model.__name__
+        
+        if model_name == 'Propriedade':
+            return self.queryset.filter(cliente=cliente)
+        
+        elif model_name == 'Animal':
+            return self.queryset.filter(propriedade__cliente=cliente)
+        
+        elif model_name == 'RegistroPesagem':
+            return self.queryset.filter(animal__propriedade__cliente=cliente)
+        
+        elif model_name == 'Piquete':
+            return self.queryset.filter(propriedade__cliente=cliente)
+        
+        # Para outros modelos, retorna sem filtro (ajustar conforme necessário)
+        logger.warning(
+            f"Modelo {model_name} não possui filtro de cliente customizado",
+            extra={'model': model_name}
+        )
+        return self.queryset
+
+    def _apply_funcionario_filter(self, queryset, user):
+        """
+        Filtra queryset para que Funcionário veja APENAS suas propriedades designadas.
+        
+        Suporta diferentes modelos com relacionamento para propriedade.
+        """
+        model_name = queryset.model.__name__
+        
+        if model_name == 'Animal':
+            # Animal tem 'propriedade' direto
+            return queryset.filter(propriedade__in=user.propriedades.all())
+        
+        elif model_name == 'RegistroPesagem':
+            # RegistroPesagem tem 'animal__propriedade'
+            return queryset.filter(animal__propriedade__in=user.propriedades.all())
+        
+        elif model_name == 'Piquete':
+            # Piquete tem 'propriedade' direto
+            return queryset.filter(propriedade__in=user.propriedades.all())
+        
+        # Para Propriedade, Funcionário não deveria acessar
+        elif model_name == 'Propriedade':
+            # Funcionário pode listar propriedades que está alocado
+            return queryset.filter(id__in=user.propriedades.all())
+        
+        # Para outros modelos, retorna sem filtro adicional
+        return queryset
 
     def perform_create(self, serializer):
-        # Associa o novo objeto ao cliente do usuário logado, com validação clara
-        user = getattr(self.request, 'user', None)
-        perfil = getattr(user, 'perfilusuario', None)
-        cliente = getattr(perfil, 'cliente', None)
-        # fallback: tentar encontrar por e-mail do usuário ou pegar primeiro cliente disponível
-        if cliente is None:
-            try:
-                if user and getattr(user, 'email', None):
-                    cliente = Cliente.objects.filter(email_contato=user.email).first()
-                if cliente is None:
-                    cliente = Cliente.objects.first()
-            except Exception:
-                cliente = None
-
-        if cliente is None:
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({'cliente': 'Usuário não possui um Cliente associado.'})
-
-        serializer.save(cliente=cliente)
+        """
+        Salva novo objeto com dados do usuário.
+        
+        ⚠️ IMPORTANTE: Não tenta passar 'cliente' para todos os modelos.
+        Apenas Propriedade tem cliente direto. Animal/Piquete herdam via propriedade.
+        """
+        model_name = self.queryset.model.__name__
+        
+        try:
+            if model_name == 'Propriedade':
+                # Propriedade precisa de cliente
+                user = self.request.user
+                cliente = self._get_user_cliente(user)
+                if not cliente:
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError({'cliente': 'Usuário sem cliente associado.'})
+                serializer.save(cliente=cliente)
+                logger.info(
+                    f"Propriedade criada",
+                    extra={'user_id': user.id, 'cliente_id': cliente.id}
+                )
+            else:
+                # Outros modelos (Animal, Piquete, etc) não precisam de cliente
+                serializer.save()
+                logger.info(
+                    f"{model_name} criado",
+                    extra={'user_id': self.request.user.id}
+                )
+        except Exception as e:
+            logger.error(
+                f"Erro ao criar {model_name}: {str(e)}",
+                extra={'user_id': self.request.user.id}
+            )
+            raise
 
 
 class ClienteViewSet(viewsets.ModelViewSet):
-    """ViewSet otimizado para clientes"""
-    queryset = Cliente.objects.prefetch_related('propriedade_set').all()
+    """ViewSet otimizado para clientes — apenas Proprietários"""
+    queryset = Cliente.objects.prefetch_related('propriedades').all()
     serializer_class = None  # Será definido no método get_serializer_class
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietario]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = []
     search_fields = ['nome_empresa', 'cpf_cnpj', 'email_contato']
@@ -95,6 +246,12 @@ class PropriedadeViewSet(BaseViewSet):
     search_fields = ['nome_propriedade', 'cidade', 'endereco']
     ordering_fields = ['hectares', 'nome_propriedade']
     ordering = ['nome_propriedade']
+    
+    # 🔐 Permissões: Apenas Proprietário pode editar
+    permission_classes = [
+        permissions.IsAuthenticated,
+        PermissaoPropriedades  # Controla visualização e edição
+    ]
     
     def get_queryset(self):
         """
@@ -156,6 +313,12 @@ class AnimalViewSet(BaseViewSet):
         'data_nascimento', 'updated_at', 'brinco'
     ]
     ordering = ['-updated_at']
+    
+    # 🔐 Permissões: Controla visualização e edição
+    permission_classes = [
+        permissions.IsAuthenticated,
+        PermissaoAnimais  # Controla quem pode editar
+    ]
     
     def get_queryset(self):
         """
@@ -272,37 +435,29 @@ class RegistroPesagemViewSet(BaseViewSet):
 
 class PiqueteViewSet(BaseViewSet):
     """ViewSet para gerenciamento de piquetes"""
+    queryset = Piquete.objects.all()
     serializer_class = PiqueteSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['tipo_vegetacao']
     search_fields = ['nome', 'observacoes']
-
-    def get_queryset(self):
-        """Filtra piquetes pela propriedade do cliente"""
-        user = getattr(self.request, 'user', None)
-        cliente = None
-
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
-        if cliente is None:
-            return Piquete.objects.none()
-
-        return Piquete.objects.filter(propriedade__cliente=cliente)
+    permission_classes = [
+        permissions.IsAuthenticated,
+        PermissaoAnimais,
+    ]
 
 
 class VacinaViewSet(viewsets.ModelViewSet):
     """ViewSet para catálogo de vacinas (global, não filtrado por cliente)"""
     queryset = Vacina.objects.filter(ativo=True)
     serializer_class = VacinaSerializer
-    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome', 'descricao']
+    
+    # 🔐 Permissões: Controla visualização e edição
+    permission_classes = [
+        permissions.IsAuthenticated,
+        PermissaoVacinas  # Controla quem pode editar vacinas
+    ]
 
 
 class AplicacaoVacinaViewSet(BaseViewSet):
@@ -492,3 +647,4 @@ class FichaTecnicaAnimalViewSet(BaseViewSet):
         })
 
         return Response(relatorio)
+

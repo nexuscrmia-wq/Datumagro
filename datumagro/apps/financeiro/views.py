@@ -17,10 +17,11 @@ from datetime import date, timedelta
 
 from .models import Transacao, Categoria, FormaPagamento
 from .serializers import (
-    TransacaoSerializer, CategoriaSerializer, 
+    TransacaoSerializer, CategoriaSerializer,
     FormaPagamentoSerializer
 )
 from datumagro.apps.cadastros.models import Cliente
+from datumagro.apps.usuarios.permissions import PermissaoFinanceiro, CanDeleteData
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 class CategoriaViewSet(viewsets.ModelViewSet):
     """ViewSet otimizado para categorias financeiras com cache"""
     serializer_class = CategoriaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, PermissaoFinanceiro, CanDeleteData]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['tipo']
     search_fields = ['nome']
@@ -114,11 +115,11 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 class TransacaoViewSet(viewsets.ModelViewSet):
     """ViewSet otimizado para transações financeiras com cache inteligente"""
     serializer_class = TransacaoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, PermissaoFinanceiro, CanDeleteData]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['categoria', 'data']
     search_fields = ['descricao', 'observacao']
-    ordering_fields = ['data', 'valor', 'created_at']
+    ordering_fields = ['data', 'valor']
     ordering = ['-data']
 
     def get_queryset(self):
@@ -144,7 +145,7 @@ class TransacaoViewSet(viewsets.ModelViewSet):
             'categoria'
         ).filter(
             cliente=cliente
-        ).order_by('-data', '-created_at')
+        ).order_by('-data')
 
     def perform_create(self, serializer):
         # Protege contra usuários sem perfil/cliente associado
@@ -298,7 +299,7 @@ class TransacaoViewSet(viewsets.ModelViewSet):
 class FormaPagamentoViewSet(viewsets.ModelViewSet):
     """ViewSet para formas de pagamento"""
     serializer_class = FormaPagamentoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, PermissaoFinanceiro, CanDeleteData]
 
     def get_queryset(self):
         return FormaPagamento.objects.filter(usuario=self.request.user, ativo=True)
