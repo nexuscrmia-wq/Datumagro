@@ -103,3 +103,4 @@ DIAGRAMA_*.md
 RESUMO_*.md
 VALIDACAO_*.md
 TODO.md
+.github/workflows/ci.yml
