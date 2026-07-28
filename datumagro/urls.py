@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponse
 from rest_framework_simplejwt.views import TokenRefreshView
 from datumagro.apps.usuarios.views import CustomTokenObtainPairView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
@@ -15,6 +16,7 @@ from datumagro.apps.usuarios.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('ping/', lambda req: HttpResponse('pong'), name='ping'),
 
     # Página pública (obrigatória para aprovação nas lojas)
     path('privacidade/', politica_privacidade, name='politica-privacidade'),
