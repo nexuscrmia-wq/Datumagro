@@ -2,20 +2,17 @@ services:
   - type: web
     name: datumagro-web
     env: docker
-    plan: starter
+    plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
-    startCommand: gunicorn datumagro.wsgi:application --bind 0.0.0.0:8000 --workers 3
     envVars:
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: SENTRY_DSN
-        sync: false
       - key: DEBUG
         value: "False"
       - key: ENVIRONMENT
         value: production
+      - key: PORT
+        value: "8000"
