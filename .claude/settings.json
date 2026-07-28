@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb devices)",
+      "Bash(adb exec-out *)",
+      "Bash(adb logcat *)",
+      "Bash(adb reverse *)",
+      "Bash(adb kill-server)",
+      "Bash(adb start-server)",
+      "Bash(adb install *)",
+      "Bash(adb push *)",
+      "Bash(flutter build *)",
+      "Bash(flutter run *)",
+      "Bash(flutter pub *)",
+      "Bash(flutter clean)",
+      "Bash(curl -s *)",
+      "Bash(curl -s http*)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py showmigrations *)",
+      "Bash(python manage.py show_urls)",
+      "Bash(ping *)"
+    ]
+  }
+}
