@@ -240,32 +240,29 @@ class ClienteViewSet(viewsets.ModelViewSet):
 
 class PropriedadeViewSet(BaseViewSet):
     """ViewSet otimizado para propriedades com performance máxima"""
+    queryset = Propriedade.objects.all()
     serializer_class = PropriedadeSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['cliente', 'estado', 'objetivo_producao']
     search_fields = ['nome_propriedade', 'cidade', 'endereco']
     ordering_fields = ['hectares', 'nome_propriedade']
     ordering = ['nome_propriedade']
-    
+
     # 🔐 Permissões: Apenas Proprietário pode editar
     permission_classes = [
         permissions.IsAuthenticated,
         PermissaoPropriedades  # Controla visualização e edição
     ]
-    
+
     def get_queryset(self):
-        """
-        ✅ OTIMIZAÇÃO MÁXIMA: select_related + prefetch_related otimizado
-        """
-        return Propriedade.objects.select_related(
-            'cliente'
-        ).prefetch_related(
+        qs = super().get_queryset()
+        return qs.select_related('cliente').prefetch_related(
             Prefetch(
                 'animais',
                 queryset=Animal.objects.filter(ativo=True)
                          .only('id', 'brinco', 'raca', 'sexo', 'categoria', 'propriedade')
             )
-        ).all()
+        )
 
     @action(detail=True, methods=['get'])
     def resumo(self, request, pk=None):
@@ -302,32 +299,28 @@ class PropriedadeViewSet(BaseViewSet):
 
 class AnimalViewSet(BaseViewSet):
     """ViewSet ultra-otimizado para animais com performance extrema"""
+    queryset = Animal.objects.filter(ativo=True)
     serializer_class = AnimalSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = [
         'propriedade', 'raca', 'sexo', 'categoria',
-        'status_reprodutivo', 'ativo', 'aptidao'
+        'status_reprodutivo', 'ativo', 'aptidao', 'registro_genetico'
     ]
     search_fields = ['brinco', 'nome', 'observacoes']
     ordering_fields = [
         'data_nascimento', 'updated_at', 'brinco'
     ]
     ordering = ['-updated_at']
-    
+
     # 🔐 Permissões: Controla visualização e edição
     permission_classes = [
         permissions.IsAuthenticated,
         PermissaoAnimais  # Controla quem pode editar
     ]
-    
+
     def get_queryset(self):
-        """
-        🚀 A OTIMIZAÇÃO MÁXIMA:
-        - select_related: Pega FKs em single query
-        - prefetch_related: Pega relações reversas otimizadas
-        - only: Seleciona apenas campos necessários (performance em larga escala)
-        """
-        return Animal.objects.select_related(
+        qs = super().get_queryset()
+        return qs.select_related(
             'propriedade',
             'propriedade__cliente',
             'pai',
@@ -338,7 +331,7 @@ class AnimalViewSet(BaseViewSet):
                 queryset=RegistroPesagem.objects.order_by('-data_pesagem')
             ),
             'historico_logistica'
-        ).filter(ativo=True)
+        )
 
     def perform_create(self, serializer):
         """Cria animal sem passar campo cliente (Animal não possui esse campo)"""
@@ -787,4 +780,333 @@ def _gerar_pdf_romaneio(itens: list, resumo: dict) -> str:
     buf = BytesIO()
     HTML(string=html_str).write_pdf(buf)
     return base64.b64encode(buf.getvalue()).decode('utf-8')
+
+
+# ─────────────────────────────────────────────
+#  SYNC — offline-first para o Flutter
+# ─────────────────────────────────────────────
+
+def _get_user_cliente_sync(user):
+    """Resolve o cliente do usuário para o sync."""
+    prop = user.propriedades.select_related('cliente').first()
+    if prop:
+        return prop.cliente
+    return Cliente.objects.filter(email_contato=user.email).first()
+
+
+def _animal_to_sync_dict(animal):
+    """Serializa um Animal para o formato esperado pelo SyncService Flutter."""
+    return {
+        'id': animal.id,
+        'propriedade': animal.propriedade_id,
+        'brinco': animal.brinco,
+        'raca': animal.raca or '',
+        'sexo': animal.sexo or '',
+        'data_nascimento': animal.data_nascimento.isoformat() if animal.data_nascimento else None,
+        'categoria': animal.categoria or '',
+        'temperamento': animal.temperamento or '',
+        'aptidao': animal.aptidao or '',
+        'status_reprodutivo': animal.status_reprodutivo or '',
+        'is_reprodut': animal.is_reprodutor,
+        'caracteristicas_adicionais': animal.caracteristicas_adicionais or '',
+        'pai': animal.pai_id,
+        'mae': animal.mae_id,
+        'foto_perfil': animal.foto_perfil.url if animal.foto_perfil else '',
+        'ativo': animal.ativo,
+    }
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sync_offline(request):
+    """
+    POST /api/cadastros/sync/
+
+    Endpoint de sincronização offline-first para o Flutter (SyncService).
+
+    Corpo recebido:
+    {
+        "last_server_sync": "2026-01-01T00:00:00Z" | null,
+        "changes": [
+            { "op": "create|update|delete", "model": "animal",
+              "client_id": "uuid", "data": {...} }
+        ]
+    }
+
+    Resposta:
+    {
+        "applied": [{"client_id": "uuid"}],
+        "server_changes": [{"model": "animal", "data": {...}, "updated_at": "..."}]
+    }
+    """
+    cliente = _get_user_cliente_sync(request.user)
+    if not cliente:
+        return Response(
+            {'detail': 'Cliente não encontrado. Faça o onboarding primeiro.'},
+            status=400,
+        )
+
+    # Primeira propriedade do usuário — usada para criar animais offline
+    prop_default = request.user.propriedades.filter(cliente=cliente).first()
+
+    changes = request.data.get('changes', [])
+    last_sync_raw = request.data.get('last_server_sync')
+
+    applied = []
+
+    with transaction.atomic():
+        for change in changes:
+            op = change.get('op', '').lower()
+            model = change.get('model', '').lower()
+            client_id = change.get('client_id')
+            data = change.get('data', {})
+
+            if model != 'animal':
+                continue  # apenas animais por ora
+
+            try:
+                if op == 'create':
+                    if not prop_default:
+                        continue
+                    server_id = data.get('id')
+                    # Se o servidor já tem esse animal, não duplica
+                    if server_id and Animal.objects.filter(id=server_id, propriedade__cliente=cliente).exists():
+                        applied.append({'client_id': client_id})
+                        continue
+                    # Evita brinco duplicado na mesma propriedade
+                    brinco = data.get('brinco', '').strip()
+                    if not brinco or Animal.objects.filter(propriedade=prop_default, brinco=brinco).exists():
+                        applied.append({'client_id': client_id})
+                        continue
+                    Animal.objects.create(
+                        propriedade=prop_default,
+                        brinco=brinco,
+                        raca=data.get('raca', 'OUTRA'),
+                        sexo=data.get('sexo', 'M'),
+                        data_nascimento=data.get('data_nascimento') or timezone.now().date(),
+                        categoria=data.get('categoria', ''),
+                        temperamento=data.get('temperamento', ''),
+                        aptidao=data.get('aptidao', ''),
+                        status_reprodutivo=data.get('status_reprodutivo', ''),
+                        is_reprodutor=data.get('is_reprodut', False),
+                        caracteristicas_adicionais=data.get('caracteristicas_adicionais', ''),
+                        ativo=data.get('ativo', True),
+                    )
+                    applied.append({'client_id': client_id})
+
+                elif op == 'update':
+                    server_id = data.get('id')
+                    if not server_id:
+                        continue
+                    try:
+                        animal = Animal.objects.get(id=server_id, propriedade__cliente=cliente)
+                    except Animal.DoesNotExist:
+                        continue
+                    update_fields = ['raca', 'categoria', 'temperamento', 'aptidao',
+                                     'status_reprodutivo', 'is_reprodutor',
+                                     'caracteristicas_adicionais', 'ativo']
+                    for field in update_fields:
+                        src_key = 'is_reprodut' if field == 'is_reprodutor' else field
+                        if src_key in data:
+                            setattr(animal, field, data[src_key])
+                    animal.save(update_fields=update_fields)
+                    applied.append({'client_id': client_id})
+
+                elif op == 'delete':
+                    server_id = data.get('id')
+                    if not server_id:
+                        continue
+                    Animal.objects.filter(id=server_id, propriedade__cliente=cliente).update(ativo=False)
+                    applied.append({'client_id': client_id})
+
+            except Exception as exc:
+                logger.warning("sync: erro ao processar change client_id=%s: %s", client_id, exc)
+                # Não aborta o restante do batch
+
+    # Monta server_changes: animais modificados desde last_server_sync
+    qs = Animal.objects.filter(propriedade__cliente=cliente, ativo=True)
+    if last_sync_raw:
+        try:
+            last_sync_dt = parse_datetime(last_sync_raw)
+            if last_sync_dt:
+                qs = qs.filter(updated_at__gte=last_sync_dt)
+        except Exception:
+            pass
+    else:
+        # Sem data de referência: envia todos os animais do cliente
+        pass
+
+    server_changes = [
+        {
+            'model': 'animal',
+            'data': _animal_to_sync_dict(a),
+            'updated_at': a.updated_at.isoformat() if a.updated_at else None,
+        }
+        for a in qs.select_related('propriedade')[:500]  # limite de segurança
+    ]
+
+    return Response({
+        'applied': applied,
+        'server_changes': server_changes,
+    }, status=200)
+
+
+# ─────────────────────────────────────────────
+#  PESAGEM AUTOMÁTICA — integração RFID/balança
+# ─────────────────────────────────────────────
+
+def _calcular_gmd(animal, peso_novo: 'Decimal', data_nova: 'date') -> 'Decimal | None':
+    """
+    Calcula o GMD entre a pesagem anterior e a nova.
+    Retorna None se não houver pesagem anterior ou o intervalo for zero.
+    """
+    from decimal import Decimal as D
+    anterior = (
+        RegistroPesagem.objects
+        .filter(animal=animal, data_pesagem__lt=data_nova)
+        .order_by('-data_pesagem')
+        .first()
+    )
+    if not anterior:
+        return None
+    dias = (data_nova - anterior.data_pesagem).days
+    if dias <= 0:
+        return None
+    ganho = D(str(peso_novo)) - anterior.peso_kg
+    return (ganho / D(str(dias))).quantize(D('0.001'))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pesagem_automatica(request):
+    """
+    POST /api/cadastros/pesagens/automatica/
+
+    Recebe leitura de balança integrada (RFID + peso) e salva a pesagem
+    calculando o GMD automaticamente.
+
+    Corpo:
+    {
+        "brinco": "BR-001",          # brinco RFID lido pela balança
+        "peso_kg": 452.5,
+        "data_pesagem": "2026-06-17",  # opcional — usa hoje se omitido
+        "observacao": ""
+    }
+
+    Resposta:
+    {
+        "id": 42,
+        "animal": {"id": 1, "brinco": "BR-001", "raca": "NELORE"},
+        "peso_kg": "452.500",
+        "gmd_calculado": "1.050",    # null se primeira pesagem
+        "data_pesagem": "2026-06-17",
+        "alerta_gmd": false           # true se GMD caiu 2 dias seguidos
+    }
+    """
+    from decimal import Decimal as D
+
+    brinco = (request.data.get('brinco') or '').strip()
+    if not brinco:
+        return Response({'detail': 'Campo "brinco" é obrigatório.'}, status=400)
+
+    peso_raw = request.data.get('peso_kg')
+    try:
+        peso_kg = D(str(peso_raw))
+        if peso_kg <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return Response({'detail': 'Campo "peso_kg" inválido.'}, status=400)
+
+    data_str = request.data.get('data_pesagem')
+    if data_str:
+        try:
+            from django.utils.dateparse import parse_date
+            data_pesagem = parse_date(data_str)
+            if not data_pesagem:
+                raise ValueError
+        except (ValueError, TypeError):
+            return Response({'detail': 'Formato de data inválido. Use YYYY-MM-DD.'}, status=400)
+    else:
+        data_pesagem = timezone.localdate()
+
+    # Resolve o cliente via M2M (padrão da arquitetura)
+    prop = request.user.propriedades.select_related('cliente').first()
+    if not prop:
+        return Response({'detail': 'Usuário sem propriedade vinculada.'}, status=400)
+
+    try:
+        animal = Animal.objects.get(brinco=brinco, propriedade__cliente=prop.cliente, ativo=True)
+    except Animal.DoesNotExist:
+        return Response(
+            {'detail': f'Animal com brinco "{brinco}" não encontrado nesta propriedade.'},
+            status=404,
+        )
+    except Animal.MultipleObjectsReturned:
+        animal = Animal.objects.filter(
+            brinco=brinco, propriedade__cliente=prop.cliente, ativo=True
+        ).first()
+
+    gmd = _calcular_gmd(animal, peso_kg, data_pesagem)
+
+    pesagem = RegistroPesagem.objects.create(
+        animal=animal,
+        data_pesagem=data_pesagem,
+        peso_kg=peso_kg,
+        gmd_calculado=gmd,
+        origem='RFID',
+        observacao=request.data.get('observacao', ''),
+    )
+
+    # Verifica se o GMD caiu 2 pesagens seguidas → dispara alerta IA
+    alerta_gmd = False
+    if gmd is not None:
+        ultimas = (
+            RegistroPesagem.objects
+            .filter(animal=animal, gmd_calculado__isnull=False)
+            .exclude(pk=pesagem.pk)
+            .order_by('-data_pesagem')[:2]
+        )
+        gmds_anteriores = [p.gmd_calculado for p in ultimas]
+        if len(gmds_anteriores) >= 2 and all(g is not None for g in gmds_anteriores):
+            if gmd < gmds_anteriores[0] < gmds_anteriores[1]:
+                alerta_gmd = True
+                _criar_alerta_gmd_queda(animal, gmd, prop.cliente)
+
+    gmd_str = str(gmd) if gmd is not None else '0.000'
+    return Response({
+        'status': 'sucesso',
+        'id': pesagem.pk,
+        'animal': {
+            'id': animal.pk,
+            'brinco': animal.brinco,
+            'raca': animal.get_raca_display(),
+            'registro_genetico': animal.get_registro_genetico_display(),
+        },
+        'peso_kg': str(pesagem.peso_kg),
+        'peso_registrado': str(pesagem.peso_kg),   # alias legível
+        'gmd_calculado': gmd_str,
+        'gmd_diario': gmd_str,                     # alias legível
+        'data_pesagem': str(pesagem.data_pesagem),
+        'origem': 'RFID',
+        'alerta_gmd': alerta_gmd,
+    }, status=201)
+
+
+def _criar_alerta_gmd_queda(animal, gmd_atual, cliente):
+    """Cria alerta de IA quando o GMD cai por 2 pesagens consecutivas."""
+    try:
+        from datumagro.apps.inteligencia.models import Alerta
+        Alerta.objects.create(
+            cliente=cliente,
+            animal=animal,
+            tipo_alerta='DESEMPENHO',
+            mensagem=(
+                f'{animal.brinco} ({animal.get_raca_display()}) apresentou queda de GMD '
+                f'por 2 pesagens consecutivas. GMD atual: {gmd_atual:.3f} kg/dia. '
+                f'Verifique nutrição, saúde e condição corporal do animal.'
+            ),
+            status='PENDENTE',
+        )
+    except Exception as exc:
+        logger.warning('Falha ao criar alerta GMD: %s', exc)
 

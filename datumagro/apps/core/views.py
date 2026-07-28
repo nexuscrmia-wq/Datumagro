@@ -146,8 +146,8 @@ def dashboard_resumo(request):
 
         proximos_manejos = ManejoSanitario.objects.filter(
             animal__propriedade__cliente=cliente,
-            data_aplicacao__gte=hoje,
-            data_aplicacao__lte=sete_dias,
+            data__gte=hoje,
+            data__lte=sete_dias,
         ).count()
 
         nascimentos_mes = RegistroReprodutivo.objects.filter(
@@ -165,9 +165,19 @@ def dashboard_resumo(request):
             propriedade__cliente=cliente,
             pesagens__data_pesagem=hoje,
         ).distinct().count()
+
+        from datumagro.apps.cadastros.models import RegistroPesagem
+        from django.db.models import Avg
+        gmd_result = RegistroPesagem.objects.filter(
+            animal__propriedade__cliente=cliente,
+            data_pesagem=hoje,
+            gmd_calculado__isnull=False,
+        ).aggregate(media=Avg('gmd_calculado'))
+        gmd_medio_hoje = float(gmd_result['media']) if gmd_result['media'] is not None else None
     else:
         total_animais = alertas_criticos = proximos_manejos = 0
         nascimentos_mes = embarques_ativos = pesagens_hoje = 0
+        gmd_medio_hoje = None
 
     return Response({
         'total_animais': total_animais,
@@ -176,4 +186,102 @@ def dashboard_resumo(request):
         'nascimentos_mes': nascimentos_mes,
         'embarques_ativos': embarques_ativos,
         'pesagens_hoje': pesagens_hoje,
+        'gmd_medio_hoje': gmd_medio_hoje,
+    })
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def onboarding_etapa(request):
+    """
+    GET  → retorna etapa atual e status do onboarding
+    PATCH → salva dados da etapa e avança para a próxima
+    """
+    cliente = _get_cliente_for_user(request.user)
+
+    if not cliente:
+        return Response({'detail': 'Cliente não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        prop = Propriedade.objects.filter(cliente=cliente).first()
+        return Response({
+            'etapa_atual': cliente.onboarding_etapa,
+            'onboarding_completo': cliente.onboarding_completo,
+            'dados': {
+                'nome_empresa': cliente.nome_empresa,
+                'tipo_documento': cliente.tipo_documento,
+                'cpf_cnpj': cliente.cpf_cnpj,
+                'emite_nota_fiscal': cliente.emite_nota_fiscal,
+                'inscricao_estadual': cliente.inscricao_estadual,
+                'faixa_rebanho': cliente.faixa_rebanho,
+                'num_funcionarios': cliente.num_funcionarios,
+                'sistema_anterior': cliente.sistema_anterior,
+                'principal_desafio': cliente.principal_desafio,
+                'propriedade_nome': prop.nome_propriedade if prop else '',
+                'propriedade_estado': prop.estado if prop else '',
+                'propriedade_cidade': prop.cidade if prop else '',
+                'propriedade_hectares': str(prop.hectares) if prop and prop.hectares else '',
+                'tipo_operacao': prop.tipo_operacao if prop else 'CORTE',
+            }
+        })
+
+    # PATCH — salvar dados da etapa
+    data = request.data
+    etapa = data.get('etapa', cliente.onboarding_etapa)
+
+    if etapa == 2:
+        # Dados da fazenda
+        if 'nome_empresa' in data:
+            cliente.nome_empresa = data['nome_empresa']
+        if 'tipo_documento' in data:
+            cliente.tipo_documento = data['tipo_documento']
+        if 'cpf_cnpj' in data:
+            cliente.cpf_cnpj = data['cpf_cnpj']
+        if 'emite_nota_fiscal' in data:
+            cliente.emite_nota_fiscal = data['emite_nota_fiscal']
+        if 'inscricao_estadual' in data:
+            cliente.inscricao_estadual = data['inscricao_estadual']
+
+        prop = Propriedade.objects.filter(cliente=cliente).first()
+        if prop:
+            if 'propriedade_estado' in data:
+                prop.estado = data['propriedade_estado']
+            if 'propriedade_cidade' in data:
+                prop.cidade = data['propriedade_cidade']
+            if 'propriedade_hectares' in data:
+                try:
+                    prop.hectares = float(data['propriedade_hectares'])
+                except (ValueError, TypeError):
+                    pass
+            prop.save()
+
+        cliente.onboarding_etapa = max(cliente.onboarding_etapa, 3)
+
+    elif etapa == 3:
+        # Dados da operação
+        if 'faixa_rebanho' in data:
+            cliente.faixa_rebanho = data['faixa_rebanho']
+        if 'num_funcionarios' in data:
+            cliente.num_funcionarios = int(data.get('num_funcionarios', 0))
+        if 'sistema_anterior' in data:
+            cliente.sistema_anterior = data['sistema_anterior']
+
+        prop = Propriedade.objects.filter(cliente=cliente).first()
+        if prop and 'tipo_operacao' in data:
+            prop.tipo_operacao = data['tipo_operacao']
+            prop.save()
+
+        cliente.onboarding_etapa = max(cliente.onboarding_etapa, 4)
+
+    elif etapa == 4:
+        # Finalizar onboarding
+        if 'principal_desafio' in data:
+            cliente.principal_desafio = data['principal_desafio']
+        cliente.onboarding_completo = True
+        cliente.onboarding_etapa = 4
+
+    cliente.save()
+
+    return Response({
+        'etapa_atual': cliente.onboarding_etapa,
+        'onboarding_completo': cliente.onboarding_completo,
     })

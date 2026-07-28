@@ -11,11 +11,11 @@ class ProdutoSanitarioAdmin(admin.ModelAdmin):
 
 @admin.register(ManejoSanitario)
 class ManejoSanitarioAdmin(admin.ModelAdmin):
-    list_display = ('animal', 'produto', 'data_aplicacao', 'dose')
-    list_filter = ('data_aplicacao', 'produto')
-    search_fields = ('animal__brinco', 'produto__nome')
-    autocomplete_fields = ('animal', 'produto')
-    date_hierarchy = 'data_aplicacao'
+    list_display = ('animal', 'tipo', 'data', 'produto')
+    list_filter = ('tipo', 'data')
+    search_fields = ('animal__brinco', 'produto', 'descricao')
+    autocomplete_fields = ('animal',)
+    date_hierarchy = 'data'
 
 @admin.register(RegistroReprodutivo)
 class RegistroReprodutivoAdmin(admin.ModelAdmin):

@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:async';
 import '../config.dart';
 import 'animal_form.dart';
+import 'animal_detail_screen.dart';
 import 'romaneio_screen.dart';
 
 class AnimalsListScreen extends StatefulWidget {
@@ -119,8 +120,28 @@ class _AnimalsListScreenState extends State<AnimalsListScreen> {
                   itemBuilder: (context, index) {
                     final a = animals[index];
                     return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: a.sexo == 'F'
+                            ? Colors.pink.shade100
+                            : Colors.blue.shade100,
+                        child: Text(
+                          a.sexo ?? '?',
+                          style: TextStyle(
+                            color: a.sexo == 'F'
+                                ? Colors.pink.shade700
+                                : Colors.blue.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       title: Text(a.brinco),
                       subtitle: Text(a.raca ?? ''),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AnimalDetailScreen(animal: a),
+                        ),
+                      ),
                     );
                   },
                 );

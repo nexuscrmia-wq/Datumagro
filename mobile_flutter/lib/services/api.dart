@@ -170,9 +170,49 @@ class ApiService {
   }
 
   Future<bool> deleteAccount(String password) async {
+    final refresh = await _storage.read(key: 'refresh_token');
     final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/excluir-conta/');
-    final resp = await authenticatedPost(url, {'password': password});
+    final body = <String, dynamic>{'password': password};
+    if (refresh != null && refresh.isNotEmpty) body['refresh'] = refresh;
+    final resp = await authenticatedPost(url, body);
     return resp.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>?> fetchAnimalDetail(int animalId) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/cadastros/animais/$animalId/');
+    final resp = await authenticatedGet(url);
+    if (resp.statusCode == 200) return json.decode(resp.body) as Map<String, dynamic>;
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPesagens(int animalId) async {
+    final url = Uri.parse(
+        '$kApiBaseUrlEmulator/api/cadastros/pesagens/?animal=$animalId&ordering=-data_pesagem');
+    final resp = await authenticatedGet(url);
+    if (resp.statusCode == 200) {
+      final body = json.decode(resp.body);
+      final results = body is Map ? body['results'] ?? body : body;
+      return (results as List).cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<void> registrarPesagem({
+    required int animalId,
+    required double pesoKg,
+    required String data,
+    String observacoes = '',
+  }) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/cadastros/pesagens/');
+    final resp = await authenticatedPost(url, {
+      'animal': animalId,
+      'peso_kg': pesoKg,
+      'data_pesagem': data,
+      'observacoes': observacoes,
+    });
+    if (resp.statusCode != 201) {
+      throw Exception('Erro ao salvar pesagem: ${resp.statusCode}');
+    }
   }
 
   /// Perform GET with Authorization header and automatic refresh-on-401 (single retry).

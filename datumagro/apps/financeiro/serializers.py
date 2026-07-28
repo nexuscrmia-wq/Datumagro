@@ -11,45 +11,77 @@ class CategoriaSerializer(serializers.ModelSerializer):
 
 
 class TransacaoSerializer(serializers.ModelSerializer):
-    categoria_nome = serializers.CharField(source='categoria.nome', read_only=True)
-    categoria_tipo = serializers.CharField(source='categoria.tipo', read_only=True)
+    categoria_id = serializers.IntegerField(source='categoria.id', read_only=True)
 
     class Meta:
         model = Transacao
         fields = [
             'id',
+            'tipo',
+            'status',
             'descricao',
             'valor',
             'data',
             'observacao',
             'categoria',
+            'categoria_id',
             'categoria_nome',
-            'categoria_tipo',
-            'animal'
+            'animal',
         ]
+        read_only_fields = ['categoria_id']
 
-    def validate_categoria(self, value):
+    def to_internal_value(self, data):
         """
-        Validação para garantir que a categoria pertence ao mesmo cliente da transação.
+        Accept 'categoria' as either an integer PK or a string name.
+        When it's a string, store it in categoria_nome and resolve/create
+        the Categoria FK automatically.
         """
+        data = dict(data)
+
+        raw_cat = data.get('categoria')
+        if raw_cat is not None and not isinstance(raw_cat, int):
+            # String name supplied — stash it as categoria_nome and resolve FK
+            cat_name = str(raw_cat)
+            data['categoria_nome'] = cat_name
+            # Remove 'categoria' so DRF doesn't try to coerce the string to a PK
+            data.pop('categoria', None)
+
+        return super().to_internal_value(data)
+
+    def _get_cliente(self):
         from datumagro.apps.cadastros.models import Cliente
-        
         user = self.context['request'].user
-        cliente = None
-        
-        # Fallback: tente achar cliente por email do usuário
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                # Se não encontrar por email, pega o primeiro cliente (dev only)
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
+        cliente = Cliente.objects.filter(email_contato=user.email).first()
+        if cliente is None:
+            cliente = Cliente.objects.first()
+        return cliente
 
-        if value.cliente != cliente:
-            raise serializers.ValidationError("Esta categoria não pertence ao seu usuário.")
-        return value
+    def _resolve_categoria(self, validated_data):
+        """Auto-create Categoria from categoria_nome if FK not set."""
+        cat_nome = validated_data.get('categoria_nome', '')
+        if not validated_data.get('categoria') and cat_nome:
+            cliente = self._get_cliente()
+            tipo_transacao = validated_data.get('tipo', 'DESPESA')
+            cat_tipo = 'RECEITA' if tipo_transacao == 'RECEITA' else 'CUSTO'
+            if cliente:
+                cat, _ = Categoria.objects.get_or_create(
+                    cliente=cliente,
+                    nome=cat_nome,
+                    defaults={'tipo': cat_tipo},
+                )
+                validated_data['categoria'] = cat
+
+    def create(self, validated_data):
+        from datumagro.apps.cadastros.models import Cliente
+        user = self.context['request'].user
+        cliente = self._get_cliente()
+        validated_data['cliente'] = cliente
+        self._resolve_categoria(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        self._resolve_categoria(validated_data)
+        return super().update(instance, validated_data)
 
 
 from .models import FormaPagamento

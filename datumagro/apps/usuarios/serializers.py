@@ -19,16 +19,21 @@ class UsuarioSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True)
     perfilusuario = PerfilUsuarioSerializer(read_only=True)
     tipo_usuario_display = serializers.CharField(source='get_tipo_usuario_display', read_only=True)
+    nome_completo = serializers.CharField(required=False, allow_blank=True)
+    permissoes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Usuario
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name',
-            'telefone', 'data_nascimento', 'foto_perfil',
+            'nome_completo', 'telefone', 'data_nascimento', 'foto_perfil',
             'tipo_usuario', 'tipo_usuario_display',
-            'password', 'password2', 'perfilusuario',
+            'password', 'password2', 'perfilusuario', 'permissoes',
         )
         read_only_fields = ('id',)
+
+    def get_permissoes(self, obj):
+        return obj.get_permissoes()
 
     def validate(self, attrs):
         if attrs.get('password') != attrs.get('password2'):

@@ -31,11 +31,13 @@ class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         """Retorna apenas os alertas do cliente do usuário logado."""
-        perfil = getattr(self.request.user, 'perfilusuario', None)
-        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        from datumagro.apps.cadastros.models import Cliente
+        prop = self.request.user.propriedades.select_related('cliente').first()
+        cliente = prop.cliente if prop else Cliente.objects.filter(
+            email_contato=self.request.user.email).first()
         if not cliente:
             return Alerta.objects.none()
-        return Alerta.objects.filter(cliente=cliente).order_by('-created_at')
+        return Alerta.objects.filter(cliente=cliente).order_by('-data_criacao')
 
     @action(detail=True, methods=['post'])
     def marcar_como_resolvido(self, request, pk=None):
@@ -240,6 +242,71 @@ class MetricasDesempenhoView(APIView):
                 'error': str(e)
             })
             return Response({}, status=500)
+
+
+class InsightsView(APIView):
+    """Retorna insights de IA baseados nos dados da fazenda."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            from datumagro.apps.cadastros.models import Animal, RegistroPesagem
+            perfil = getattr(request.user, 'perfilusuario', None)
+            cliente = getattr(perfil, 'cliente', None) if perfil else None
+            if not cliente:
+                return Response([])
+
+            insights = []
+            from django.db.models import Avg
+            gmd = RegistroPesagem.objects.filter(
+                animal__propriedade__cliente=cliente
+            ).aggregate(media=Avg('peso'))['media']
+            if gmd:
+                insights.append({
+                    "titulo": "Peso médio do rebanho",
+                    "mensagem": f"Peso médio atual: {gmd:.1f} kg/animal",
+                    "tipo": "info",
+                    "prioridade": "baixa",
+                    "data_criacao": datetime.now().isoformat(),
+                    "resolvido": False,
+                })
+            return Response(insights)
+        except Exception as e:
+            logger.error("Erro ao gerar insights", extra={'error': str(e)})
+            return Response([])
+
+
+class RecomendacoesView(APIView):
+    """Retorna recomendações de manejo baseadas nos dados da fazenda."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            perfil = getattr(request.user, 'perfilusuario', None)
+            cliente = getattr(perfil, 'cliente', None) if perfil else None
+            if not cliente:
+                return Response([])
+
+            recomendacoes = []
+            from datumagro.apps.cadastros.models import Animal
+            sem_lote = Animal.objects.filter(
+                propriedade__cliente=cliente,
+                lote__isnull=True,
+                ativo=True
+            ).count()
+            if sem_lote > 0:
+                recomendacoes.append({
+                    "titulo": f"{sem_lote} animais sem lote",
+                    "mensagem": "Organize seus animais em lotes para melhor gestão.",
+                    "tipo": "alerta",
+                    "prioridade": "media",
+                    "data_criacao": datetime.now().isoformat(),
+                    "resolvido": False,
+                })
+            return Response(recomendacoes)
+        except Exception as e:
+            logger.error("Erro ao gerar recomendações", extra={'error': str(e)})
+            return Response([])
 
 
 @api_view(['POST'])

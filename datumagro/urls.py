@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from datumagro.apps.usuarios.views import CustomTokenObtainPairView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from datumagro.apps.core.views import (
-    health, create_cliente_for_user, dashboard_resumo, politica_privacidade
+    health, create_cliente_for_user, dashboard_resumo, politica_privacidade, onboarding_etapa
 )
 from datumagro.apps.usuarios.views import (
     equipe_membros, equipe_convidar, equipe_aceitar,
@@ -44,6 +44,7 @@ urlpatterns = [
     path('api/health/', health, name='health'),
     path('api/dashboard/resumo/', dashboard_resumo, name='dashboard-resumo'),
     path('api/debug/create_cliente/', create_cliente_for_user, name='debug-create-cliente'),
+    path('api/onboarding/etapa/', onboarding_etapa, name='onboarding-etapa'),
 
     # OpenAPI / Swagger
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

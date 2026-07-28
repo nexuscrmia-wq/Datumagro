@@ -13,14 +13,28 @@ class ProdutoSanitario(models.Model):
         return self.nome
 
 class ManejoSanitario(models.Model):
+    TIPO_CHOICES = [
+        ('VACINACAO', 'Vacinação'),
+        ('VERMIFUGACAO', 'Vermifugação'),
+        ('CARRAPATICIDA', 'Carrapaticida'),
+        ('SUPLEMENTACAO', 'Suplementação'),
+        ('OUTRO', 'Outro'),
+    ]
     animal = models.ForeignKey('cadastros.Animal', on_delete=models.CASCADE, related_name='manejos_sanitarios')
-    produto = models.ForeignKey(ProdutoSanitario, on_delete=models.PROTECT)
-    data_aplicacao = models.DateField()
-    dose = models.CharField(max_length=50, help_text="Ex: 5ml")
-    observacao = models.TextField(blank=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='VACINACAO')
+    data = models.DateField()
+    descricao = models.CharField(max_length=200, blank=True)
+    produto = models.CharField(max_length=100, blank=True)
+    dosagem = models.CharField(max_length=50, blank=True)
+    via_aplicacao = models.CharField(max_length=50, blank=True)
+    profissional = models.CharField(max_length=100, blank=True)
+    observacoes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-data']
 
     def __str__(self):
-        return f"{self.produto} em {self.animal.brinco} ({self.data_aplicacao})"
+        return f"{self.get_tipo_display()} em {self.animal.brinco} ({self.data})"
 
 class RegistroReprodutivo(models.Model):
     TIPO_EVENTO = [('COBERTURA', 'Cobertura Natural'), ('INSEMINACAO', 'Inseminação Artificial'), ('DIAGNOSTICO', 'Diagnóstico de Gestação'), ('PARTO', 'Parto')]

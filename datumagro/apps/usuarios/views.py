@@ -44,6 +44,36 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
+
+                # Garante PROPRIETARIO independente do payload recebido
+                from datumagro.apps.usuarios.models import TipoUsuario as TU
+                if user.tipo_usuario != TU.PROPRIETARIO:
+                    user.tipo_usuario = TU.PROPRIETARIO
+                    user.save(update_fields=['tipo_usuario'])
+
+                # Cria Cliente + Propriedade padrão para novos proprietários
+                from datumagro.apps.cadastros.models import Cliente, Propriedade
+                cliente_existente = user.propriedades.select_related('cliente').first()
+                if not cliente_existente:
+                    nome = user.nome_completo or user.email.split('@')[0]
+                    cliente, _ = Cliente.objects.get_or_create(
+                        email_contato=user.email,
+                        defaults={
+                            'nome_empresa': f'Fazenda de {nome}',
+                            'cpf_cnpj': str(user.id).zfill(14),
+                            'telefone': '',
+                        }
+                    )
+                    prop, _ = Propriedade.objects.get_or_create(
+                        cliente=cliente,
+                        defaults={
+                            'nome_propriedade': f'Propriedade de {nome}',
+                            'cidade': '',
+                            'estado': '',
+                        }
+                    )
+                    user.propriedades.add(prop)
+
                 refresh = RefreshToken.for_user(user)
                 return Response({
                     'user': UsuarioSerializer(user).data,
@@ -53,7 +83,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
-                {'detail': f'Erro interno do servidor: {str(e)}'}, 
+                {'detail': f'Erro interno do servidor: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -297,6 +327,9 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class PerfilUsuarioView(RetrieveUpdateAPIView):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -557,14 +590,30 @@ def equipe_permissoes(request, pk):
 @pc([IsAuthenticated])
 def excluir_conta(request):
     """
-    Anonimiza e desativa a conta do usuário autenticado.
-    Body: { "password": "senha_atual" }
+    Anonimiza e desativa a conta do usuário autenticado (LGPD + Apple App Store).
+
+    Body: { "password": "senha_atual", "refresh": "refresh_token_opcional" }
+
+    O refresh token, quando enviado, é inserido na blacklist do simplejwt para
+    invalidação imediata. O access token expira em até 15 min (ACCESS_TOKEN_LIFETIME).
+    O is_active=False bloqueia qualquer uso do access token antes disso.
     """
     password = request.data.get('password', '')
     if not request.user.check_password(password):
         return Response({'detail': 'Senha incorreta.'}, status=400)
 
     user = request.user
+
+    # Blacklist do refresh token para invalidação imediata (B-05)
+    refresh_token = request.data.get('refresh', '').strip()
+    if refresh_token:
+        try:
+            from rest_framework_simplejwt.tokens import RefreshToken as RT
+            token = RT(refresh_token)
+            token.blacklist()
+        except Exception:
+            pass  # Token inválido ou já blacklistado — não bloqueia a exclusão
+
     # Anonimiza dados pessoais (LGPD art. 18)
     import hashlib
     anon_suffix = hashlib.sha256(user.email.encode()).hexdigest()[:12]
@@ -574,7 +623,7 @@ def excluir_conta(request):
     user.last_name = ''
     user.telefone = None
     user.foto_perfil = None
-    user.is_active = False
+    user.is_active = False  # bloqueia todos os tokens ativos via simplejwt
     user.set_unusable_password()
     user.save()
     user.propriedades.clear()

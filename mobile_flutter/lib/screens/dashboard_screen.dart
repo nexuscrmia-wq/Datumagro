@@ -166,6 +166,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
 
+        const SizedBox(height: 16),
+
+        // Card GMD em destaque
+        _GmdCard(gmdMedioHoje: kpis['gmd_medio_hoje'] as double?),
+
         const SizedBox(height: 20),
         const Text('Visão Geral',
             style: TextStyle(
@@ -249,6 +254,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _GmdCard extends StatelessWidget {
+  final double? gmdMedioHoje;
+
+  const _GmdCard({this.gmdMedioHoje});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasData = gmdMedioHoje != null;
+    final isPositive = (gmdMedioHoje ?? 0) >= 0;
+    final color = hasData
+        ? (isPositive ? const Color(0xFF2E7D32) : const Color(0xFFB71C1C))
+        : const Color(0xFF546E7A);
+    final sign = hasData && isPositive ? '+' : '';
+    final valueText = hasData
+        ? '$sign${gmdMedioHoje!.toStringAsFixed(2)} kg/dia'
+        : '—';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.trending_up, color: color, size: 26),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'GMD Médio Hoje',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3),
+              ),
+              Text(
+                valueText,
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: color),
+              ),
+            ],
+          ),
+          const Spacer(),
+          if (!hasData)
+            Text('Sem pesagens\nhoje',
+                style: TextStyle(fontSize: 11, color: color),
+                textAlign: TextAlign.right),
+        ],
+      ),
     );
   }
 }

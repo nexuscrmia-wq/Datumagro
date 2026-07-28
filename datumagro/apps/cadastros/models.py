@@ -7,11 +7,25 @@ class Cliente(models.Model):
     Representa o cliente pagante do sistema, a "conta" principal.
     A conexão com o usuário de login é feita a partir do modelo PerfilUsuario.
     """
+    FAIXA_REBANHO_CHOICES = [
+        ('1-50', '1 a 50'), ('51-200', '51 a 200'), ('201-500', '201 a 500'),
+        ('501-1000', '501 a 1000'), ('1000+', 'Acima de 1000'),
+    ]
+
     nome_empresa = models.CharField(max_length=255)
     cpf_cnpj = models.CharField(max_length=18, unique=True)
+    tipo_documento = models.CharField(max_length=4, choices=[('CPF', 'CPF'), ('CNPJ', 'CNPJ')], default='CPF')
     telefone = models.CharField(max_length=20, blank=True)
     email_contato = models.EmailField(unique=True)
     data_cadastro = models.DateTimeField(auto_now_add=True)
+    emite_nota_fiscal = models.BooleanField(default=False)
+    inscricao_estadual = models.CharField(max_length=20, blank=True)
+    faixa_rebanho = models.CharField(max_length=20, choices=FAIXA_REBANHO_CHOICES, blank=True)
+    num_funcionarios = models.IntegerField(default=0)
+    sistema_anterior = models.CharField(max_length=50, blank=True)
+    principal_desafio = models.CharField(max_length=50, blank=True)
+    onboarding_completo = models.BooleanField(default=False)
+    onboarding_etapa = models.IntegerField(default=1)
 
     class Meta:
         verbose_name = "Cliente"
@@ -29,6 +43,7 @@ class Propriedade(models.Model):
     OBJETIVO_CHOICES = [('CRIA', 'Cria'), ('RECRIA', 'Recria'), ('ENGORDA', 'Engorda')]
     TIPO_SOLO_CHOICES = [('ARENOSO', 'Arenoso'), ('ARGILOSO', 'Argiloso'), ('MISTO', 'Misto')]
     TOPOGRAFIA_CHOICES = [('PLANO', 'Plano'), ('ONDULADO', 'Ondulado'), ('MONTANHOSO', 'Montanhoso')]
+    TIPO_OPERACAO_CHOICES = [('CORTE', 'Corte'), ('LEITE', 'Leite'), ('MISTO', 'Misto')]
 
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='propriedades')
     nome_propriedade = models.CharField(max_length=255)
@@ -37,6 +52,7 @@ class Propriedade(models.Model):
     estado = models.CharField(max_length=2)  # UF
     cep = models.CharField(max_length=9, blank=True)
     hectares = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    tipo_operacao = models.CharField(max_length=20, choices=TIPO_OPERACAO_CHOICES, default='CORTE')
 
     objetivo_producao = models.CharField(max_length=10, choices=OBJETIVO_CHOICES, null=True, blank=True)
     tipo_solo = models.CharField(max_length=10, choices=TIPO_SOLO_CHOICES, null=True, blank=True)
@@ -74,13 +90,19 @@ class Animal(models.Model):
     APTIDAO_CHOICES = [('CORTE', 'Corte'), ('LEITE', 'Leite'), ('DUPLA', 'Dupla Aptidão')]
     STATUS_REPRODUTIVO_CHOICES = [('VAZIA', 'Vazia'), ('PRENHA', 'Prenha'), ('LACTANTE', 'Em Lactação'),
                                   ('SECA', 'Seca')]
+    REGISTRO_GENETICO_CHOICES = [
+        ('PO', 'Puro de Origem (PO)'),
+        ('PC', 'Puro por Cruza (PC)'),
+        ('PA', 'Puro por Absorção (PA)'),
+        ('COM', 'Comercial (sem registro)'),
+    ]
 
     # --- DEFINIÇÃO DOS CAMPOS ---
     propriedade = models.ForeignKey(Propriedade, on_delete=models.CASCADE, related_name='animais')
     brinco = models.CharField(max_length=50, help_text="Identificação única do animal.")
     raca = models.CharField(max_length=100, choices=RACA_CHOICES)
     sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
-    data_nascimento = models.DateField()
+    data_nascimento = models.DateField(null=True, blank=True)
 
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, blank=True)
     temperamento = models.CharField(max_length=20, choices=TEMPERAMENTO_CHOICES, blank=True)
@@ -88,6 +110,10 @@ class Animal(models.Model):
     status_reprodutivo = models.CharField(max_length=10, choices=STATUS_REPRODUTIVO_CHOICES, blank=True,
                                           help_text="Apenas para fêmeas em idade reprodutiva.")
     is_reprodutor = models.BooleanField(default=False, help_text="Marque se este macho é um reprodutor (touro).")
+    registro_genetico = models.CharField(
+        max_length=3, choices=REGISTRO_GENETICO_CHOICES, default='COM', blank=True,
+        help_text="Classificação genética do animal conforme associação de raça."
+    )
 
     caracteristicas_adicionais = models.TextField(blank=True,
                                                   help_text="Descreva outros comportamentos ou características físicas.")
@@ -188,6 +214,15 @@ class RegistroPesagem(models.Model):
     animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name='pesagens')
     data_pesagem = models.DateField()
     peso_kg = models.DecimalField(max_digits=7, decimal_places=2)
+    gmd_calculado = models.DecimalField(
+        max_digits=6, decimal_places=3, null=True, blank=True,
+        help_text="GMD calculado automaticamente em relação à pesagem anterior (kg/dia)."
+    )
+    origem = models.CharField(
+        max_length=10,
+        choices=[('MANUAL', 'Manual'), ('RFID', 'Balança RFID')],
+        default='MANUAL',
+    )
     observacao = models.TextField(blank=True)
 
     class Meta:

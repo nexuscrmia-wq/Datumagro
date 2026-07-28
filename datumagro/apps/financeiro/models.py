@@ -35,16 +35,31 @@ class Transacao(models.Model):
     """
     Representa uma transação financeira individual, seja um custo ou uma receita.
     """
+    TIPO_CHOICES = [
+        ('RECEITA', 'Receita'),
+        ('DESPESA', 'Despesa'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDENTE', 'Pendente'),
+        ('PAGO', 'Pago'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+
     cliente = models.ForeignKey(
         'cadastros.Cliente',
         on_delete=models.CASCADE,
         related_name='transacoes'
     )
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='DESPESA')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDENTE')
     categoria = models.ForeignKey(
         Categoria,
-        on_delete=models.PROTECT,  # Impede a exclusão de categoria com transações
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='transacoes'
     )
+    categoria_nome = models.CharField(max_length=100, blank=True, default='')
     descricao = models.CharField(max_length=255)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     data = models.DateField()

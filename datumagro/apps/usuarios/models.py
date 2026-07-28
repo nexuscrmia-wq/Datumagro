@@ -114,7 +114,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             TipoUsuario.FUNCIONARIO: {
                 'can_view_animais': True,
                 'can_edit_animais': False,
-                'can_view_propriedades': False,
+                'can_view_propriedades': True,  # vê apenas as suas (filtrado no get_queryset)
                 'can_edit_propriedades': False,
                 'can_view_financeiro': False,
                 'can_edit_financeiro': False,
