@@ -34,6 +34,9 @@ urlpatterns = [
     path('api/logistica/', include('datumagro.apps.logistica.urls')),
     path('api/operacional/', include('datumagro.apps.operacional.urls')),
     path('api/relatorios/', include('datumagro.apps.relatorios.urls', namespace='relatorios')),
+    path('api/assinaturas/', include('datumagro.apps.assinaturas.urls', namespace='assinaturas')),
+    path('api/notificacoes/', include('datumagro.apps.notificacoes.urls', namespace='notificacoes')),
+    path('api/rastreabilidade/', include('datumagro.apps.rastreabilidade.urls', namespace='rastreabilidade')),
 
     # Equipe / convites
     path('api/equipe/membros/', equipe_membros, name='equipe-membros'),
