@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -399,6 +400,38 @@
     .foot-inner a { text-decoration: none; transition: color .15s; }
     .foot-inner a:hover { color: var(--tag-gold); }
 
+    /* ── LOGO / BRAND ── */
+    .nav-logo {
+      width: 36px; height: 36px; border-radius: 50%;
+      object-fit: cover; object-position: center 10%;
+      border: 1.5px solid rgba(201,162,39,0.4);
+      flex-shrink: 0;
+    }
+    .hero-brand-row {
+      display: flex; align-items: center; gap: 18px;
+      margin-bottom: 24px;
+    }
+    .hero-brand-img {
+      width: 76px; height: 76px; border-radius: 50%;
+      object-fit: cover; object-position: center 10%;
+      border: 2px solid rgba(201,162,39,0.45);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+      flex-shrink: 0;
+    }
+    .hero-brand-text { line-height: 1.1; }
+    .hero-brand-text .hb-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.7rem; font-weight: 700;
+      color: #f3efe4; letter-spacing: -0.02em;
+    }
+    .hero-brand-text .hb-name span { color: var(--tag-gold); }
+    .hero-brand-text .hb-by {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.67rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #7a9a85;
+      margin-top: 3px; display: block;
+    }
+
     /* ── REVEAL ── */
     .reveal {
       opacity: 0; transform: translateY(20px);
@@ -412,7 +445,10 @@
 <!-- NAV -->
 <header class="nav">
   <div class="nav-inner">
-    <div class="brand">Datum<span class="tag">Agro</span></div>
+    <div class="brand" style="display:flex;align-items:center;gap:10px;">
+      <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="DatumAgro ícone" class="nav-logo">
+      Datum<span class="tag">Agro</span>
+    </div>
     <nav class="nav-links">
       <a href="#como-funciona">Como funciona</a>
       <a href="#funcionalidades">Funcionalidades</a>
@@ -439,6 +475,13 @@
 
     <!-- Text column -->
     <div>
+      <div class="hero-brand-row">
+        <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="DatumAgro logo" class="hero-brand-img">
+        <div class="hero-brand-text">
+          <div class="hb-name">Datum<span>Agro</span></div>
+          <span class="hb-by">Desenvolvido por Nexus AI Tech</span>
+        </div>
+      </div>
       <span class="eyebrow">Pecuária de precisão</span>
       <h1>O mapa da fazenda, o peso do rebanho e o <em>passaporte</em> de exportação — em um só app.</h1>
       <p class="lead">O DatumAgro importa automaticamente o polígono da sua propriedade pelo CAR, calcula o ganho de peso diário do gado e emite o passaporte sanitário digital exigido para transporte e exportação — tudo funcionando mesmo sem internet no curral.</p>
@@ -752,7 +795,10 @@
 
 <footer>
   <div class="wrap foot-inner">
-    <div>Datum<span style="color:#c9a227">Agro</span> — by Nexus IA</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center 10%;opacity:0.7;">
+      <span>Datum<span style="color:#c9a227">Agro</span> — Desenvolvido por <span style="color:#c9a227">Nexus AI Tech</span></span>
+    </div>
     <div>&copy; 2026 DatumAgro. Todos os direitos reservados.</div>
     <div><a href="/privacidade/">Política de Privacidade (LGPD)</a></div>
   </div>
