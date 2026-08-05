@@ -148,8 +148,9 @@ TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -289,8 +290,6 @@ logging.config.dictConfig({
     },
 })
 
-# 🚀 WHITENOISE CONFIG (Arquivos estáticos otimizados)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # 🚀 CONFIGURAÇÕES DE EMAIL (Notificações)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
