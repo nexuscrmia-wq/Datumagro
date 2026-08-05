@@ -2,6 +2,7 @@
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
+from django.shortcuts import render
 from datumagro.apps.cadastros.models import Animal, Propriedade
 from datumagro.apps.assinaturas.models import Assinatura
 from django.conf import settings
@@ -285,3 +286,7 @@ def onboarding_etapa(request):
         'etapa_atual': cliente.onboarding_etapa,
         'onboarding_completo': cliente.onboarding_completo,
     })
+
+
+def home(request):
+    return render(request, "home.html")

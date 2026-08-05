@@ -3,12 +3,11 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
-from django.views.generic import RedirectView
 from rest_framework_simplejwt.views import TokenRefreshView
 from datumagro.apps.usuarios.views import CustomTokenObtainPairView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from datumagro.apps.core.views import (
-    health, create_cliente_for_user, dashboard_resumo, politica_privacidade, onboarding_etapa
+    health, create_cliente_for_user, dashboard_resumo, politica_privacidade, onboarding_etapa, home
 )
 from datumagro.apps.usuarios.views import (
     equipe_membros, equipe_convidar, equipe_aceitar,
@@ -16,7 +15,7 @@ from datumagro.apps.usuarios.views import (
 )
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/api/swagger/', permanent=False)),
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('ping/', lambda req: HttpResponse('pong'), name='ping'),
 

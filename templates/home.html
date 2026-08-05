@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DatumAgro — Gestão Pecuária Inteligente</title>
+  <meta name="description" content="Gerencie sua propriedade rural com tecnologia. Controle de animais, pesagens, financeiro e muito mais.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --hero-bg:    #0F2213;
+      --hero-mid:   #173020;
+      --page-bg:    #F5F1E8;
+      --green:      #2A7530;
+      --green-lite: #D0E9C8;
+      --amber:      #C97A0A;
+      --amber-dark: #A5620A;
+      --text-dark:  #172A1A;
+      --text-mid:   #3D5242;
+      --text-hero:  #CDE8CE;
+      --text-white: #F0F7F0;
+      --radius:     12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--page-bg);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100svh;
+      background: var(--hero-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Campo SVG de fundo */
+    .hero-landscape {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      width: 100%; height: 260px;
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    /* Pontos de dados flutuando */
+    .dots-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .dot {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      opacity: 0;
+      animation: floatDot linear infinite;
+    }
+    @keyframes floatDot {
+      0%   { transform: translateY(0)   scale(1);   opacity: 0; }
+      15%  { opacity: 0.7; }
+      85%  { opacity: 0.4; }
+      100% { transform: translateY(-340px) scale(0.4); opacity: 0; }
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(42,117,48,0.35);
+      border: 1px solid rgba(42,117,48,0.6);
+      color: var(--green-lite);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 40px;
+      margin-bottom: 28px;
+    }
+
+    .hero-logo {
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--text-white);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .hero-logo span { color: var(--amber); }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: var(--text-hero);
+      max-width: 480px;
+      margin: 0 auto 44px;
+      font-weight: 400;
+      line-height: 1.55;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--amber);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: background 0.18s, transform 0.14s, box-shadow 0.18s;
+      box-shadow: 0 4px 28px rgba(201,122,10,0.38);
+      position: relative;
+      z-index: 1;
+    }
+    .btn-download:hover {
+      background: var(--amber-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 36px rgba(201,122,10,0.52);
+    }
+    .btn-download:active { transform: translateY(0); }
+
+    .btn-download svg { flex-shrink: 0; }
+
+    .download-meta {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: rgba(200,232,200,0.55);
+      letter-spacing: 0.04em;
+      position: relative; z-index: 1;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 80px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      text-align: center;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-dark);
+      margin-bottom: 56px;
+      line-height: 1.2;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #E0DAD0;
+      border-radius: var(--radius);
+      padding: 32px 28px;
+    }
+
+    .card-icon {
+      width: 48px; height: 48px;
+      background: var(--green-lite);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .card-icon svg { color: var(--green); }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text-mid);
+      line-height: 1.6;
+    }
+
+    /* ── CTA BOTTOM ── */
+    .cta-bottom {
+      background: var(--hero-mid);
+      padding: 72px 24px;
+      text-align: center;
+    }
+
+    .cta-bottom h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .cta-bottom p {
+      font-size: 1rem;
+      color: var(--text-hero);
+      margin-bottom: 36px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--hero-bg);
+      text-align: center;
+      padding: 24px;
+      font-size: 0.78rem;
+      color: rgba(200,232,200,0.35);
+      letter-spacing: 0.03em;
+    }
+    footer a { color: rgba(200,232,200,0.5); text-decoration: none; }
+    footer a:hover { color: var(--text-hero); }
+
+    @media (max-width: 560px) {
+      .btn-download { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<section class="hero">
+
+  <!-- pontos de dados animados -->
+  <div class="dots-container" aria-hidden="true">
+    <div class="dot" style="left:8%;  bottom:12%; animation-duration:7s;  animation-delay:0s;"></div>
+    <div class="dot" style="left:20%; bottom:5%;  animation-duration:9s;  animation-delay:1.4s;"></div>
+    <div class="dot" style="left:35%; bottom:18%; animation-duration:6.5s;animation-delay:0.7s;"></div>
+    <div class="dot" style="left:52%; bottom:8%;  animation-duration:8s;  animation-delay:2.1s;"></div>
+    <div class="dot" style="left:65%; bottom:22%; animation-duration:7.5s;animation-delay:0.3s;"></div>
+    <div class="dot" style="left:78%; bottom:10%; animation-duration:9.5s;animation-delay:1.8s;"></div>
+    <div class="dot" style="left:90%; bottom:15%; animation-duration:6s;  animation-delay:3s;"></div>
+    <div class="dot" style="left:45%; bottom:30%; animation-duration:11s; animation-delay:0.9s; background:#2A7530;"></div>
+    <div class="dot" style="left:28%; bottom:38%; animation-duration:13s; animation-delay:4s;  background:#2A7530;"></div>
+  </div>
+
+  <!-- silhueta de campo -->
+  <svg class="hero-landscape" viewBox="0 0 1440 260" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0,180 C200,120 400,200 600,160 C800,120 1000,190 1200,150 C1320,130 1400,155 1440,145 L1440,260 L0,260 Z" fill="#2A7530"/>
+    <path d="M0,210 C180,170 360,220 540,195 C720,170 900,215 1080,200 C1240,188 1360,205 1440,195 L1440,260 L0,260 Z" fill="#1E5A24"/>
+    <path d="M0,240 C240,225 480,245 720,238 C960,231 1200,244 1440,238 L1440,260 L0,260 Z" fill="#163D1A"/>
+    <!-- boi (silhueta simples) -->
+    <g transform="translate(660,148)" fill="#0F2213">
+      <ellipse cx="24" cy="18" rx="28" ry="16"/>
+      <ellipse cx="46" cy="12" rx="12" ry="10"/>
+      <line x1="10" y1="30" x2="8"  y2="46" stroke="#0F2213" stroke-width="4"/>
+      <line x1="20" y1="32" x2="18" y2="48" stroke="#0F2213" stroke-width="4"/>
+      <line x1="32" y1="32" x2="30" y2="48" stroke="#0F2213" stroke-width="4"/>
+      <line x1="42" y1="30" x2="40" y2="46" stroke="#0F2213" stroke-width="4"/>
+      <path d="M44,4 C46,0 50,-2 52,2" stroke="#0F2213" stroke-width="3" fill="none"/>
+      <path d="M50,4 C54,0 58,-2 56,4" stroke="#0F2213" stroke-width="3" fill="none"/>
+    </g>
+  </svg>
+
+  <div style="position:relative; z-index:1;">
+    <p class="hero-badge">Android · Versão 1.0.0</p>
+    <h1 class="hero-logo">Datum<span>Agro</span></h1>
+    <p class="hero-sub">Gestão pecuária completa na palma da mão. Animais, pesagens, financeiro e rastreabilidade — tudo em um só lugar.</p>
+
+    <a href="https://github.com/victor226942-web/datumagro-backend/releases/download/v1.0.0/DatumAgro_v1.0.0.apk"
+       class="btn-download">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Baixar para Android
+    </a>
+    <p class="download-meta">APK · 53 MB · Android 5.0+</p>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features">
+  <p class="section-label">O que o app oferece</p>
+  <h2 class="section-title">Tudo que sua propriedade precisa</h2>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="5"/>
+          <path d="M3 21v-1a9 9 0 0 1 18 0v1"/>
+        </svg>
+      </div>
+      <h3>Cadastro de Animais</h3>
+      <p>Registre brinco, raça, peso ao nascer, origem e histórico completo de cada animal do seu rebanho.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+      </div>
+      <h3>Pesagens e Métricas</h3>
+      <p>Acompanhe o ganho de peso, GMD e evolução do rebanho com gráficos e relatórios automáticos.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+          <line x1="1" y1="10" x2="23" y2="10"/>
+        </svg>
+      </div>
+      <h3>Controle Financeiro</h3>
+      <p>Gerencie receitas, despesas, compras e vendas por propriedade. Veja o lucro do seu rebanho em tempo real.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <h3>Rastreabilidade</h3>
+      <p>Histórico completo de movimentações, manejo sanitário e localização por propriedade.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <h3>Gestão de Equipe</h3>
+      <p>Convide colaboradores, defina permissões e colabore com toda a equipe da propriedade.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <h3>Inteligência Agro</h3>
+      <p>Alertas automáticos, previsões de desempenho e insights baseados nos dados do seu rebanho.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA BOTTOM ── -->
+<div class="cta-bottom">
+  <h2>Pronto para começar?</h2>
+  <p>Instale agora e tenha controle total da sua propriedade rural.</p>
+  <a href="https://github.com/victor226942-web/datumagro-backend/releases/download/v1.0.0/DatumAgro_v1.0.0.apk"
+     class="btn-download">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Baixar DatumAgro · Android
+  </a>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p>© 2026 DatumAgro · <a href="/privacidade/">Política de Privacidade</a> · <a href="/api/swagger/">API Docs</a></p>
+</footer>
+
+</body>
+</html>
