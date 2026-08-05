@@ -630,6 +630,56 @@
     }
     .calc-ref span { font-size: 0.76rem; color: #8fa897; font-family: 'IBM Plex Mono', monospace; }
     .calc-ref span b { color: #b3c4ba; }
+
+    /* Botões de exportação */
+    .calc-export {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px; border-radius: 8px; border: none;
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 0.84rem; font-weight: 600;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+      min-height: 44px; flex: 1; justify-content: center;
+      white-space: nowrap;
+    }
+    .btn-export:active { transform: scale(0.97); }
+    .btn-export.csv  { background: #1a6b3c; color: #fff; }
+    .btn-export.pdf  { background: #7b3322; color: #fff; }
+    .btn-export:hover { opacity: 0.88; }
+    .btn-export svg  { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── PRINT (PDF via browser) ── */
+    .print-report { display: none; }
+
+    @media print {
+      /* esconde tudo */
+      body > *                       { display: none !important; }
+      /* mostra só o relatório */
+      .print-report                  { display: block !important; }
+
+      .print-report {
+        font-family: Arial, sans-serif; color: #111;
+        margin: 0; padding: 24px;
+      }
+      .pr-header { border-bottom: 2px solid #2e7d32; padding-bottom: 10px; margin-bottom: 16px; }
+      .pr-header h2 { margin: 0 0 4px; font-size: 18px; color: #1b5e20; }
+      .pr-header .pr-meta { font-size: 11px; color: #666; }
+      .pr-section { margin-bottom: 14px; }
+      .pr-section h3 { font-size: 13px; color: #2e7d32; margin: 0 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+      .pr-kpis { display: flex; gap: 20px; flex-wrap: wrap; background: #e8f5e9; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; }
+      .pr-kpi  { text-align: center; }
+      .pr-kpi .pk-val { font-size: 18px; font-weight: 700; color: #1b5e20; }
+      .pr-kpi .pk-val.gold { color: #a88118; }
+      .pr-kpi .pk-lbl { font-size: 9px; text-transform: uppercase; color: #666; }
+      .pr-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      .pr-table th { background: #2e7d32; color: #fff; padding: 6px 10px; text-align: left; }
+      .pr-table td { padding: 5px 10px; border-bottom: 1px solid #ddd; }
+      .pr-table tr:nth-child(even) td { background: #f5f5f5; }
+      .pr-table .td-num  { text-align: right; }
+      .pr-table .td-gold { color: #a88118; font-weight: 700; text-align: right; }
+      .pr-footer { margin-top: 20px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 8px; }
+    }
   </style>
 </head>
 <body>
@@ -986,6 +1036,16 @@
         <div class="calc-result" id="c-result-unico">
           <span class="calc-result-empty">Digite o peso para ver o resultado</span>
         </div>
+        <div class="calc-export" id="export-unico" style="display:none;">
+          <button class="btn-export csv" onclick="exportCSV('unico')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Baixar Excel / CSV
+          </button>
+          <button class="btn-export pdf" onclick="exportPDF('unico')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Salvar PDF
+          </button>
+        </div>
       </div>
 
       <!-- Painel: lote -->
@@ -1003,6 +1063,16 @@
         </div>
         <div class="lote-totais" id="l-totais" style="display:none;"></div>
         <div class="lote-list" id="l-list"></div>
+        <div class="calc-export" id="export-lote" style="display:none;">
+          <button class="btn-export csv" onclick="exportCSV('lote')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Baixar Excel / CSV
+          </button>
+          <button class="btn-export pdf" onclick="exportPDF('lote')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Salvar PDF
+          </button>
+        </div>
       </div>
 
       <!-- Referência -->
@@ -1105,14 +1175,17 @@
     const at = kg / 30;
     const vl = at * p;
     const el = document.getElementById('c-result-unico');
+    const ex = document.getElementById('export-unico');
     if (kg <= 0) {
       el.innerHTML = '<span class="calc-result-empty">Digite o peso para ver o resultado</span>';
+      ex.style.display = 'none';
     } else {
       el.innerHTML =
         '<div class="calc-result-item"><div class="r-val">' + fmt(kg, 0) + ' kg</div><div class="r-lbl">peso vivo</div></div>' +
         '<div class="calc-result-sep"></div>' +
         '<div class="calc-result-item"><div class="r-val">' + fmt(at, 2) + ' @</div><div class="r-lbl">arrobas</div></div>' +
         (p > 0 ? '<div class="calc-result-sep"></div><div class="calc-result-item"><div class="r-val big">R$ ' + fmt(vl, 0) + '</div><div class="r-lbl">valor estimado</div></div>' : '');
+      ex.style.display = 'flex';
     }
   }
 
@@ -1135,10 +1208,13 @@
     const totVl  = totAt * p;
     const totEl  = document.getElementById('l-totais');
     const listEl = document.getElementById('l-list');
+    const exEl   = document.getElementById('export-lote');
 
-    if (_lote.length === 0) { totEl.style.display = 'none'; listEl.innerHTML = ''; return; }
+    if (_lote.length === 0) { totEl.style.display = 'none'; listEl.innerHTML = ''; exEl.style.display = 'none'; return; }
 
     totEl.style.display = 'flex';
+    exEl.style.display  = 'flex';
+
     totEl.innerHTML =
       '<div class="lote-tot-item"><div class="t-val">' + _lote.length + '</div><div class="t-lbl">animais</div></div>' +
       '<div class="lote-tot-item"><div class="t-val">' + fmt(totKg, 0) + ' kg</div><div class="t-lbl">peso total</div></div>' +
@@ -1159,10 +1235,116 @@
     }).join('');
   }
 
+  // ── Helpers de data ──────────────────────────────────────────────────────
+  function agora() {
+    return new Date().toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  }
+  function nomeArquivo(prefix) {
+    const d = new Date();
+    return prefix + '_' + d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2) + '_' + ('0'+d.getHours()).slice(-2) + ('0'+d.getMinutes()).slice(-2);
+  }
+
+  // ── CSV ──────────────────────────────────────────────────────────────────
+  function exportCSV(mode) {
+    const p   = preco();
+    const bom = '﻿'; // UTF-8 BOM para Excel abrir direto
+    let csv = '';
+
+    if (mode === 'unico') {
+      const kg = parseFloat(document.getElementById('c-peso').value) || 0;
+      if (kg <= 0) return;
+      const at = kg / 30;
+      const vl = at * p;
+      csv = bom + 'Data/Hora;Peso (kg);Arrobas;Preço @;Valor (R$)\r\n';
+      csv += '"' + agora() + '";' + kg.toFixed(2) + ';' + at.toFixed(3) + ';' + p.toFixed(2) + ';' + vl.toFixed(2) + '\r\n';
+    } else {
+      if (_lote.length === 0) return;
+      const totKg = _lote.reduce((s,e) => s + e.kg, 0);
+      const totAt = totKg / 30;
+      const totVl = totAt * p;
+      csv = bom + 'Nº;Brinco;Peso (kg);Arrobas;Valor (R$)\r\n';
+      _lote.forEach((e, i) => {
+        const at = e.kg / 30;
+        const vl = at * p;
+        csv += (i+1) + ';' + e.b + ';' + e.kg.toFixed(2) + ';' + at.toFixed(3) + ';' + vl.toFixed(2) + '\r\n';
+      });
+      csv += '\r\n;TOTAL;' + totKg.toFixed(2) + ';' + totAt.toFixed(3) + ';' + totVl.toFixed(2) + '\r\n';
+      csv += '\r\nGerado em;' + agora() + ';Preço @;R$ ' + p.toFixed(2) + '\r\n';
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = nomeArquivo('datumagro_' + mode) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  }
+
+  // ── PDF (impressão do navegador) ─────────────────────────────────────────
+  function exportPDF(mode) {
+    const p    = preco();
+    const hora = agora();
+    let html   = '';
+
+    if (mode === 'unico') {
+      const kg = parseFloat(document.getElementById('c-peso').value) || 0;
+      if (kg <= 0) return;
+      const at = kg / 30;
+      const vl = at * p;
+      html =
+        '<div class="pr-header"><h2>DatumAgro — Cálculo de Peso</h2><div class="pr-meta">Gerado em ' + hora + '</div></div>' +
+        '<div class="pr-section">' +
+          '<div class="pr-kpis">' +
+            '<div class="pr-kpi"><div class="pk-val">' + fmt(kg, 0) + ' kg</div><div class="pk-lbl">Peso vivo</div></div>' +
+            '<div class="pr-kpi"><div class="pk-val">' + fmt(at, 3) + '</div><div class="pk-lbl">Arrobas (@)</div></div>' +
+            (p > 0 ? '<div class="pr-kpi"><div class="pk-val gold">R$ ' + fmt(vl, 2) + '</div><div class="pk-lbl">Valor estimado</div></div>' : '') +
+            (p > 0 ? '<div class="pr-kpi"><div class="pk-val">R$ ' + fmt(p, 2) + '</div><div class="pk-lbl">Preço da @</div></div>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="pr-footer">DatumAgro · Desenvolvido por Nexus AI Tech · 1@ = 30 kg (boi vivo)</div>';
+    } else {
+      if (_lote.length === 0) return;
+      const totKg = _lote.reduce((s,e) => s + e.kg, 0);
+      const totAt = totKg / 30;
+      const totVl = totAt * p;
+      const rows  = _lote.map((e, i) => {
+        const at = e.kg / 30;
+        const vl = at * p;
+        return '<tr><td>' + (i+1) + '</td><td>' + e.b + '</td>' +
+          '<td class="td-num">' + fmt(e.kg, 0) + '</td>' +
+          '<td class="td-num">' + fmt(at, 2) + '</td>' +
+          (p > 0 ? '<td class="td-gold">R$ ' + fmt(vl, 2) + '</td>' : '') +
+          '</tr>';
+      }).join('');
+      html =
+        '<div class="pr-header"><h2>DatumAgro — Romaneio de Pesagem</h2><div class="pr-meta">Gerado em ' + hora + (p > 0 ? ' · Preço da @: R$ ' + fmt(p, 2) : '') + '</div></div>' +
+        '<div class="pr-section">' +
+          '<div class="pr-kpis">' +
+            '<div class="pr-kpi"><div class="pk-val">' + _lote.length + '</div><div class="pk-lbl">Animais</div></div>' +
+            '<div class="pr-kpi"><div class="pk-val">' + fmt(totKg, 0) + ' kg</div><div class="pk-lbl">Peso total</div></div>' +
+            '<div class="pr-kpi"><div class="pk-val">' + fmt(totAt, 2) + ' @</div><div class="pk-lbl">Total arrobas</div></div>' +
+            (p > 0 ? '<div class="pr-kpi"><div class="pk-val gold">R$ ' + fmt(totVl, 2) + '</div><div class="pk-lbl">Valor total</div></div>' : '') +
+          '</div>' +
+          '<table class="pr-table"><thead><tr><th>#</th><th>Brinco</th><th>Kg</th><th>@</th>' + (p > 0 ? '<th>Valor</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        '</div>' +
+        '<div class="pr-footer">DatumAgro · Desenvolvido por Nexus AI Tech · 1@ = 30 kg (boi vivo)</div>';
+    }
+
+    document.getElementById('print-report').innerHTML = html;
+    window.print();
+    // limpa após impressão para não interferir na página
+    setTimeout(() => { document.getElementById('print-report').innerHTML = ''; }, 1500);
+  }
+
   document.getElementById('c-peso').addEventListener('input', renderUnico);
   document.getElementById('c-preco').addEventListener('input', () => { renderUnico(); renderLote(); });
   document.getElementById('l-peso').addEventListener('keydown', e => { if (e.key === 'Enter') adicionarLote(); });
 </script>
+
+<!-- Relatório de impressão (invisível; aparece só ao imprimir/salvar PDF) -->
+<div class="print-report" id="print-report"></div>
 
 </body>
 </html>
