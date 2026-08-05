@@ -1,0 +1,19 @@
+[phases.setup]
+nixPkgs = [
+  "python311",
+  "gcc",
+  "cairo",
+  "pango",
+  "gdk-pixbuf",
+  "glib",
+  "libffi",
+  "shared-mime-info",
+  "gobject-introspection",
+  "pkg-config",
+]
+
+[phases.install]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
+
+[start]
+cmd = "sh start.sh"

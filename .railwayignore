@@ -1,0 +1,20 @@
+# Railway ignora estes diretórios — apenas o backend Django é necessário
+mobile_flutter/
+venv/
+.venv/
+staticfiles/
+media/
+logs/
+flutter_backup/
+flutter_example/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.idea/
+.git/
+.github/
+.claude/
+node_modules/
+*.log
+db.sqlite3
