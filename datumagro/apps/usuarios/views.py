@@ -348,6 +348,21 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = dict(serializer.data)
+
+        from datumagro.apps.cadastros.models import Cliente
+        user = request.user
+        perfil = getattr(user, 'perfilusuario', None)
+        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        if not cliente:
+            cliente = Cliente.objects.filter(email_contato=user.email).first()
+        data['tipo_especie'] = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
+
+        return Response(data)
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
