@@ -18,7 +18,14 @@ class PerfilPublicoAPIViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        cliente = self.request.user.perfilusuario.cliente
+        from datumagro.apps.cadastros.models import Cliente
+        user = self.request.user
+        perfil = getattr(user, 'perfilusuario', None)
+        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        if not cliente:
+            cliente = Cliente.objects.filter(email_contato=user.email).first()
+        if not cliente:
+            return PerfilPublicoAnimal.objects.none()
         return PerfilPublicoAnimal.objects.filter(animal__propriedade__cliente=cliente)
 
     @action(detail=True, methods=['post'])

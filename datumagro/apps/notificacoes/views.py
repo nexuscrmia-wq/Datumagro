@@ -16,9 +16,12 @@ class HistoricoNotificacoesViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Esta função é a garantia de segurança: ela filtra o histórico para mostrar
-        APENAS as notificações que pertencem ao cliente do usuário que fez a requisição.
-        """
-        cliente = self.request.user.perfilusuario.cliente
+        from datumagro.apps.cadastros.models import Cliente
+        user = self.request.user
+        perfil = getattr(user, 'perfilusuario', None)
+        cliente = getattr(perfil, 'cliente', None) if perfil else None
+        if not cliente:
+            cliente = Cliente.objects.filter(email_contato=user.email).first()
+        if not cliente:
+            return LogNotificacao.objects.none()
         return LogNotificacao.objects.filter(cliente=cliente)
