@@ -453,6 +453,91 @@
       transition: opacity .6s ease, transform .6s ease;
     }
     .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── CALCULADORA ── */
+    .calc-section { padding: 80px 0; background: var(--ink); }
+    .calc-section .section-head { text-align: center; margin-bottom: 40px; }
+    .calc-section .section-head h2 { color: var(--paper); font-size: clamp(1.7rem,4vw,2.4rem); }
+    .calc-section .section-head p  { color: #8fa897; margin-top: 10px; font-size: 1rem; }
+    .calc-card {
+      background: var(--ink-2); border: 1px solid rgba(201,162,39,0.18);
+      border-radius: 18px; padding: 28px; max-width: 700px; margin: 0 auto;
+    }
+    .calc-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px;
+      background: rgba(0,0,0,0.3); border-radius: 10px; padding: 4px;
+    }
+    .calc-tab {
+      flex: 1; padding: 9px 0; border: none; border-radius: 7px;
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; transition: background .15s, color .15s;
+      background: transparent; color: #8fa897;
+    }
+    .calc-tab.active { background: var(--pasture); color: #fff; }
+    .calc-panel { display: none; }
+    .calc-panel.active { display: block; }
+    .calc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media(max-width:520px){ .calc-row { grid-template-columns:1fr; } }
+    .calc-field { display: flex; flex-direction: column; gap: 5px; }
+    .calc-field label { font-size: 0.78rem; font-weight: 600; color: #8fa897; letter-spacing: 0.05em; text-transform: uppercase; }
+    .calc-field input {
+      background: rgba(0,0,0,0.35); border: 1px solid rgba(201,162,39,0.22);
+      border-radius: 8px; padding: 11px 14px;
+      color: var(--paper); font-size: 1rem; font-family: 'IBM Plex Mono', monospace;
+      outline: none; transition: border-color .15s;
+      -webkit-appearance: none; -moz-appearance: textfield;
+    }
+    .calc-field input:focus { border-color: var(--tag-gold); }
+    .calc-result {
+      background: var(--pasture); border-radius: 12px;
+      padding: 18px 22px; display: flex; gap: 0; flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .calc-result-item { flex: 1; min-width: 120px; text-align: center; }
+    .calc-result-item .r-val {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.8rem; font-weight: 700; color: #fff; line-height: 1;
+    }
+    .calc-result-item .r-val.big { font-size: 2.1rem; color: var(--tag-gold); }
+    .calc-result-item .r-lbl { font-size: 0.72rem; color: rgba(255,255,255,0.7); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .calc-result-sep { width: 1px; background: rgba(255,255,255,0.15); margin: 6px 0; }
+    .calc-result-empty { color: rgba(255,255,255,0.4); text-align: center; width: 100%; font-size: 0.9rem; padding: 8px 0; }
+    /* lote */
+    .lote-add { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 12px; align-items: end; }
+    @media(max-width:520px){ .lote-add { grid-template-columns:1fr 1fr auto; } }
+    .btn-add-lote {
+      height: 44px; padding: 0 16px; border: none; border-radius: 8px;
+      background: var(--pasture); color: #fff; font-size: 1.1rem;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-add-lote:hover { background: #4f9e6e; }
+    .lote-totais {
+      background: var(--pasture); border-radius: 10px; padding: 12px 18px;
+      display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 10px;
+    }
+    .lote-tot-item { text-align: center; }
+    .lote-tot-item .t-val { color: #fff; font-weight: 700; font-size: 1rem; font-family:'Fraunces',serif; }
+    .lote-tot-item .t-val.gold { color: var(--tag-gold); font-size: 1.15rem; }
+    .lote-tot-item .t-lbl { color: rgba(255,255,255,0.65); font-size: 0.7rem; text-transform: uppercase; }
+    .lote-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+    .lote-item {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0,0,0,0.25); border-radius: 8px; padding: 8px 12px;
+    }
+    .lote-item .li-num {
+      width: 22px; height: 22px; border-radius: 50%; background: var(--pasture);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .lote-item .li-brinco { flex: 1; color: var(--paper); font-size: 0.85rem; font-weight: 600; }
+    .lote-item .li-kg    { color: #8fa897; font-size: 0.82rem; }
+    .lote-item .li-at    { color: var(--pasture-light); font-weight: 700; font-size: 0.85rem; }
+    .lote-item .li-val   { color: var(--tag-gold); font-size: 0.82rem; }
+    .lote-item .li-rm    { background: none; border: none; cursor: pointer; color: #c0392b; font-size: 1.1rem; padding: 0 2px; line-height: 1; }
+    .calc-ref { margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .calc-ref span { font-size: 0.78rem; color: #8fa897; font-family: 'IBM Plex Mono', monospace; }
+    .calc-ref span b { color: #b3c4ba; }
   </style>
 </head>
 <body>
@@ -470,6 +555,7 @@
       <a href="#como-funciona">Como funciona</a>
       <a href="#funcionalidades">Funcionalidades</a>
       <a href="#planos">Planos</a>
+      <a href="#calculadora">Calculadora</a>
     </nav>
     <div style="display:flex;gap:12px;align-items:center;">
       <a href="#baixar" class="btn btn-gold">Baixar o app</a>
@@ -482,6 +568,7 @@
     <a href="#como-funciona">Como funciona</a>
     <a href="#funcionalidades">Funcionalidades</a>
     <a href="#planos">Planos</a>
+    <a href="#calculadora">Calculadora</a>
     <a href="#baixar" style="color:var(--tag-gold)">Baixar o app</a>
   </nav>
 </header>
@@ -775,6 +862,69 @@
   </div>
 </section>
 
+<!-- CALCULADORA -->
+<section class="calc-section" id="calculadora">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Calculadora de Peso</h2>
+      <p>Converta kg em arrobas e calcule o valor da negociação — sem precisar de conta.</p>
+    </div>
+    <div class="calc-card reveal">
+
+      <!-- Preço da @ -->
+      <div class="calc-row" style="margin-bottom:18px;">
+        <div class="calc-field">
+          <label>Preço da Arroba (R$ / @)</label>
+          <input type="number" id="c-preco" value="280" min="0" step="0.01" placeholder="Ex: 280.00">
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="calc-tabs">
+        <button class="calc-tab active" onclick="switchTab('unico')">Animal único</button>
+        <button class="calc-tab"        onclick="switchTab('lote')">Lote de animais</button>
+      </div>
+
+      <!-- Painel: animal único -->
+      <div class="calc-panel active" id="panel-unico">
+        <div class="calc-row">
+          <div class="calc-field">
+            <label>Peso vivo (kg)</label>
+            <input type="number" id="c-peso" min="0" step="0.1" placeholder="Ex: 450">
+          </div>
+        </div>
+        <div class="calc-result" id="c-result-unico">
+          <span class="calc-result-empty">Digite o peso para ver o resultado</span>
+        </div>
+      </div>
+
+      <!-- Painel: lote -->
+      <div class="calc-panel" id="panel-lote">
+        <div class="lote-add">
+          <div class="calc-field">
+            <label>Brinco (opcional)</label>
+            <input type="text" id="l-brinco" placeholder="Ex: B-001" style="text-transform:uppercase;">
+          </div>
+          <div class="calc-field">
+            <label>Peso (kg)</label>
+            <input type="number" id="l-peso" min="0" step="0.1" placeholder="450">
+          </div>
+          <button class="btn-add-lote" onclick="adicionarLote()" title="Adicionar">+</button>
+        </div>
+        <div class="lote-totais" id="l-totais" style="display:none;"></div>
+        <div class="lote-list" id="l-list"></div>
+      </div>
+
+      <!-- Referência -->
+      <div class="calc-ref">
+        <span>1 @ = <b>30 kg</b> (vivo)</span>
+        <span>1 @ = <b>15 kg</b> (carcaça)</span>
+        <span>Fórmula: <b>kg ÷ 30 = @</b></span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- DOWNLOAD -->
 <section class="download" id="baixar">
   <div class="wrap">
@@ -846,6 +996,82 @@
     { threshold: 0.1 }
   );
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ── CALCULADORA ──────────────────────────────────────────────────────────
+  let _lote = [];
+
+  function fmt(n, dec) { return n.toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
+  function preco() { return parseFloat(document.getElementById('c-preco').value) || 0; }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.calc-tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'unico')));
+    document.getElementById('panel-unico').classList.toggle('active', tab === 'unico');
+    document.getElementById('panel-lote').classList.toggle('active', tab === 'lote');
+  }
+
+  function renderUnico() {
+    const kg = parseFloat(document.getElementById('c-peso').value) || 0;
+    const p  = preco();
+    const at = kg / 30;
+    const vl = at * p;
+    const el = document.getElementById('c-result-unico');
+    if (kg <= 0) {
+      el.innerHTML = '<span class="calc-result-empty">Digite o peso para ver o resultado</span>';
+    } else {
+      el.innerHTML =
+        '<div class="calc-result-item"><div class="r-val">' + fmt(kg, 0) + ' kg</div><div class="r-lbl">peso vivo</div></div>' +
+        '<div class="calc-result-sep"></div>' +
+        '<div class="calc-result-item"><div class="r-val">' + fmt(at, 2) + ' @</div><div class="r-lbl">arrobas</div></div>' +
+        (p > 0 ? '<div class="calc-result-sep"></div><div class="calc-result-item"><div class="r-val big">R$ ' + fmt(vl, 0) + '</div><div class="r-lbl">valor estimado</div></div>' : '');
+    }
+  }
+
+  function adicionarLote() {
+    const brincoEl = document.getElementById('l-brinco');
+    const pesoEl   = document.getElementById('l-peso');
+    const kg = parseFloat(pesoEl.value) || 0;
+    if (kg <= 0) { pesoEl.focus(); return; }
+    _lote.push({ b: (brincoEl.value.trim().toUpperCase() || 'Animal ' + (_lote.length + 1)), kg });
+    brincoEl.value = ''; pesoEl.value = ''; pesoEl.focus();
+    renderLote();
+  }
+
+  function removerLote(i) { _lote.splice(i, 1); renderLote(); }
+
+  function renderLote() {
+    const p      = preco();
+    const totKg  = _lote.reduce((s, e) => s + e.kg, 0);
+    const totAt  = totKg / 30;
+    const totVl  = totAt * p;
+    const totEl  = document.getElementById('l-totais');
+    const listEl = document.getElementById('l-list');
+
+    if (_lote.length === 0) { totEl.style.display = 'none'; listEl.innerHTML = ''; return; }
+
+    totEl.style.display = 'flex';
+    totEl.innerHTML =
+      '<div class="lote-tot-item"><div class="t-val">' + _lote.length + '</div><div class="t-lbl">animais</div></div>' +
+      '<div class="lote-tot-item"><div class="t-val">' + fmt(totKg, 0) + ' kg</div><div class="t-lbl">peso total</div></div>' +
+      '<div class="lote-tot-item"><div class="t-val">' + fmt(totAt, 1) + ' @</div><div class="t-lbl">arrobas</div></div>' +
+      (p > 0 ? '<div class="lote-tot-item"><div class="t-val gold">R$ ' + fmt(totVl, 0) + '</div><div class="t-lbl">valor total</div></div>' : '');
+
+    listEl.innerHTML = _lote.map((e, i) => {
+      const at = e.kg / 30;
+      const vl = at * p;
+      return '<div class="lote-item">' +
+        '<span class="li-num">' + (i + 1) + '</span>' +
+        '<span class="li-brinco">' + e.b + '</span>' +
+        '<span class="li-kg">' + fmt(e.kg, 0) + ' kg</span>' +
+        '<span class="li-at">' + fmt(at, 1) + ' @</span>' +
+        (p > 0 ? '<span class="li-val">R$ ' + fmt(vl, 0) + '</span>' : '') +
+        '<button class="li-rm" onclick="removerLote(' + i + ')" title="Remover">×</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('c-peso').addEventListener('input', renderUnico);
+  document.getElementById('c-preco').addEventListener('input', () => { renderUnico(); renderLote(); });
+  document.getElementById('l-peso').addEventListener('keydown', e => { if (e.key === 'Enter') adicionarLote(); });
 </script>
 
 </body>
