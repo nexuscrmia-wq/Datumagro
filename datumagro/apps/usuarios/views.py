@@ -150,11 +150,19 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             }
             
             serializer = UsuarioLoginSerializer(user_data)
-            
+
+            from datumagro.apps.cadastros.models import Cliente
+            cliente = Cliente.objects.filter(email_contato=user.email).first()
+            perfil = getattr(user, 'perfilusuario', None)
+            if not cliente and perfil:
+                cliente = getattr(perfil, 'cliente', None)
+            tipo_especie = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
+
             return Response({
                 'user': serializer.data,
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'tipo_especie': tipo_especie,
             })
         
         return Response(
@@ -319,9 +327,18 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             'telefone': user.telefone,
             'usuario_obj': user,
         }
-        
+
+        from datumagro.apps.cadastros.models import Cliente
+        cliente = Cliente.objects.filter(email_contato=user.email).first()
+        perfil = getattr(user, 'perfilusuario', None)
+        if not cliente and perfil:
+            cliente = getattr(perfil, 'cliente', None)
+        tipo_especie = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
+
         serializer = UsuarioLoginSerializer(user_data)
-        return Response(serializer.data)
+        response_data = dict(serializer.data)
+        response_data['tipo_especie'] = tipo_especie
+        return Response(response_data)
 
 
 class PerfilUsuarioView(RetrieveUpdateAPIView):

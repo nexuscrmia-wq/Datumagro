@@ -222,6 +222,7 @@ def onboarding_etapa(request):
                 'propriedade_cidade': prop.cidade if prop else '',
                 'propriedade_hectares': str(prop.hectares) if prop and prop.hectares else '',
                 'tipo_operacao': prop.tipo_operacao if prop else 'CORTE',
+                'tipo_especie': cliente.tipo_especie,
             }
         })
 
@@ -265,6 +266,8 @@ def onboarding_etapa(request):
             cliente.num_funcionarios = int(data.get('num_funcionarios', 0))
         if 'sistema_anterior' in data:
             cliente.sistema_anterior = data['sistema_anterior']
+        if 'tipo_especie' in data:
+            cliente.tipo_especie = data['tipo_especie']
 
         prop = Propriedade.objects.filter(cliente=cliente).first()
         if prop and 'tipo_operacao' in data:

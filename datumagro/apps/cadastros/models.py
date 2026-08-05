@@ -12,6 +12,14 @@ class Cliente(models.Model):
         ('501-1000', '501 a 1000'), ('1000+', 'Acima de 1000'),
     ]
 
+    TIPO_ESPECIE_CHOICES = [
+        ('BOVINOS_CORTE', 'Pecuária de Corte (Bovinos)'),
+        ('BOVINOS_LEITE', 'Pecuária de Leite (Bovinos)'),
+        ('SUINOS', 'Suinocultura (Porcos)'),
+        ('EQUINOS', 'Equinocultura (Cavalos)'),
+        ('OVINOS_CAPRINOS', 'Ovinos e Caprinos (Ovelhas/Cabras)'),
+    ]
+
     nome_empresa = models.CharField(max_length=255)
     cpf_cnpj = models.CharField(max_length=18, unique=True)
     tipo_documento = models.CharField(max_length=4, choices=[('CPF', 'CPF'), ('CNPJ', 'CNPJ')], default='CPF')
@@ -26,6 +34,11 @@ class Cliente(models.Model):
     principal_desafio = models.CharField(max_length=50, blank=True)
     onboarding_completo = models.BooleanField(default=False)
     onboarding_etapa = models.IntegerField(default=1)
+    tipo_especie = models.CharField(
+        max_length=20,
+        choices=TIPO_ESPECIE_CHOICES,
+        default='BOVINOS_CORTE',
+    )
 
     class Meta:
         verbose_name = "Cliente"
