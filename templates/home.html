@@ -401,35 +401,50 @@
     .foot-inner a:hover { color: var(--tag-gold); }
 
     /* ── LOGO / BRAND ── */
+    /* Badge container — fundo creme da logo fica intencional */
+    .nav-logo-badge {
+      background: var(--paper);
+      border-radius: 10px;
+      border: 1.5px solid rgba(201,162,39,0.5);
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
     .nav-logo {
-      width: 36px; height: 36px; border-radius: 50%;
-      object-fit: cover; object-position: center 10%;
-      border: 1.5px solid rgba(201,162,39,0.4);
-      flex-shrink: 0;
+      width: 36px; height: 36px;
+      object-fit: contain;
     }
     .hero-brand-row {
-      display: flex; align-items: center; gap: 18px;
-      margin-bottom: 24px;
+      display: inline-flex; align-items: center; gap: 16px;
+      background: rgba(243,239,228,0.07);
+      border: 1px solid rgba(201,162,39,0.25);
+      border-radius: 16px;
+      padding: 10px 18px 10px 10px;
+      margin-bottom: 28px;
+    }
+    .hero-brand-badge {
+      background: var(--paper);
+      border-radius: 10px;
+      width: 60px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
     }
     .hero-brand-img {
-      width: 76px; height: 76px; border-radius: 50%;
-      object-fit: cover; object-position: center 10%;
-      border: 2px solid rgba(201,162,39,0.45);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.45);
-      flex-shrink: 0;
+      width: 56px; height: 56px;
+      object-fit: contain;
     }
-    .hero-brand-text { line-height: 1.1; }
+    .hero-brand-text { line-height: 1.15; }
     .hero-brand-text .hb-name {
       font-family: 'Fraunces', Georgia, serif;
-      font-size: 1.7rem; font-weight: 700;
+      font-size: 1.6rem; font-weight: 700;
       color: #f3efe4; letter-spacing: -0.02em;
     }
     .hero-brand-text .hb-name span { color: var(--tag-gold); }
     .hero-brand-text .hb-by {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.67rem; letter-spacing: 0.1em;
+      font-size: 0.65rem; letter-spacing: 0.1em;
       text-transform: uppercase; color: #7a9a85;
-      margin-top: 3px; display: block;
+      margin-top: 4px; display: block;
     }
 
     /* ── REVEAL ── */
@@ -446,7 +461,9 @@
 <header class="nav">
   <div class="nav-inner">
     <div class="brand" style="display:flex;align-items:center;gap:10px;">
-      <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="DatumAgro ícone" class="nav-logo">
+      <div class="nav-logo-badge">
+        <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="" class="nav-logo">
+      </div>
       Datum<span class="tag">Agro</span>
     </div>
     <nav class="nav-links">
@@ -476,7 +493,9 @@
     <!-- Text column -->
     <div>
       <div class="hero-brand-row">
-        <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="DatumAgro logo" class="hero-brand-img">
+        <div class="hero-brand-badge">
+          <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="DatumAgro" class="hero-brand-img">
+        </div>
         <div class="hero-brand-text">
           <div class="hb-name">Datum<span>Agro</span></div>
           <span class="hb-by">Desenvolvido por Nexus AI Tech</span>
@@ -796,7 +815,9 @@
 <footer>
   <div class="wrap foot-inner">
     <div style="display:flex;align-items:center;gap:10px;">
-      <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center 10%;opacity:0.7;">
+      <div style="background:#f3efe4;border-radius:7px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0.8;flex-shrink:0;">
+        <img src="{% static 'images/logos/banner_datumagro.jpeg' %}" alt="" style="width:28px;height:28px;object-fit:contain;">
+      </div>
       <span>Datum<span style="color:#c9a227">Agro</span> — Desenvolvido por <span style="color:#c9a227">Nexus AI Tech</span></span>
     </div>
     <div>&copy; 2026 DatumAgro. Todos os direitos reservados.</div>
