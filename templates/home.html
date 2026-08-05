@@ -1093,6 +1093,7 @@
     <div class="dl-buttons">
 
       <a href="{% static 'downloads/DatumAgro.apk' %}"
+         download="DatumAgro.apk"
          class="dl-card">
         <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--pasture)">
           <path d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.86 3.22a10.9 10.9 0 00-8.42 0L6.43 5.8a.5.5 0 10-.87.5l1.84 3.18C4.9 11.03 3.2 13.87 3 17h18c-.2-3.13-1.9-5.97-4.4-7.52zM8.5 14a1 1 0 110-2 1 1 0 010 2zm7 0a1 1 0 110-2 1 1 0 010 2z"/>
@@ -1100,7 +1101,7 @@
         <div>
           <div class="lbl" style="font-family:'IBM Plex Mono',monospace">Download direto</div>
           <div class="name">Android (APK)</div>
-          <div class="meta">v1.0.0 · 53 MB · Android 5.0+</div>
+          <div class="meta">v1.0.0 · 74 MB · Android 5.0+</div>
         </div>
       </a>
 
@@ -1116,7 +1117,18 @@
       </span>
 
     </div>
-    <p class="dl-note">
+    <div style="margin-top:28px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:20px 24px;max-width:540px;margin-left:auto;margin-right:auto;">
+      <p style="font-size:0.82rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gold,#c9a227);margin-bottom:10px;">Como instalar no Android</p>
+      <ol style="padding-left:18px;font-size:0.85rem;line-height:1.9;color:rgba(255,255,255,0.82);">
+        <li>Toque em <strong>Baixar APK</strong> acima e aguarde o download.</li>
+        <li>O Chrome vai mostrar um aviso — toque em <strong>"Baixar assim mesmo"</strong>.</li>
+        <li>Abra o arquivo baixado. Se o Android bloquear, vá em:<br>
+            <strong>Configurações → Segurança → Instalar apps desconhecidos → Chrome → Permitir</strong></li>
+        <li>Toque em <strong>Instalar</strong> e aguarde.</li>
+      </ol>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-top:8px;">O aviso de "fonte desconhecida" é normal para APKs fora da Play Store. O app é seguro.</p>
+    </div>
+    <p class="dl-note" style="margin-top:18px;">
       Dúvidas? Consulte a <a href="/api/swagger/">documentação da API</a> ou a <a href="/privacidade/">Política de Privacidade</a>.
     </p>
   </div>
