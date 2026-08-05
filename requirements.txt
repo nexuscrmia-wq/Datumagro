@@ -9,7 +9,8 @@ whitenoise
 djangorestframework
 dj-rest-auth
 djangorestframework-simplejwt
-drf-yasg
+drf-spectacular
+drf-spectacular[sidecar]
 
 # --- CORS e Autenticação ---
 django-cors-headers
