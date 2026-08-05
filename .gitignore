@@ -7,7 +7,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
+# downloads/  # liberado para APK em static/downloads/
 eggs/
 .eggs/
 lib/
@@ -103,4 +103,3 @@ DIAGRAMA_*.md
 RESUMO_*.md
 VALIDACAO_*.md
 TODO.md
-.github/workflows/ci.yml
