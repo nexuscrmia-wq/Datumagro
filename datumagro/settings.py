@@ -52,6 +52,8 @@ if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 if os.getenv('RAILWAY_PROJECT_ID'):
     ALLOWED_HOSTS += ['healthcheck.railway.app', '.railway.app']
+# Domínio personalizado
+ALLOWED_HOSTS += ['datumagro.com.br', 'www.datumagro.com.br']
 
 CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
@@ -61,6 +63,7 @@ if RAILWAY_PUBLIC_DOMAIN:
 extra_origins = os.getenv('CSRF_TRUSTED_ORIGINS', '')
 if extra_origins:
     CSRF_TRUSTED_ORIGINS += [o.strip() for o in extra_origins.split(',') if o.strip()]
+CSRF_TRUSTED_ORIGINS += ['https://datumagro.com.br', 'https://www.datumagro.com.br']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
