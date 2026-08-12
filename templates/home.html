@@ -6,6 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DatumAgro — Gestão e Rastreabilidade Rural de Precisão</title>
   <meta name="description" content="DatumAgro: mapeamento automático da fazenda via CAR, pesagem com cálculo de GMD e passaporte sanitário digital para exportação.">
+
+  <!-- SEO & Canonical -->
+  <link rel="canonical" href="https://datumagro.com.br/" />
+
+  <!-- Open Graph (WhatsApp / Facebook / LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://datumagro.com.br/" />
+  <meta property="og:title" content="DatumAgro | Soluções Inteligentes para o Campo" />
+  <meta property="og:description" content="Plataforma modular para pecuária de corte, leite, suinocultura, equinos e mapeamento territorial com CAR e linhas de plantio." />
+  <meta property="og:image" content="https://datumagro.com.br/static/img/og-preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="pt_BR" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://datumagro.com.br/" />
+  <meta name="twitter:title" content="DatumAgro | Soluções Inteligentes para o Campo" />
+  <meta name="twitter:description" content="Plataforma modular para pecuária de corte, leite, suinocultura, equinos e mapeamento territorial." />
+  <meta name="twitter:image" content="https://datumagro.com.br/static/img/og-preview.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -352,6 +373,28 @@
       color: var(--pasture); font-weight: 700; font-size: 0.82rem; flex-shrink: 0;
     }
 
+    .plan .price-consult {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--pasture);
+      background: rgba(63,125,88,0.09); border-radius: 6px;
+      padding: 5px 12px; display: inline-block; margin: 4px 0 4px;
+    }
+    .consult-cta {
+      margin-top: 48px; text-align: center;
+    }
+    .consult-cta p {
+      font-size: 1rem; color: var(--ink-soft); margin-bottom: 16px;
+    }
+    .btn-whatsapp {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #25D366; color: #fff;
+      padding: 14px 28px; border-radius: 10px;
+      font-weight: 700; font-size: 0.95rem; text-decoration: none;
+      transition: background .2s, transform .15s;
+    }
+    .btn-whatsapp:hover { background: #1da851; transform: translateY(-2px); }
+
     /* ── DOWNLOAD ── */
     .download {
       background: linear-gradient(155deg, var(--ink) 0%, #0b1610 100%);
@@ -680,6 +723,151 @@
       .pr-table .td-gold { color: #a88118; font-weight: 700; text-align: right; }
       .pr-footer { margin-top: 20px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 8px; }
     }
+
+    /* ── GEO / CAR ── */
+    .geo-section { background: var(--ink); padding: 72px 0; }
+    .geo-section .section-head h2 { color: #f3efe4; }
+    .geo-section .section-head p  { color: #9db3a5; }
+    .geo-steps {
+      display: flex; gap: 0; margin-bottom: 44px;
+      flex-wrap: wrap; align-items: flex-start;
+    }
+    .geo-step { flex: 1; min-width: 180px; text-align: center; padding: 0 16px; position: relative; }
+    .geo-step:not(:last-child)::after {
+      content: '›'; position: absolute; right: -2px; top: 18px;
+      font-size: 1.6rem; color: var(--tag-gold); opacity: .6;
+    }
+    .geo-step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(201,162,39,.15); border: 1.5px solid rgba(201,162,39,.3);
+      color: var(--tag-gold);
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .geo-step h3 { font-size: 0.95rem; font-weight: 600; color: #f3efe4; margin-bottom: 6px; }
+    .geo-step p  { font-size: 0.84rem; color: #8fa897; line-height: 1.55; margin: 0; }
+    .geo-areas {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 36px;
+    }
+    @media (max-width: 860px) { .geo-areas { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .geo-areas { grid-template-columns: 1fr; } }
+    .geo-area-card {
+      background: var(--ink-2); border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.06); padding: 20px 18px;
+    }
+    .geo-area-lbl {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--tag-gold); margin-bottom: 10px; display: block;
+    }
+    .geo-area-val {
+      font-family: 'Fraunces', serif; font-size: 2rem;
+      color: #f3efe4; font-weight: 600; line-height: 1;
+    }
+    .geo-area-unit { font-size: 0.78rem; color: #8fa897; margin-left: 4px; }
+    .geo-area-desc { font-size: 0.82rem; color: #6b8b73; margin-top: 8px; line-height: 1.5; }
+    .geo-density {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 36px;
+    }
+    .geo-density-card {
+      flex: 1; min-width: 200px;
+      background: var(--ink-2); border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.06); padding: 20px 22px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .geo-density-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(63,125,88,.15); border: 1px solid rgba(63,125,88,.25);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      color: #5daf7a;
+    }
+    .geo-density-body { flex: 1; min-width: 0; }
+    .geo-density-body h4 { font-size: 0.92rem; color: #f3efe4; font-weight: 600; margin-bottom: 4px; }
+    .geo-density-body p  { font-size: 0.82rem; color: #8fa897; margin: 0; line-height: 1.5; }
+    .geo-passport {
+      background: rgba(201,162,39,.07);
+      border: 1px solid rgba(201,162,39,.22);
+      border-radius: var(--radius); padding: 28px 32px;
+      display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;
+    }
+    .geo-passport-icon { flex-shrink: 0; margin-top: 2px; }
+    .geo-passport-body { flex: 1; min-width: 0; }
+    .geo-passport-body h3 { font-family: 'Fraunces', serif; color: #f3efe4; font-size: 1.1rem; margin-bottom: 8px; }
+    .geo-passport-body p  { color: #9db3a5; font-size: 0.91rem; line-height: 1.62; margin: 0 0 10px; }
+    .geo-passport-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .geo-passport-tag {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+      padding: 3px 10px; border-radius: 5px;
+      background: rgba(201,162,39,.12); color: var(--tag-gold);
+      border: 1px solid rgba(201,162,39,.25);
+    }
+
+    /* ── ESPÉCIES / MULTI-MANEJO ── */
+    .especies-section { background: var(--paper-2); padding: 72px 0; }
+    .sp-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px; }
+    .sp-tab {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 17px; border-radius: 999px;
+      background: var(--paper); border: 1.5px solid #c8bfa6;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.85rem; font-weight: 600; color: var(--ink-soft);
+      cursor: pointer; transition: background .18s, border-color .18s, color .18s;
+      white-space: nowrap;
+    }
+    .sp-tab:hover { border-color: var(--pasture); color: var(--pasture); }
+    .sp-tab.active { background: var(--pasture); border-color: var(--pasture); color: #fff; }
+    .sp-panel { display: none; }
+    .sp-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 820px) { .sp-panel.active { grid-template-columns: 1fr; } }
+    .sp-info-card { background: var(--paper); border: 1px solid #c8bfa6; border-radius: var(--radius); padding: 28px; }
+    .sp-card-title {
+      font-family: 'Fraunces', serif; font-size: 1.4rem;
+      font-weight: 600; color: var(--ink); margin: 0 0 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sp-desc { color: var(--ink-soft); font-size: 0.93rem; line-height: 1.62; margin-bottom: 20px; }
+    .sp-attr { display: flex; gap: 8px; margin-bottom: 10px; }
+    .sp-attr-lbl {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.67rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--rust); flex-shrink: 0; padding-top: 2px; width: 80px;
+    }
+    .sp-attr-val { color: var(--ink); font-size: 0.9rem; line-height: 1.5; }
+    .sp-kpis { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #d8ceb8; }
+    .sp-kpi {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.71rem;
+      background: rgba(63,125,88,.1); color: var(--pasture);
+      border: 1px solid rgba(63,125,88,.22);
+      padding: 4px 11px; border-radius: 6px;
+    }
+    .sp-excl-card { background: var(--ink); border-radius: var(--radius); padding: 28px; }
+    .sp-excl-eyebrow {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--tag-gold); margin-bottom: 16px; display: block;
+    }
+    .sp-excl-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .sp-excl-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .sp-excl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tag-gold); flex-shrink: 0; margin-top: 6px; }
+    .sp-excl-text { font-size: 0.9rem; color: #c4dbc9; line-height: 1.52; }
+    .sp-excl-text strong { color: #f3efe4; }
+    .multi-banner {
+      margin-top: 40px; background: var(--ink-2); border-radius: var(--radius);
+      border: 1px solid rgba(201,162,39,.2);
+      padding: 28px 32px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+    }
+    .multi-banner-em { font-size: 2rem; flex-shrink: 0; }
+    .multi-banner-body { flex: 1; min-width: 200px; }
+    .multi-banner-body h3 { font-family: 'Fraunces', serif; color: #f3efe4; font-size: 1.15rem; margin-bottom: 8px; }
+    .multi-banner-body p { color: #8fa897; font-size: 0.91rem; line-height: 1.62; margin: 0 0 12px; }
+    .multi-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+    .multi-pill {
+      font-size: 0.8rem; padding: 4px 12px; border-radius: 999px;
+      background: rgba(201,162,39,.12); color: var(--tag-gold);
+      border: 1px solid rgba(201,162,39,.28); font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -695,7 +883,9 @@
     </div>
     <nav class="nav-links">
       <a href="#como-funciona">Como funciona</a>
+      <a href="#especies">Espécies</a>
       <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#mapeamento">Mapeamento</a>
       <a href="#planos">Planos</a>
       <a href="#calculadora">Calculadora</a>
     </nav>
@@ -708,7 +898,9 @@
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     <a href="#como-funciona">Como funciona</a>
+    <a href="#especies">Espécies</a>
     <a href="#funcionalidades">Funcionalidades</a>
+    <a href="#mapeamento">Mapeamento</a>
     <a href="#planos">Planos</a>
     <a href="#calculadora">Calculadora</a>
     <a href="#baixar" style="color:var(--tag-gold)">Baixar o app</a>
@@ -889,6 +1081,168 @@
   </div>
 </section>
 
+<!-- ESPÉCIES / MULTI-MANEJO -->
+<section class="especies-section" id="especies">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Multi-espécie</span>
+      <h2>Um sistema. Qualquer criação.</h2>
+      <p>O DatumAgro reconfigura interface, KPIs e alertas automaticamente conforme o tipo de manejo. Cada atividade tem seu vocabulário, métricas e calendário sanitário próprios — sem precisar de outro sistema.</p>
+    </div>
+
+    <div class="sp-tabs" role="tablist">
+      <button class="sp-tab active" role="tab" data-sp="corte" aria-selected="true">🐄 Bovinos de Corte</button>
+      <button class="sp-tab" role="tab" data-sp="leite" aria-selected="false">🥛 Bovinos de Leite</button>
+      <button class="sp-tab" role="tab" data-sp="suinos" aria-selected="false">🐖 Suinocultura</button>
+      <button class="sp-tab" role="tab" data-sp="equinos" aria-selected="false">🐴 Equinocultura</button>
+      <button class="sp-tab" role="tab" data-sp="ovinos" aria-selected="false">🐑 Ovinos e Caprinos</button>
+      <button class="sp-tab" role="tab" data-sp="terra" aria-selected="false">🌾 Lavoura</button>
+    </div>
+
+    <!-- Bovinos de Corte -->
+    <div class="sp-panel active" id="sp-corte" role="tabpanel">
+      <div class="sp-info-card reveal">
+        <p class="sp-card-title">🐄 Bovinos de Corte</p>
+        <p class="sp-desc">Focado em engorda, ganho de peso e comercialização. O app rastreia cada animal do nascimento até o romaneio de saída.</p>
+        <div class="sp-attr"><span class="sp-attr-lbl">Instalação</span><span class="sp-attr-val">Piquetes e pastagens — área calculada em hectares</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">ID Animal</span><span class="sp-attr-val">Brinco RFID ou visual — leitura por câmera ou Bluetooth</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Calendário</span><span class="sp-attr-val">Febre aftosa, brucelose, GTA — validação automática MAPA</span></div>
+        <div class="sp-kpis">
+          <span class="sp-kpi">GMD g/dia</span><span class="sp-kpi">Arroba (@)</span><span class="sp-kpi">Taxa de lotação</span><span class="sp-kpi">Peso vivo kg</span><span class="sp-kpi">Custo/@</span>
+        </div>
+      </div>
+      <div class="sp-excl-card reveal" style="transition-delay:.1s">
+        <span class="sp-excl-eyebrow">Funções exclusivas</span>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Romaneio em PDF</strong> — contrato com peso, arrobas e valor por lote, pronto para assinar no curral</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Calculadora @ em tempo real</strong> — conversão automática de kg para arrobas com o preço do dia</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Passaporte sanitário com QR Code</strong> — documento para GTA e exportação gerado direto no app</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Alerta de GMD</strong> — notificação quando o lote cai abaixo da meta de ganho diário</span></div>
+      </div>
+    </div>
+
+    <!-- Bovinos de Leite -->
+    <div class="sp-panel" id="sp-leite" role="tabpanel">
+      <div class="sp-info-card reveal">
+        <p class="sp-card-title">🥛 Bovinos de Leite</p>
+        <p class="sp-desc">Controle de produção diária, curva de lactação e manejo reprodutivo — tudo integrado em um único histórico por vaca.</p>
+        <div class="sp-attr"><span class="sp-attr-lbl">Instalação</span><span class="sp-attr-val">Piquetes ou galpão de ordenha — configurável por propriedade</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">ID Animal</span><span class="sp-attr-val">Brinco RFID — leitura automática no canzil de ordenha</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Calendário</span><span class="sp-attr-val">Brucelose, tuberculose, secagem — alertas por data de parto</span></div>
+        <div class="sp-kpis">
+          <span class="sp-kpi">Litros/vaca/dia</span><span class="sp-kpi">Curva de lactação</span><span class="sp-kpi">Dias em leite</span><span class="sp-kpi">Intervalo entre partos</span>
+        </div>
+      </div>
+      <div class="sp-excl-card reveal" style="transition-delay:.1s">
+        <span class="sp-excl-eyebrow">Funções exclusivas</span>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Registro de ordenha diária</strong> — manhã e tarde, com totais automáticos por turno e por animal</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Curva de lactação individual</strong> — gráfico do parto até a secagem por vaca</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Controle reprodutivo integrado</strong> — IATF, diagnóstico de gestação e data prevista de parto</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Alerta de produção</strong> — identifica vacas em queda antes de comprometer o lote</span></div>
+      </div>
+    </div>
+
+    <!-- Suinocultura -->
+    <div class="sp-panel" id="sp-suinos" role="tabpanel">
+      <div class="sp-info-card reveal">
+        <p class="sp-card-title">🐖 Suinocultura</p>
+        <p class="sp-desc">Confinamento de precisão com controle de baia, fases de produção e conversão alimentar automática — da creche ao abate.</p>
+        <div class="sp-attr"><span class="sp-attr-lbl">Instalação</span><span class="sp-attr-val">Baias e galpões — identificados por número e fase de produção</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">ID Animal</span><span class="sp-attr-val">Tatuagem auricular ou identificação por lote de baia</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Calendário</span><span class="sp-attr-val">Influenza suína, PRRS, circovírus — por fase de produção</span></div>
+        <div class="sp-kpis">
+          <span class="sp-kpi">Conversão Alimentar</span><span class="sp-kpi">kg/dia</span><span class="sp-kpi">Mortalidade %</span><span class="sp-kpi">Peso de saída</span><span class="sp-kpi">Custo/kg</span>
+        </div>
+      </div>
+      <div class="sp-excl-card reveal" style="transition-delay:.1s">
+        <span class="sp-excl-eyebrow">Funções exclusivas</span>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Fases automáticas</strong> — o sistema avança o lote de Creche → Crescimento → Terminação conforme o peso</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>CA em tempo real</strong> — conversão alimentar calculada a cada pesagem, com meta configurável por fase</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Gestão por baia</strong> — lotação, mortalidade e desempenho registrados por baia individual</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Relatório de lote</strong> — peso médio, CA final e conformidade sanitária prontos para o abatedouro</span></div>
+      </div>
+    </div>
+
+    <!-- Equinocultura -->
+    <div class="sp-panel" id="sp-equinos" role="tabpanel">
+      <div class="sp-info-card reveal">
+        <p class="sp-card-title">🐴 Equinocultura</p>
+        <p class="sp-desc">Ficha completa de saúde e genealogia para haras — do pedigree ao histórico de atividades e treinos por animal.</p>
+        <div class="sp-attr"><span class="sp-attr-lbl">Instalação</span><span class="sp-attr-val">Cocheiras e baias individuais — identificadas por nome</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">ID Animal</span><span class="sp-attr-val">Microchip obrigatório ou resenha descritiva completa</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Calendário</span><span class="sp-attr-val">Influenza equina, AIE, raiva — com emissão do atestado sanitário</span></div>
+        <div class="sp-kpis">
+          <span class="sp-kpi">Escore corporal</span><span class="sp-kpi">Peso kg</span><span class="sp-kpi">Idade</span><span class="sp-kpi">Dias de treino/mês</span>
+        </div>
+      </div>
+      <div class="sp-excl-card reveal" style="transition-delay:.1s">
+        <span class="sp-excl-eyebrow">Funções exclusivas</span>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Ficha de pedigree</strong> — árvore genealógica com pai, mãe e avós, com fotos</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Histórico de casqueamento</strong> — ferrageamento com alertas de vencimento e observações</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Diário de atividades</strong> — treinos, competições e descanso com duração e notas por animal</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Resenha digital</strong> — descrição oficial de pelagem e marcas para documentação e seguro</span></div>
+      </div>
+    </div>
+
+    <!-- Ovinos e Caprinos -->
+    <div class="sp-panel" id="sp-ovinos" role="tabpanel">
+      <div class="sp-info-card reveal">
+        <p class="sp-card-title">🐑 Ovinos e Caprinos</p>
+        <p class="sp-desc">Gestão de rebanho pequeno com foco em sanidade, reprodução e escore corporal — ovelhas, cabras e cruzamentos.</p>
+        <div class="sp-attr"><span class="sp-attr-lbl">Instalação</span><span class="sp-attr-val">Piquetes rotativos ou curral coletivo</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">ID Animal</span><span class="sp-attr-val">Brinco pequeno numerado ou colar com plaqueta</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Calendário</span><span class="sp-attr-val">Clostridiose, ectima contagioso, verminose — por escore corporal</span></div>
+        <div class="sp-kpis">
+          <span class="sp-kpi">FAMACHA</span><span class="sp-kpi">Escore corporal (ECC)</span><span class="sp-kpi">g/dia</span><span class="sp-kpi">Taxa de parição</span>
+        </div>
+      </div>
+      <div class="sp-excl-card reveal" style="transition-delay:.1s">
+        <span class="sp-excl-eyebrow">Funções exclusivas</span>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Score FAMACHA digital</strong> — avaliação de mucosa ocular com foto e pontuação por animal</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Escore corporal (ECC)</strong> — escala de 1 a 5 com histórico e alertas de subnutrição por rebanho</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Ciclo reprodutivo por raça</strong> — estação de monta, diagnóstico de gestação e previsão de parição</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Controle de verminose</strong> — histórico de OPG e protocolos de dosificação por animal</span></div>
+      </div>
+    </div>
+
+    <!-- Lavoura -->
+    <div class="sp-panel" id="sp-terra" role="tabpanel">
+      <div class="sp-info-card reveal">
+        <p class="sp-card-title">🌾 Lavoura e Mapeamento</p>
+        <p class="sp-desc">Para quem planta ou integra lavoura-pecuária — talhões, análise de solo e custo por hectare sem precisar de outro sistema.</p>
+        <div class="sp-attr"><span class="sp-attr-lbl">Instalação</span><span class="sp-attr-val">Talhões com polígono importado do SiCAR ou desenhado no mapa</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Identificação</span><span class="sp-attr-val">Coordenadas GPS ou upload de arquivo KML/shapefile</span></div>
+        <div class="sp-attr"><span class="sp-attr-lbl">Registros</span><span class="sp-attr-val">Plantio, colheita, aplicação de insumos e análise de solo</span></div>
+        <div class="sp-kpis">
+          <span class="sp-kpi">sc/ha</span><span class="sp-kpi">Custo/ha</span><span class="sp-kpi">pH do solo</span><span class="sp-kpi">Hectares totais</span><span class="sp-kpi">Rotação</span>
+        </div>
+      </div>
+      <div class="sp-excl-card reveal" style="transition-delay:.1s">
+        <span class="sp-excl-eyebrow">Funções exclusivas</span>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Análise de solo por talhão</strong> — pH, CTC, matéria orgânica e recomendação de calcário</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Histórico de rotação</strong> — soja → milho → pastagem com custo e produtividade por safra</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Integração lavoura-pecuária</strong> — mapeia o talhão que virou pastagem e o animal que vai nele</span></div>
+        <div class="sp-excl-item"><div class="sp-excl-dot"></div><span class="sp-excl-text"><strong>Custo por hectare</strong> — insumos, serviços e colheita consolidados por talhão e safra</span></div>
+      </div>
+    </div>
+
+    <!-- Banner multi-espécie -->
+    <div class="multi-banner reveal">
+      <div class="multi-banner-em">🏡</div>
+      <div class="multi-banner-body">
+        <h3>Criação mista? Tudo numa conta só.</h3>
+        <p>Bovinos e suínos na mesma propriedade? Equinos com lavoura integrada? No DatumAgro você cadastra todos os tipos de manejo dentro da mesma conta — cada espécie com suas próprias fichas, métricas e calendário sanitário, sem misturar os dados.</p>
+        <div class="multi-pills">
+          <span class="multi-pill">🐄 + 🐖 Bovinos + Suínos</span>
+          <span class="multi-pill">🐴 + 🌾 Equinos + Lavoura</span>
+          <span class="multi-pill">🐄 + 🐑 Corte + Ovinos</span>
+          <span class="multi-pill">🥛 + 🌾 Leite + iLP</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- FUNCIONALIDADES -->
 <section class="features" id="funcionalidades">
   <div class="wrap">
@@ -925,10 +1279,10 @@
 
       <div class="feat-card reveal" style="transition-delay:.18s">
         <div class="feat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4zM4 12h10v8H4zM17 12h3v8h-3z"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         </div>
-        <h3>Área e piquetes em hectares</h3>
-        <p>Cálculo automático da área de cada subdivisão da propriedade a partir do polígono importado do SiCAR.</p>
+        <h3>Mapeamento via CAR</h3>
+        <p>Upload do .kml ou .geojson do SInCAR — o app calcula área total, Reserva Legal, APP e área útil para pastagem automaticamente.</p>
       </div>
 
       <div class="feat-card reveal" style="transition-delay:.24s">
@@ -951,32 +1305,139 @@
   </div>
 </section>
 
+<!-- GEOPROCESSAMENTO / CAR -->
+<section class="geo-section" id="mapeamento">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark" style="color:var(--tag-gold)">Geoprocessamento</span>
+      <h2>Sua fazenda no mapa — sem papel e sem intermediário</h2>
+      <p>Importe o arquivo oficial do CAR diretamente do SInCAR. O DatumAgro lê os polígonos, calcula cada área automaticamente e usa esses dados para calcular a taxa de lotação real e emitir o passaporte socioambiental nos romaneios.</p>
+    </div>
+
+    <!-- 3 passos -->
+    <div class="geo-steps">
+      <div class="geo-step reveal">
+        <div class="geo-step-num">01</div>
+        <h3>Baixe o arquivo no SInCAR</h3>
+        <p>Acesse o portal oficial, localize sua propriedade e exporte o arquivo <code style="font-size:.8em;color:var(--tag-gold)">.kml</code> ou <code style="font-size:.8em;color:var(--tag-gold)">.geojson</code> do recibo CAR.</p>
+      </div>
+      <div class="geo-step reveal" style="transition-delay:.08s">
+        <div class="geo-step-num">02</div>
+        <h3>Faça o upload no app</h3>
+        <p>Na tela da Propriedade, toque em "Importar CAR" e selecione o arquivo. Funciona offline — o processo é local no dispositivo.</p>
+      </div>
+      <div class="geo-step reveal" style="transition-delay:.16s">
+        <div class="geo-step-num">03</div>
+        <h3>Mapa e áreas prontos</h3>
+        <p>Os polígonos são desenhados no mapa, as áreas calculadas em hectares e a taxa de lotação do rebanho é atualizada automaticamente.</p>
+      </div>
+    </div>
+
+    <!-- Áreas calculadas -->
+    <div class="geo-areas">
+      <div class="geo-area-card reveal">
+        <span class="geo-area-lbl">Área Total</span>
+        <div><span class="geo-area-val">312</span><span class="geo-area-unit">ha</span></div>
+        <p class="geo-area-desc">Perímetro total da propriedade calculado do polígono CAR</p>
+      </div>
+      <div class="geo-area-card reveal" style="transition-delay:.06s">
+        <span class="geo-area-lbl">Reserva Legal</span>
+        <div><span class="geo-area-val">45</span><span class="geo-area-unit">ha</span></div>
+        <p class="geo-area-desc">Área de RL mapeada — protegida por lei, fora do manejo produtivo</p>
+      </div>
+      <div class="geo-area-card reveal" style="transition-delay:.12s">
+        <span class="geo-area-lbl">APP</span>
+        <div><span class="geo-area-val">12</span><span class="geo-area-unit">ha</span></div>
+        <p class="geo-area-desc">Área de Preservação Permanente — faixas de mata ciliar e nascentes</p>
+      </div>
+      <div class="geo-area-card reveal" style="transition-delay:.18s">
+        <span class="geo-area-lbl">Área Útil</span>
+        <div><span class="geo-area-val">255</span><span class="geo-area-unit">ha</span></div>
+        <p class="geo-area-desc">Pastagem e lavoura disponíveis para produção após descontar RL e APP</p>
+      </div>
+    </div>
+
+    <!-- Densidade e lotação -->
+    <div class="geo-density">
+      <div class="geo-density-card reveal">
+        <div class="geo-density-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 8-7 13C8.5 17 5 13 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </div>
+        <div class="geo-density-body">
+          <h4>Taxa de lotação real</h4>
+          <p>Com a <strong style="color:#c4dbc9">área_util_ha</strong> calculada do polígono, o Dashboard exibe cabeças/ha e UA/ha descontando RL e APP — sem estimativa, com precisão topográfica.</p>
+        </div>
+      </div>
+      <div class="geo-density-card reveal" style="transition-delay:.1s">
+        <div class="geo-density-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div class="geo-density-body">
+          <h4>Código CAR salvo no perfil</h4>
+          <p>O número de recibo (<strong style="color:#c4dbc9">BR-XX-...</strong>) fica vinculado à fazenda para gerar relatórios de conformidade e rastreabilidade socioambiental para exportação.</p>
+        </div>
+      </div>
+      <div class="geo-density-card reveal" style="transition-delay:.2s">
+        <div class="geo-density-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
+        <div class="geo-density-body">
+          <h4>100% offline — zero dependência do governo</h4>
+          <p>O processamento é local: sem chamadas ao SInCAR, sem captcha, sem instabilidade de portais estaduais. O arquivo já sai do app pronto para uso.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Passaporte socioambiental -->
+    <div class="geo-passport reveal">
+      <div class="geo-passport-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.6"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/><polyline points="9 12 11 14 15 10"/></svg>
+      </div>
+      <div class="geo-passport-body">
+        <h3>Passaporte Socioambiental — impresso no romaneio</h3>
+        <p>Quando a propriedade tem CAR ativo e os dados geoespaciais importados, o DatumAgro inclui automaticamente o <strong style="color:#f3efe4">Selo de Conformidade Ambiental</strong> nos PDFs de romaneio e passaporte sanitário — um diferencial exigido por frigoríficos e exportadores que operam em rastreabilidade total.</p>
+        <div class="geo-passport-tags">
+          <span class="geo-passport-tag">CAR ativo</span>
+          <span class="geo-passport-tag">RL mapeada</span>
+          <span class="geo-passport-tag">APP respeitada</span>
+          <span class="geo-passport-tag">GTA + QR Code</span>
+          <span class="geo-passport-tag">Código Florestal Lei 12.651</span>
+          <span class="geo-passport-tag">Rastreabilidade total</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- PLANOS -->
 <section id="planos">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow-dark">Planos</span>
-      <h2>Um preço que acompanha o tamanho do seu rebanho</h2>
-      <p>Sem contrato de fidelidade. Mude de plano conforme o rebanho cresce.</p>
+      <h2>Escolha o plano certo para o seu rebanho</h2>
+      <p>Converse com nossa equipe e receba uma proposta personalizada para o porte da sua operação. Sem contrato de fidelidade — você cresce, o plano cresce junto.</p>
     </div>
+
     <div class="plans">
 
       <div class="plan reveal">
         <h3>Starter</h3>
-        <div class="price">R$ 89<span class="price-unit">/mês</span></div>
+        <div class="price-consult">Consultar valor</div>
         <div class="cap">Até 100 cabeças</div>
         <ul>
           <li>Mapeamento via CAR</li>
           <li>Pesagem com cálculo de GMD</li>
           <li>Passaporte sanitário digital</li>
-          <li>Suporte por e-mail</li>
+          <li>Suporte por WhatsApp</li>
         </ul>
-        <a href="#baixar" class="btn btn-dark">Começar agora</a>
+        <a href="https://wa.me/5522988330445?text=Olá!%20Tenho%20interesse%20no%20plano%20Starter%20do%20DatumAgro."
+           target="_blank" rel="noopener" class="btn btn-dark">Consultar</a>
       </div>
 
       <div class="plan featured reveal" style="transition-delay:.1s">
         <h3>Profissional</h3>
-        <div class="price">R$ 249<span class="price-unit">/mês</span></div>
+        <div class="price-consult" style="color:var(--tag-gold)">Consultar valor</div>
         <div class="cap">Até 500 cabeças</div>
         <ul>
           <li>Tudo do Starter</li>
@@ -984,12 +1445,13 @@
           <li>Gestão financeira por lote</li>
           <li>Gestão de equipe e permissões</li>
         </ul>
-        <a href="#baixar" class="btn btn-gold">Começar agora</a>
+        <a href="https://wa.me/5522988330445?text=Olá!%20Tenho%20interesse%20no%20plano%20Profissional%20do%20DatumAgro."
+           target="_blank" rel="noopener" class="btn btn-gold">Consultar</a>
       </div>
 
       <div class="plan reveal" style="transition-delay:.2s">
         <h3>Cooperativa</h3>
-        <div class="price">R$ 890<span class="price-unit">/mês</span></div>
+        <div class="price-consult">Consultar valor</div>
         <div class="cap">Rebanho ilimitado · multi-fazenda</div>
         <ul>
           <li>Tudo do Profissional</li>
@@ -997,10 +1459,22 @@
           <li>Relatórios consolidados</li>
           <li>Suporte prioritário</li>
         </ul>
-        <a href="#baixar" class="btn btn-dark">Falar com a equipe</a>
+        <a href="https://wa.me/5522988330445?text=Olá!%20Tenho%20interesse%20no%20plano%20Cooperativa%20do%20DatumAgro."
+           target="_blank" rel="noopener" class="btn btn-dark">Consultar</a>
       </div>
 
     </div>
+
+    <!-- CTA WhatsApp central -->
+    <div class="consult-cta reveal">
+      <p>Não sabe qual plano escolher? Nossa equipe responde em minutos.</p>
+      <a href="https://wa.me/5522988330445?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20planos%20do%20DatumAgro."
+         target="_blank" rel="noopener" class="btn-whatsapp">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor"><path d="M16 0C7.164 0 0 7.163 0 16c0 2.822.737 5.472 2.027 7.773L0 32l8.437-2.01A15.93 15.93 0 0 0 16 32c8.836 0 16-7.163 16-16S24.836 0 16 0Zm8.223 22.614c-.343.966-2.01 1.847-2.76 1.962-.707.109-1.598.155-2.577-.162a23.67 23.67 0 0 1-2.33-.86c-4.104-1.775-6.787-5.9-6.99-6.173-.205-.273-1.673-2.222-1.673-4.237 0-2.016 1.058-3.007 1.434-3.419.376-.41.82-.512 1.093-.512.273 0 .547.003.786.014.252.012.59-.096.924.705.343.82 1.165 2.836 1.267 3.042.103.205.171.444.034.717-.137.273-.205.444-.41.683-.205.239-.43.534-.614.717-.205.205-.418.428-.18.838.239.41 1.062 1.75 2.28 2.835 1.566 1.397 2.887 1.83 3.297 2.035.41.205.649.171.888-.103.239-.273 1.024-1.195 1.298-1.605.273-.41.547-.342.922-.205.376.137 2.39 1.128 2.8 1.333.41.205.683.308.786.478.103.17.103.99-.24 1.956Z"/></svg>
+        Falar com a equipe no WhatsApp
+      </a>
+    </div>
+
   </div>
 </section>
 
@@ -1092,8 +1566,7 @@
     <p class="lead">Disponível para Android. Instale no celular que já fica no curral e comece a mapear sua fazenda em poucos minutos.</p>
     <div class="dl-buttons">
 
-      <a href="{% static 'downloads/DatumAgro.apk' %}"
-         download="DatumAgro.apk"
+      <a href="{% url 'download-apk' %}"
          class="dl-card">
         <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--pasture)">
           <path d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.86 3.22a10.9 10.9 0 00-8.42 0L6.43 5.8a.5.5 0 10-.87.5l1.84 3.18C4.9 11.03 3.2 13.87 3 17h18c-.2-3.13-1.9-5.97-4.4-7.52zM8.5 14a1 1 0 110-2 1 1 0 010 2zm7 0a1 1 0 110-2 1 1 0 010 2z"/>
@@ -1101,7 +1574,7 @@
         <div>
           <div class="lbl" style="font-family:'IBM Plex Mono',monospace">Download direto</div>
           <div class="name">Android (APK)</div>
-          <div class="meta">v1.0.0 · 74 MB · Android 5.0+</div>
+          <div class="meta">v1.2.0 · 71 MB · Android 7.0+</div>
         </div>
       </a>
 
@@ -1353,6 +1826,21 @@
   document.getElementById('c-peso').addEventListener('input', renderUnico);
   document.getElementById('c-preco').addEventListener('input', () => { renderUnico(); renderLote(); });
   document.getElementById('l-peso').addEventListener('keydown', e => { if (e.key === 'Enter') adicionarLote(); });
+
+  // ── ESPÉCIES TABS ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.sp-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sp-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+      document.querySelectorAll('.sp-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      const panel = document.getElementById('sp-' + tab.dataset.sp);
+      if (panel) {
+        panel.classList.add('active');
+        panel.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+      }
+    });
+  });
 </script>
 
 <!-- Relatório de impressão (invisível; aparece só ao imprimir/salvar PDF) -->

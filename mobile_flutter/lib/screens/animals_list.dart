@@ -8,6 +8,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:async';
 import '../config.dart';
+import '../ajuda/ajuda_bottom_sheet.dart';
+import '../ajuda/ajuda_service.dart';
 import 'animal_form.dart';
 import 'animal_detail_screen.dart';
 import 'romaneio_screen.dart';
@@ -27,6 +29,7 @@ class _AnimalsListScreenState extends State<AnimalsListScreen> {
   DateTime? _lastSyncAttempt;
 
   final _secureStorage = const FlutterSecureStorage();
+  final _ajudaService = AjudaService(ApiService());
 
   @override
   void initState() {
@@ -97,6 +100,12 @@ class _AnimalsListScreenState extends State<AnimalsListScreen> {
       appBar: AppBar(
         title: const Text('Animais', key: Key('animals_title')),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Ajuda',
+            onPressed: () => mostrarAjuda(context,
+                service: _ajudaService, moduloSlug: 'animals'),
+          ),
           IconButton(
             icon: const Icon(Icons.scale),
             tooltip: 'Romaneio de Pesagem',

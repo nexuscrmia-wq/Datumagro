@@ -3,11 +3,13 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenRefreshView
 from datumagro.apps.usuarios.views import CustomTokenObtainPairView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from datumagro.apps.core.views import (
-    health, create_cliente_for_user, dashboard_resumo, politica_privacidade, onboarding_etapa, home
+    health, create_cliente_for_user, dashboard_resumo, politica_privacidade,
+    onboarding_etapa, home, versao_app, redefinir_senha, download_apk, upload_apk,
 )
 from datumagro.apps.usuarios.views import (
     equipe_membros, equipe_convidar, equipe_aceitar,
@@ -16,8 +18,9 @@ from datumagro.apps.usuarios.views import (
 
 urlpatterns = [
     path('', home, name='home'),
-    path('admin/', admin.site.urls),
-    path('ping/', lambda req: HttpResponse('pong'), name='ping'),
+    # Admin em path não-padrão — bots varrem /admin/ automaticamente
+    path('datumagro-gestao/', admin.site.urls),
+    path('ping/', lambda _: HttpResponse('pong'), name='ping'),
 
     # Página pública (obrigatória para aprovação nas lojas)
     path('privacidade/', politica_privacidade, name='politica-privacidade'),
@@ -46,14 +49,25 @@ urlpatterns = [
     path('api/equipe/membros/<int:pk>/permissoes/', equipe_permissoes, name='equipe-permissoes'),
     path('api/usuarios/excluir-conta/', excluir_conta, name='excluir-conta'),
 
+    # Recuperação de senha via browser (link enviado por email)
+    path('redefinir-senha/<str:token>/', redefinir_senha, name='redefinir-senha'),
+
+    # Central de Ajuda / Base de Conhecimento
+    path('api/ajuda/', include('datumagro.apps.ajuda.urls', namespace='ajuda')),
+
+    # APK: download público + upload restrito a admin (salva no Railway Volume)
+    path('baixar/apk/', download_apk, name='download-apk'),
+    path('api/admin/upload-apk/', upload_apk, name='upload-apk'),
+
     # Utilitários
     path('api/health/', health, name='health'),
+    path('api/versao/', versao_app, name='versao-app'),
     path('api/dashboard/resumo/', dashboard_resumo, name='dashboard-resumo'),
-    path('api/debug/create_cliente/', create_cliente_for_user, name='debug-create-cliente'),
+    path('api/onboarding/criar-conta/', create_cliente_for_user, name='onboarding-create-cliente'),
     path('api/onboarding/etapa/', onboarding_etapa, name='onboarding-etapa'),
 
-    # OpenAPI / Swagger
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # OpenAPI / Swagger — acessível a qualquer usuário autenticado
+    path('api/schema/', SpectacularAPIView.as_view(permission_classes=[IsAuthenticated]), name='schema'),
+    path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema', permission_classes=[IsAuthenticated]), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema', permission_classes=[IsAuthenticated]), name='redoc'),
 ]

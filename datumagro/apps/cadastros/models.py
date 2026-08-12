@@ -40,6 +40,19 @@ class Cliente(models.Model):
         default='BOVINOS_CORTE',
     )
 
+    STATUS_ASSINATURA_CHOICES = [
+        ('PENDENTE', 'Pendente de Aprovação'),
+        ('ATIVO', 'Ativo'),
+        ('BLOQUEADO', 'Bloqueado'),
+    ]
+    status_assinatura = models.CharField(
+        'Status de Assinatura',
+        max_length=10,
+        choices=STATUS_ASSINATURA_CHOICES,
+        default='PENDENTE',
+        db_index=True,
+    )
+
     class Meta:
         verbose_name = "Cliente"
         verbose_name_plural = "Clientes"
@@ -66,6 +79,42 @@ class Propriedade(models.Model):
     cep = models.CharField(max_length=9, blank=True)
     hectares = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     tipo_operacao = models.CharField(max_length=20, choices=TIPO_OPERACAO_CHOICES, default='CORTE')
+
+    # CAR / SInCAR
+    codigo_car = models.CharField(
+        'Código CAR', max_length=80, blank=True,
+        help_text='Ex: BR-RJ-330100-9AB12345.678901234567-2024.09.17',
+    )
+    arquivo_car = models.FileField(
+        'Arquivo CAR', upload_to='car/', blank=True, null=True,
+        help_text='Arquivo .kml ou .geojson baixado do SInCAR',
+    )
+    geojson_car = models.JSONField(
+        'GeoJSON CAR', null=True, blank=True,
+        help_text='FeatureCollection extraído do arquivo CAR',
+    )
+    area_total_ha = models.DecimalField(
+        'Área Total CAR (ha)', max_digits=10, decimal_places=2, null=True, blank=True,
+    )
+    area_reserva_legal_ha = models.DecimalField(
+        'Reserva Legal (ha)', max_digits=10, decimal_places=2, null=True, blank=True,
+    )
+    area_app_ha = models.DecimalField(
+        'APP (ha)', max_digits=10, decimal_places=2, null=True, blank=True,
+    )
+    area_util_ha = models.DecimalField(
+        'Área Útil (ha)', max_digits=10, decimal_places=2, null=True, blank=True,
+    )
+
+    # Camadas editáveis pelo usuário (desenhadas no mapa)
+    geojson_piquetes_talhoes = models.JSONField(
+        'Piquetes / Talhões (GeoJSON)', null=True, blank=True,
+        help_text='FeatureCollection de polígonos desenhados pelo usuário',
+    )
+    geojson_infraestrutura = models.JSONField(
+        'Infraestrutura (GeoJSON)', null=True, blank=True,
+        help_text='FeatureCollection de pontos: bebedouros, cochos, porteiras etc.',
+    )
 
     objetivo_producao = models.CharField(max_length=10, choices=OBJETIVO_CHOICES, null=True, blank=True)
     tipo_solo = models.CharField(max_length=10, choices=TIPO_SOLO_CHOICES, null=True, blank=True)

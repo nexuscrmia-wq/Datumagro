@@ -53,6 +53,24 @@ class Plano(models.Model):
 
     ativo = models.BooleanField(default=True)
 
+    # Campos para o app móvel (sem preço — preço só no admin)
+    cap_descricao = models.CharField(
+        max_length=100, default='', blank=True,
+        help_text='Descrição da capacidade exibida no app. Ex: Até 100 cabeças',
+    )
+    recursos = models.JSONField(
+        default=list, blank=True,
+        help_text='Lista de recursos exibidos no app. Ex: ["Gestão de animais", "Mapa interativo"]',
+    )
+    highlight = models.BooleanField(
+        default=False,
+        help_text='Exibir este plano em destaque ("Mais popular") no app',
+    )
+    whatsapp_msg = models.CharField(
+        max_length=500, default='', blank=True,
+        help_text='Mensagem URL-encoded para WhatsApp ao clicar em "Consultar". Deixe vazio para usar o padrão.',
+    )
+
     class Meta:
         verbose_name = "Plano"
         verbose_name_plural = "Planos"

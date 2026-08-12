@@ -100,16 +100,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
                 'can_view_animais': True,
                 'can_edit_animais': True,
                 'can_view_propriedades': True,
-                'can_edit_propriedades': False,
+                'can_edit_propriedades': True,   # gerente cadastra piquetes/baias/galpões
                 'can_view_financeiro': True,
-                'can_edit_financeiro': False,
+                'can_edit_financeiro': True,      # gerente lança compras/despesas operacionais
                 'can_view_alertas': True,
                 'can_view_vacinas': True,
                 'can_edit_vacinas': True,
                 'can_view_relatorios': True,
                 'can_manage_usuarios': False,
                 'can_manage_lotes': True,
-                'can_delete_dados': False,
+                'can_delete_dados': False,        # só proprietário deleta
             },
             TipoUsuario.FUNCIONARIO: {
                 'can_view_animais': True,

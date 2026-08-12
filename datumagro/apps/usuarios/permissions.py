@@ -24,8 +24,57 @@ class IsGerente(BasePermission):
         )
 
 
+class IsProprietarioOrGerente(BasePermission):
+    """Proprietários e gerentes — peões não acessam módulos estratégicos."""
+    message = "Apenas proprietários e gerentes podem acessar este recurso."
+
+    def has_permission(self, request, view):
+        return (
+            request.user and request.user.is_authenticated and
+            (request.user.is_proprietario() or request.user.is_gerente())
+        )
+
+
+class IsOperadorCampo(BasePermission):
+    """
+    Operações de campo (pesagem, sanitário, movimentação de lote):
+    - GET: todos os autenticados
+    - POST / PUT / PATCH: todos os autenticados (peão pode registrar)
+    - DELETE: somente Proprietário
+    """
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        if request.method == 'DELETE':
+            return request.user.get_permissoes().get('can_delete_dados', False)
+        return True
+
+
+class PermissaoLotesExtendida(BasePermission):
+    """
+    Lotes, piquetes, baias e galpões:
+    - GET: todos os autenticados
+    - POST (criar): Proprietário + Gerente
+    - PUT / PATCH (movimentar animais): todos (peão pode trocar de piquete/baia)
+    - DELETE: somente Proprietário
+    """
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        if request.method == 'DELETE':
+            return request.user.is_proprietario()
+        if request.method == 'POST':
+            return request.user.is_proprietario() or request.user.is_gerente()
+        return True
+
+
+# Mantido para compatibilidade — equivale a IsAuthenticated
 class IsFuncionario(BasePermission):
-    """Apenas funcionários, gerentes e proprietários podem acessar."""
+    """Deprecated: use IsOperadorCampo para operações de campo."""
     message = "Acesso restrito."
 
     def has_permission(self, request, view):

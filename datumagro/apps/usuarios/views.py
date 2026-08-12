@@ -11,7 +11,12 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class LoginRateThrottle(AnonRateThrottle):
+    scope = 'login'
 
 from .models import Usuario, PerfilUsuario, TipoUsuario, ConviteEquipe
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -75,10 +80,59 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                     user.propriedades.add(prop)
 
                 refresh = RefreshToken.for_user(user)
+                _cli = _resolver_cliente(user)
+                _status_ass = _status_from_cliente(user, _cli)
+
+                # ── Email de boas-vindas para o usuário ──────────────────
+                from django.utils import timezone as tz
+                nome_usuario = user.nome_completo or user.email.split('@')[0]
+                try:
+                    send_mail(
+                        subject='✅ Cadastro recebido — DatumAgro',
+                        message=(
+                            f'Olá, {nome_usuario}!\n\n'
+                            f'Recebemos seu cadastro no DatumAgro com sucesso. '
+                            f'Sua conta está sendo analisada e você receberá acesso completo assim que for aprovada.\n\n'
+                            f'Isso normalmente leva algumas horas. Se preferir aprovação mais rápida, '
+                            f'entre em contato diretamente:\n\n'
+                            f'📱 WhatsApp: https://wa.me/5522988330445\n'
+                            f'📧 E-mail: nexusia47@gmail.com\n\n'
+                            f'Atenciosamente,\n'
+                            f'Equipe DatumAgro\n'
+                            f'https://datumagro.com.br'
+                        ),
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'DatumAgro <nexusia47@gmail.com>'),
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+
+                # ── Notificação ao admin (aprovação pendente) ────────────
+                try:
+                    send_mail(
+                        subject=f'🌱 Novo cadastro aguardando aprovação — {nome_usuario}',
+                        message=(
+                            f'Novo usuário cadastrado:\n\n'
+                            f'Nome: {user.nome_completo or "—"}\n'
+                            f'E-mail: {user.email}\n'
+                            f'Data: {tz.now().strftime("%d/%m/%Y %H:%M")}\n\n'
+                            f'► Aprovar agora:\n'
+                            f'https://datumagro.com.br/datumagro-gestao/cadastros/cliente/\n\n'
+                            f'— Sistema DatumAgro'
+                        ),
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'DatumAgro <nexusia47@gmail.com>'),
+                        recipient_list=['nexuscrmia@gmail.com'],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass  # Nunca bloqueia o cadastro por falha de email
+
                 return Response({
                     'user': UsuarioSerializer(user).data,
                     'refresh': str(refresh),
                     'access': str(refresh.access_token),
+                    'status_assinatura': _status_ass,
                 }, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -87,11 +141,11 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], throttle_classes=[LoginRateThrottle])
     def login(self, request):
         """
         Login com retorno de tipo de usuário e permissões.
-        
+
         Request:
         {
             "email": "usuario@example.com",
@@ -151,22 +205,20 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             
             serializer = UsuarioLoginSerializer(user_data)
 
-            from datumagro.apps.cadastros.models import Cliente
-            cliente = Cliente.objects.filter(email_contato=user.email).first()
-            perfil = getattr(user, 'perfilusuario', None)
-            if not cliente and perfil:
-                cliente = getattr(perfil, 'cliente', None)
+            cliente = _resolver_cliente(user)
             tipo_especie = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
+            status_assinatura = _status_from_cliente(user, cliente)
 
             return Response({
                 'user': serializer.data,
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'tipo_especie': tipo_especie,
+                'status_assinatura': status_assinatura,
             })
-        
+
         return Response(
-            {'error': 'Credenciais inválidas'}, 
+            {'error': 'Credenciais inválidas'},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -228,50 +280,51 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def reset_password(self, request):
-        """Solicitar reset de senha."""
-        email = request.data.get('email')
+        """
+        Solicitar reset de senha.
+        Sempre retorna 200 com mensagem genérica — evita enumeração de usuários.
+        """
+        email = request.data.get('email', '').strip()
         if not email:
             return Response(
-                {'error': 'Email é obrigatório'}, 
+                {'error': 'Email é obrigatório'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        _GENERIC_RESPONSE = Response({
+            'message': 'Se este e-mail estiver cadastrado, você receberá as instruções em instantes.'
+        }, status=status.HTTP_200_OK)
+
         try:
-            user = Usuario.objects.get(email=email)
+            user = Usuario.objects.get(email__iexact=email)
         except Usuario.DoesNotExist:
-            return Response(
-                {'error': 'Usuário não encontrado'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+            # Não revelar se o email existe ou não
+            return _GENERIC_RESPONSE
 
         token = get_random_string(48)
         user.password_reset_token = token
         user.token_created_at = timezone.now()
         user.save()
 
-        reset_url = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')}/reset-password/{token}"
-        context = {'user': user, 'reset_url': reset_url}
+        base_url = getattr(settings, 'FRONTEND_URL', 'https://datumagro.com.br')
+        reset_url = f"{base_url}/redefinir-senha/{token}/"
+        nome = user.first_name or user.email.split('@')[0]
+        context = {'user': user, 'nome': nome, 'reset_url': reset_url}
         message = render_to_string('usuarios/reset_password_email.html', context)
 
         try:
             send_mail(
-                'Recuperação de Senha - DatumAgro',
-                message,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@localhost'),
+                'Recuperação de Senha — DatumAgro',
+                '',
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'DatumAgro <nexusia47@gmail.com>'),
                 [user.email],
-                fail_silently=False,
+                html_message=message,
+                fail_silently=True,
             )
-        except Exception as e:
-            if getattr(settings, 'DEBUG', False):
-                return Response({
-                    'message': 'Falha ao enviar email via SMTP (dev). Token gerado (apenas dev):', 
-                    'token': token
-                }, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response({
-                    'message': 'Email de recuperação enfileirado.'
-                }, status=status.HTTP_202_ACCEPTED)
+        except Exception:
+            pass  # EMAIL_TIMEOUT=10 garante que nunca trava; falha silenciosa
 
-        return Response({'message': 'Email de recuperação enviado.'})
+        return _GENERIC_RESPONSE
 
     @action(detail=False, methods=['post'])
     def confirm_reset_password(self, request):
@@ -328,16 +381,13 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             'usuario_obj': user,
         }
 
-        from datumagro.apps.cadastros.models import Cliente
-        cliente = Cliente.objects.filter(email_contato=user.email).first()
-        perfil = getattr(user, 'perfilusuario', None)
-        if not cliente and perfil:
-            cliente = getattr(perfil, 'cliente', None)
+        cliente = _resolver_cliente(user)
         tipo_especie = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
 
         serializer = UsuarioLoginSerializer(user_data)
         response_data = dict(serializer.data)
         response_data['tipo_especie'] = tipo_especie
+        response_data['status_assinatura'] = _status_from_cliente(user, cliente)
         return Response(response_data)
 
 
@@ -353,13 +403,10 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
 
-        from datumagro.apps.cadastros.models import Cliente
         user = request.user
-        perfil = getattr(user, 'perfilusuario', None)
-        cliente = getattr(perfil, 'cliente', None) if perfil else None
-        if not cliente:
-            cliente = Cliente.objects.filter(email_contato=user.email).first()
+        cliente = _resolver_cliente(user)
         data['tipo_especie'] = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
+        data['status_assinatura'] = _status_from_cliente(user, cliente)
 
         return Response(data)
 
@@ -372,8 +419,35 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 # ---------------------------------------------------------------------------
-# Helpers de equipe
+# Helpers internos
 # ---------------------------------------------------------------------------
+
+def _resolver_cliente(user):
+    """
+    Resolve o Cliente de um usuário independente do tipo (Proprietário/Gerente/Peão).
+    Ordem: email_contato → propriedade M2M → PerfilUsuario.cliente (fallback legado).
+    """
+    from datumagro.apps.cadastros.models import Cliente
+    cliente = Cliente.objects.filter(email_contato=user.email).first()
+    if not cliente:
+        prop = user.propriedades.select_related('cliente').first()
+        if prop:
+            cliente = prop.cliente
+    if not cliente:
+        perfil = getattr(user, 'perfilusuario', None)
+        cliente = getattr(perfil, 'cliente', None) if perfil else None
+    return cliente
+
+
+def _status_from_cliente(user, cliente):
+    """
+    Retorna o status_assinatura correto.
+    Superusuários e staff são sempre ATIVO independente do Cliente vinculado.
+    """
+    if user.is_superuser or user.is_staff:
+        return 'ATIVO'
+    return cliente.status_assinatura if cliente else 'PENDENTE'
+
 
 def _get_cliente_equipe(user):
     """Retorna o Cliente associado ao usuário (via perfil ou email)."""

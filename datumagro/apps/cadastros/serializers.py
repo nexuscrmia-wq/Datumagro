@@ -6,9 +6,7 @@ class PropriedadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Propriedade
         fields = '__all__'
-        # cliente será definido pelo servidor a partir do usuário autenticado
-        # e não deve ser enviado pelo cliente (flutter/mobile)
-        read_only_fields = ('cliente',)
+        read_only_fields = ('cliente', 'geojson_car', 'area_total_ha')
 
 class ClienteSerializer(serializers.ModelSerializer):
     propriedades = PropriedadeSerializer(many=True, read_only=True)

@@ -24,7 +24,7 @@ class SyncService {
       };
     }).toList();
 
-    final lastSync = null; // In future save last sync timestamp
+    const lastSync = null; // In future save last sync timestamp
 
     final effectiveBase =
         baseUrl.isEmpty ? '$kApiBaseUrlEmulator/api/cadastros' : baseUrl;
@@ -78,8 +78,8 @@ class SyncService {
             statusReprodutivo: Value(data['status_reprodutivo'] ?? ''),
             isReprodutor: Value(data['is_reprodut'] ?? false),
             caracteristicas: Value(data['caracteristicas_adicionais'] ?? ''),
-            paiId: Value(data['pai'] ?? null),
-            maeId: Value(data['mae'] ?? null),
+            paiId: Value(data['pai'] as int?),
+            maeId: Value(data['mae'] as int?),
             fotoPerfil: Value(data['foto_perfil'] ?? ''),
             ativo: Value(data['ativo'] ?? true),
             updatedAt: Value(updatedAt),

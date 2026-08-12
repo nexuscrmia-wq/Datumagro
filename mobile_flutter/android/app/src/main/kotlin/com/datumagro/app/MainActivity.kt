@@ -1,4 +1,4 @@
-package com.example.datumagro_mobile
+package com.datumagro.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -3,6 +3,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.shortcuts import render
+from django.http import FileResponse, Http404
+from django.views.decorators.http import require_GET
 from datumagro.apps.cadastros.models import Animal, Propriedade
 from datumagro.apps.assinaturas.models import Assinatura
 from django.conf import settings
@@ -14,6 +16,7 @@ from django.utils import timezone
 from datetime import timedelta
 import uuid
 from datumagro.apps.cadastros.models import Cliente
+import os
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -55,6 +58,48 @@ from django.shortcuts import render
 def politica_privacidade(request):
     """Política de Privacidade pública — obrigatória para aprovação nas lojas."""
     return render(request, 'privacidade.html')
+
+
+@require_GET
+def download_apk(request):
+    """Serve o APK do DatumAgro via streaming. O arquivo fica no Railway Volume."""
+    apk_path = _apk_path()
+    if not os.path.isfile(apk_path):
+        raise Http404("APK não disponível no momento.")
+    return FileResponse(
+        open(apk_path, 'rb'),
+        as_attachment=True,
+        filename='DatumAgro.apk',
+        content_type='application/vnd.android.package-archive',
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_apk(request):
+    """Admin-only: faz upload do APK para o Railway Volume."""
+    if not (request.user.is_superuser or request.user.is_staff):
+        return Response({'error': 'Acesso negado.'}, status=status.HTTP_403_FORBIDDEN)
+    apk_file = request.FILES.get('apk')
+    if not apk_file:
+        return Response({'error': 'Envie o arquivo no campo "apk".'}, status=status.HTTP_400_BAD_REQUEST)
+    if not apk_file.name.endswith('.apk'):
+        return Response({'error': 'Apenas arquivos .apk são aceitos.'}, status=status.HTTP_400_BAD_REQUEST)
+    apk_path = _apk_path()
+    os.makedirs(os.path.dirname(apk_path), exist_ok=True)
+    with open(apk_path, 'wb') as f:
+        for chunk in apk_file.chunks():
+            f.write(chunk)
+    size_mb = os.path.getsize(apk_path) / (1024 * 1024)
+    return Response({'status': 'ok', 'path': apk_path, 'size_mb': round(size_mb, 1)})
+
+
+def _apk_path():
+    return str(getattr(
+        settings,
+        'APK_STORAGE_PATH',
+        os.path.join(settings.BASE_DIR, 'static', 'downloads', 'DatumAgro.apk'),
+    ))
 
 
 @api_view(["GET"])
@@ -200,7 +245,21 @@ def onboarding_etapa(request):
     cliente = _get_cliente_for_user(request.user)
 
     if not cliente:
-        return Response({'detail': 'Cliente não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        # Usuários criados fora do fluxo normal (admin, convite) não têm Cliente.
+        # Cria um automaticamente para não bloquear o onboarding.
+        from datumagro.apps.cadastros.models import Cliente as ClienteModel, Propriedade
+        nome = request.user.first_name or request.user.email.split('@')[0]
+        cliente = ClienteModel.objects.create(
+            email_contato=request.user.email,
+            nome_empresa=f'Fazenda de {nome}',
+            cpf_cnpj=str(request.user.id).zfill(14),
+        )
+        prop = Propriedade.objects.create(
+            cliente=cliente,
+            nome_propriedade=f'Propriedade de {nome}',
+            cidade='', estado='',
+        )
+        request.user.propriedades.add(prop)
 
     if request.method == 'GET':
         prop = Propriedade.objects.filter(cliente=cliente).first()
@@ -293,3 +352,52 @@ def onboarding_etapa(request):
 
 def home(request):
     return render(request, "home.html")
+
+
+def redefinir_senha(request, token):
+    """Página web de redefinição de senha — aberta pelo link do email."""
+    from datumagro.apps.usuarios.models import Usuario
+    from django.utils import timezone
+
+    try:
+        user = Usuario.objects.get(password_reset_token=token)
+        expirado = (
+            user.token_created_at is None
+            or (timezone.now() - user.token_created_at).total_seconds() > 86400
+        )
+        token_valido = not expirado
+    except Usuario.DoesNotExist:
+        token_valido = False
+        user = None
+
+    ctx = {'token_valido': token_valido, 'sucesso': False, 'erro': ''}
+
+    if request.method == 'POST' and token_valido:
+        senha = request.POST.get('senha', '')
+        senha2 = request.POST.get('senha2', '')
+        if len(senha) < 8:
+            ctx['erro'] = 'A senha deve ter pelo menos 8 caracteres.'
+        elif senha != senha2:
+            ctx['erro'] = 'As senhas não coincidem.'
+        else:
+            user.set_password(senha)
+            user.password_reset_token = None
+            user.token_created_at = None
+            user.save()
+            ctx['sucesso'] = True
+
+    return render(request, 'redefinir_senha.html', ctx)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def versao_app(request):
+    """Retorna a versão atual do APK para checagem in-app."""
+    versao = os.getenv('APP_VERSION', '1.2.0')
+    url_base = os.getenv('APP_URL', 'https://datumagro-web-production.up.railway.app')
+    return Response({
+        'versao': versao,
+        'url_download': f'{url_base}/baixar/apk/',
+        'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
+        'novidades': os.getenv('UPDATE_NOVIDADES', ''),
+    })

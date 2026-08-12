@@ -6,6 +6,7 @@ Views otimizadas para cadastros com query optimization máxima.
 import logging
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import api_view, action, permission_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Prefetch, Count, Q, F
@@ -23,10 +24,13 @@ from .serializers import (PropriedadeSerializer, AnimalSerializer, RegistroPesag
 # 🔐 Importar permissões do app usuarios (import relativo)
 from ..usuarios.permissions import (
     IsProprietario,
+    IsProprietarioOrGerente,
     PermissaoPropriedades,
     PermissaoAnimais,
     PermissaoVacinas,
-    CanDeleteData
+    CanDeleteData,
+    IsOperadorCampo,
+    PermissaoLotesExtendida,
 )
 
 logger = logging.getLogger(__name__)
@@ -296,6 +300,102 @@ class PropriedadeViewSet(BaseViewSet):
         
         return Response(resumo)
 
+    @action(
+        detail=True, methods=['post'], url_path='importar-car',
+        permission_classes=[permissions.IsAuthenticated, IsProprietarioOrGerente],
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def importar_car(self, request, pk=None):
+        """
+        Importa arquivo .kml ou .geojson do CAR e salva na propriedade.
+
+        Form-data esperado:
+          arquivo              — arquivo .kml ou .geojson (obrigatório)
+          codigo_car           — string do recibo CAR  (opcional)
+          area_reserva_legal_ha — decimal             (opcional)
+          area_app_ha          — decimal               (opcional)
+          area_util_ha         — decimal               (opcional)
+
+        Retorna o GeoJSON extraído + áreas calculadas.
+        """
+        from datumagro.apps.cadastros.services_car import parse_car_file
+
+        prop = self.get_object()
+        arquivo = request.FILES.get('arquivo')
+
+        if not arquivo:
+            return Response(
+                {'erro': 'Envie o arquivo .kml ou .geojson no campo "arquivo".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            result = parse_car_file(arquivo.name, arquivo.read())
+        except ValueError as exc:
+            return Response({'erro': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        prop.geojson_car = result['geojson']
+        prop.arquivo_car = arquivo
+        prop.area_total_ha = result['area_total_ha']
+
+        # Preenchem hectares se ainda não definido
+        if not prop.hectares:
+            prop.hectares = result['area_total_ha']
+
+        def _decimal(key):
+            try:
+                return float(request.data[key])
+            except (KeyError, ValueError, TypeError):
+                return None
+
+        if request.data.get('codigo_car'):
+            prop.codigo_car = request.data['codigo_car'].strip()
+        area_rl = _decimal('area_reserva_legal_ha')
+        area_app = _decimal('area_app_ha')
+        area_util = _decimal('area_util_ha')
+        if area_rl is not None:
+            prop.area_reserva_legal_ha = area_rl
+        if area_app is not None:
+            prop.area_app_ha = area_app
+        if area_util is not None:
+            prop.area_util_ha = area_util
+
+        prop.save()
+
+        logger.info('CAR importado', extra={
+            'user_id': request.user.id,
+            'propriedade_id': prop.id,
+            'area_total_ha': result['area_total_ha'],
+            'poligonos': len(result['placemarks']),
+        })
+
+        return Response({
+            'sucesso': True,
+            'area_total_ha': result['area_total_ha'],
+            'poligonos': len(result['placemarks']),
+            'placemarks': [{'nome': p['name'], 'area_ha': p['area_ha']} for p in result['placemarks']],
+            'geojson': result['geojson'],
+        }, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True, methods=['patch'], url_path='camadas',
+        permission_classes=[permissions.IsAuthenticated, IsProprietarioOrGerente],
+    )
+    def atualizar_camadas(self, request, pk=None):
+        """
+        Salva as camadas editáveis desenhadas pelo usuário no mapa.
+        Campos aceitos:
+          geojson_piquetes_talhoes — FeatureCollection de polígonos
+          geojson_infraestrutura  — FeatureCollection de pontos
+        """
+        prop = self.get_object()
+        campos = ('geojson_piquetes_talhoes', 'geojson_infraestrutura')
+        for campo in campos:
+            if campo in request.data:
+                setattr(prop, campo, request.data[campo])
+        prop.save(update_fields=[c for c in campos if c in request.data])
+        return Response(PropriedadeSerializer(prop).data)
+
 
 class AnimalViewSet(BaseViewSet):
     """ViewSet ultra-otimizado para animais com performance extrema"""
@@ -375,9 +475,10 @@ class AnimalViewSet(BaseViewSet):
         
         return Response(genealogia)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'],
+            permission_classes=[permissions.IsAuthenticated, IsOperadorCampo])
     def registrar_pesagem(self, request, pk=None):
-        """Registrar pesagem para o animal"""
+        """Registrar pesagem — peão de campo pode registrar."""
         animal = self.get_object()
         serializer = RegistroPesagemSerializer(data=request.data)
         
@@ -394,49 +495,32 @@ class AnimalViewSet(BaseViewSet):
 
 
 class RegistroPesagemViewSet(BaseViewSet):
-    """ViewSet para registros de pesagem com otimizações"""
+    """Pesagens: peão de campo pode registrar (POST/PATCH). DELETE só Proprietário."""
     queryset = RegistroPesagem.objects.all()
     serializer_class = RegistroPesagemSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['animal', 'data_pesagem']
     ordering_fields = ['data_pesagem', 'peso_kg']
     ordering = ['-data_pesagem']
+    permission_classes = [permissions.IsAuthenticated, IsOperadorCampo]
 
     def get_queryset(self):
-        """✅ Otimiza com select_related"""
         return RegistroPesagem.objects.select_related(
             'animal', 'animal__propriedade'
         ).all()
 
     def perform_create(self, serializer):
-        """
-        Ao criar um Animal, não tentar passar `cliente` para serializer.save()
-        (Animal não possui campo cliente). Simplesmente salva o serializer.
-
-        Em implementações futuras, validar que a `propriedade` recebida
-        pertence ao `cliente` do usuário e ajustar o comportamento.
-        """
         serializer.save()
 
 
-class RegistroPesagemViewSet(BaseViewSet):
-    queryset = RegistroPesagem.objects.all()
-    serializer_class = RegistroPesagemSerializer
-
-    # Utiliza o get_queryset da classe base
-
-
 class PiqueteViewSet(BaseViewSet):
-    """ViewSet para gerenciamento de piquetes"""
+    """Piquetes: criar = Proprietário+Gerente; mover animais (PATCH) = todos; deletar = Proprietário."""
     queryset = Piquete.objects.all()
     serializer_class = PiqueteSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['tipo_vegetacao']
     search_fields = ['nome', 'observacoes']
-    permission_classes = [
-        permissions.IsAuthenticated,
-        PermissaoAnimais,
-    ]
+    permission_classes = [permissions.IsAuthenticated, PermissaoLotesExtendida]
 
 
 class VacinaViewSet(viewsets.ModelViewSet):

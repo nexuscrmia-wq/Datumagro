@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api.dart';
+import '../config.dart';
+import '../ajuda/ajuda_bottom_sheet.dart';
+import '../ajuda/ajuda_service.dart';
 import 'romaneio_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -15,12 +19,141 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = true;
   String? _erro;
 
+  static bool _versionChecked = false;
   static const _verde = Color(0xFF2E7D32);
+
+  final _ajudaService = AjudaService(ApiService());
 
   @override
   void initState() {
     super.initState();
     _load();
+    if (!_versionChecked) {
+      _versionChecked = true;
+      // Aguarda o frame estar pronto antes de exibir qualquer dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkVersion());
+    }
+  }
+
+  // ─── Verificação de atualização ──────────────────────────────────────────
+
+  Future<void> _checkVersion() async {
+    try {
+      final info = await ApiService().fetchVersaoApp();
+      if (!mounted) return;
+      final serverVersion = info['versao'] as String? ?? '';
+      final obrigatorio = info['obrigatorio'] as bool? ?? false;
+      final novidades = info['novidades'] as String? ?? '';
+      final urlDownload = info['url_download'] as String? ?? '';
+      if (_isNewerVersion(serverVersion, kAppVersion)) {
+        _showUpdateDialog(
+          versao: serverVersion,
+          obrigatorio: obrigatorio,
+          novidades: novidades,
+          urlDownload: urlDownload,
+        );
+      }
+    } catch (_) {
+      // Falha silenciosa — conectividade não impede o dashboard de funcionar
+    }
+  }
+
+  List<int> _parseVersion(String v) =>
+      v.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+
+  bool _isNewerVersion(String server, String current) {
+    final s = _parseVersion(server);
+    final c = _parseVersion(current);
+    for (int i = 0; i < 3; i++) {
+      final sv = i < s.length ? s[i] : 0;
+      final cv = i < c.length ? c[i] : 0;
+      if (sv > cv) return true;
+      if (sv < cv) return false;
+    }
+    return false;
+  }
+
+  void _showUpdateDialog({
+    required String versao,
+    required bool obrigatorio,
+    required String novidades,
+    required String urlDownload,
+  }) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: !obrigatorio,
+      builder: (ctx) => PopScope(
+        canPop: !obrigatorio,
+        child: AlertDialog(
+          icon: Icon(
+            obrigatorio ? Icons.system_update : Icons.system_update_alt,
+            color: _verde,
+            size: 40,
+          ),
+          title: Text(
+            obrigatorio ? 'Atualização obrigatória' : 'Nova versão disponível',
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Versão $versao disponível.\nVocê está usando $kAppVersion.',
+                style: const TextStyle(fontSize: 14),
+              ),
+              if (novidades.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Text(
+                    novidades,
+                    style: const TextStyle(fontSize: 13, height: 1.5),
+                  ),
+                ),
+              ],
+              if (obrigatorio) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Esta versão não é mais suportada. Atualize para continuar usando o DatumAgro.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (!obrigatorio)
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Agora não'),
+              ),
+            FilledButton.icon(
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text('Baixar atualização'),
+              style: FilledButton.styleFrom(backgroundColor: _verde),
+              onPressed: () async {
+                final uri = Uri.parse(urlDownload);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+                if (!obrigatorio && ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _load() async {
@@ -67,6 +200,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         foregroundColor: Colors.white,
         title: const Text('DatumAgro', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Ajuda',
+            onPressed: () => mostrarAjuda(context,
+                service: _ajudaService, moduloSlug: 'dashboard'),
+          ),
           IconButton(
             icon: const Icon(Icons.scale),
             tooltip: 'Romaneio de Pesagem',
@@ -251,6 +390,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     MaterialPageRoute(builder: (_) => const RomaneioScreen())),
               ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionButton(
+                label: 'Mapa',
+                icon: Icons.map_outlined,
+                color: const Color(0xFF1565C0),
+                onTap: () => Navigator.of(context).pushNamed('/mapa'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionButton(
+                label: 'Planos',
+                icon: Icons.star_outline,
+                color: const Color(0xFFF9A825),
+                onTap: () => Navigator.of(context).pushNamed('/planos'),
+              ),
+            ),
           ],
         ),
       ],
@@ -373,14 +530,20 @@ class _KpiCard extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.label, required this.icon, required this.onTap});
+  const _ActionButton(
+      {required this.label,
+      required this.icon,
+      required this.onTap,
+      this.color});
 
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? const Color(0xFF2E7D32);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -389,15 +552,14 @@ class _ActionButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFA5D6A7)),
+          border: Border.all(color: c.withValues(alpha: 0.4)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: const Color(0xFF2E7D32), size: 28),
+            Icon(icon, color: c, size: 28),
             const SizedBox(height: 6),
             Text(label,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
+                style: TextStyle(fontWeight: FontWeight.w600, color: c)),
           ],
         ),
       ),

@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'drf_spectacular_sidecar',
 
     # 🎯 Nossos Apps (Todos eles)
+    'datumagro.apps.ajuda.apps.AjudaConfig',
     'datumagro.apps.usuarios.apps.UsuariosConfig',
     'datumagro.apps.core.apps.CoreConfig',
     'datumagro.apps.assinaturas.apps.AssinaturasConfig',
@@ -159,6 +160,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# APK — Railway Volume montado em /app/apk_storage/ em produção
+APK_STORAGE_PATH = os.environ.get(
+    'APK_STORAGE_PATH',
+    str(BASE_DIR / 'static' / 'downloads' / 'DatumAgro.apk'),
+)
+
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
 AUTHENTICATION_BACKENDS = [
@@ -220,8 +227,9 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',    # Visitantes: 100 requests/hora
-        'user': '1000/hour'    # Usuários: 1000 requests/hora
+        'anon': '60/hour',     # Visitantes: 60 requests/hora
+        'user': '1000/hour',   # Usuários: 1000 requests/hora
+        'login': '5/minute',   # Endpoint de login: máx 5 tentativas/min (anti-brute-force)
     },
     
     # 🚀 VALIDAÇÃO E TRATAMENTO DE ERROS
@@ -230,7 +238,7 @@ REST_FRAMEWORK = {
 
 # 🚀 CONFIGURAÇÃO JWT (Autenticação)
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -302,7 +310,9 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'DatumAgro <contato@datumagro.com.br>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'DatumAgro <nexusia47@gmail.com>')
+# Evita que a conexão SMTP trave indefinidamente (Railway bloqueia portas SMTP)
+EMAIL_TIMEOUT = 10
 
 # Se não houver credenciais de email, usar backend de console para dev
 if not EMAIL_HOST_USER:
@@ -340,12 +350,16 @@ Características principais:
 
 # 🚀 CORS Configuration
 if IS_PRODUCTION:
-    # Apps mobile não enviam Origin header — CORS não se aplica a eles.
-    # Liberar todas as origens é seguro aqui porque a autenticação é via JWT.
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGINS = []
+    # Restringir CORS às origens legítimas.
+    # Apps mobile nativos não enviam Origin — não são afetados por CORS.
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "https://datumagro.com.br",
+        "https://www.datumagro.com.br",
+        f"https://{RAILWAY_PUBLIC_DOMAIN}" if RAILWAY_PUBLIC_DOMAIN else None,
+    ]
+    CORS_ALLOWED_ORIGINS = [o for o in CORS_ALLOWED_ORIGINS if o]
 else:
-    # Desenvolvimento: Permitir todos os origins
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
@@ -354,8 +368,8 @@ else:
         "http://127.0.0.1:8000",
         "http://localhost:8080",
         "http://127.0.0.1:8080",
-        "http://10.0.2.2:8000",  # Android emulator
-        "http://10.0.2.2:8080",  # Android emulator
+        "http://10.0.2.2:8000",
+        "http://10.0.2.2:8080",
     ]
 
 CORS_ALLOW_CREDENTIALS = True

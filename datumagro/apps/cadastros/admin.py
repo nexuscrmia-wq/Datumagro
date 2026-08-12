@@ -12,9 +12,39 @@ class PropriedadeInline(admin.TabularInline):
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('nome_empresa', 'cpf_cnpj', 'email_contato', 'data_cadastro')
-    search_fields = ('nome_empresa', 'cpf_cnpj')
+    list_display = ('nome_empresa', 'email_contato', 'status_badge', 'tipo_especie', 'data_cadastro')
+    list_filter = ('status_assinatura', 'tipo_especie')
+    search_fields = ('nome_empresa', 'email_contato', 'cpf_cnpj')
+    list_per_page = 30
+    actions = ['aprovar_clientes', 'bloquear_clientes', 'marcar_pendente']
     inlines = [PropriedadeInline]
+
+    @admin.display(description='Status')
+    def status_badge(self, obj):
+        cores = {
+            'ATIVO': ('#2E7D32', '✅ Ativo'),
+            'PENDENTE': ('#E65100', '⏳ Pendente'),
+            'BLOQUEADO': ('#B71C1C', '🔒 Bloqueado'),
+        }
+        cor, label = cores.get(obj.status_assinatura, ('#555', obj.status_assinatura))
+        return format_html(
+            '<strong style="color:{};font-size:13px">{}</strong>', cor, label
+        )
+
+    @admin.action(description='✅ Aprovar clientes selecionados')
+    def aprovar_clientes(self, request, queryset):
+        n = queryset.update(status_assinatura='ATIVO')
+        self.message_user(request, f'{n} cliente(s) aprovado(s) e liberado(s).')
+
+    @admin.action(description='🔒 Bloquear clientes selecionados')
+    def bloquear_clientes(self, request, queryset):
+        n = queryset.update(status_assinatura='BLOQUEADO')
+        self.message_user(request, f'{n} cliente(s) bloqueado(s).')
+
+    @admin.action(description='⏳ Marcar como Pendente')
+    def marcar_pendente(self, request, queryset):
+        n = queryset.update(status_assinatura='PENDENTE')
+        self.message_user(request, f'{n} cliente(s) marcado(s) como pendente.')
 
 
 class AnimalInline(admin.TabularInline):

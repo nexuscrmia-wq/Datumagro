@@ -6,17 +6,91 @@ import '../config.dart';
 
 class ApiService {
   final _storage = const FlutterSecureStorage();
-  // Candidate refresh endpoints (try in order). Adjust if your backend uses a different path.
+
   final List<String> _refreshPaths = [
     '/api/token/refresh/',
     '/api/usuarios/token/refresh/',
     '/api/usuarios/refresh/',
   ];
 
-  /// Login using new backend endpoint. Stores access, refresh and user payload.
+  // ─── Token helpers ────────────────────────────────────────────────────────
+
+  Future<String?> _getAccessToken() => _storage.read(key: 'access_token');
+
+  /// Central dispatcher: executa [requestFn] com o token atual e, em caso de
+  /// 401, tenta refresh transparente e refaz a requisição uma única vez.
+  Future<http.Response> _authenticatedRequest(
+    Future<http.Response> Function(String token) requestFn,
+  ) async {
+    String token = await _getAccessToken() ?? '';
+    var response = await requestFn(token);
+
+    if (response.statusCode == 401) {
+      final refreshed = await refreshAccessToken();
+      if (refreshed) {
+        token = await _getAccessToken() ?? '';
+        response = await requestFn(token);
+      }
+    }
+
+    return response;
+  }
+
+  Map<String, String> _authHeaders(String token,
+      {bool json = true, Map<String, String>? extra}) {
+    final h = <String, String>{};
+    if (json) h['Content-Type'] = 'application/json';
+    if (token.isNotEmpty) h['Authorization'] = 'Bearer $token';
+    if (extra != null) h.addAll(extra);
+    return h;
+  }
+
+  // ─── Verbos HTTP autenticados ─────────────────────────────────────────────
+
+  Future<http.Response> authenticatedGet(Uri url,
+      {Map<String, String>? extraHeaders}) {
+    return _authenticatedRequest((token) => http
+        .get(url, headers: _authHeaders(token, json: false, extra: extraHeaders))
+        .timeout(const Duration(seconds: 15)));
+  }
+
+  Future<http.Response> authenticatedPost(Uri url, Map<String, dynamic> body,
+      {Map<String, String>? extraHeaders}) {
+    return _authenticatedRequest((token) => http
+        .post(url,
+            headers: _authHeaders(token, extra: extraHeaders),
+            body: json.encode(body))
+        .timeout(const Duration(seconds: 15)));
+  }
+
+  Future<http.Response> authenticatedPatch(Uri url, Map<String, dynamic> body,
+      {Map<String, String>? extraHeaders}) {
+    return _authenticatedRequest((token) => http
+        .patch(url,
+            headers: _authHeaders(token, extra: extraHeaders),
+            body: json.encode(body))
+        .timeout(const Duration(seconds: 15)));
+  }
+
+  Future<http.Response> authenticatedPut(Uri url, Map<String, dynamic> body,
+      {Map<String, String>? extraHeaders}) {
+    return _authenticatedRequest((token) => http
+        .put(url,
+            headers: _authHeaders(token, extra: extraHeaders),
+            body: json.encode(body))
+        .timeout(const Duration(seconds: 15)));
+  }
+
+  Future<http.Response> authenticatedDelete(Uri url,
+      {Map<String, String>? extraHeaders}) {
+    return _authenticatedRequest((token) => http
+        .delete(url, headers: _authHeaders(token, extra: extraHeaders))
+        .timeout(const Duration(seconds: 15)));
+  }
+
+  // ─── Auth ────────────────────────────────────────────────────────────────
+
   Future<void> login(String email, String password) async {
-    // Backend exposes the ViewSet under /api/usuarios/usuarios/ so the login
-    // action is available at /api/usuarios/usuarios/login/
     final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/usuarios/login/');
     final resp = await http
         .post(url,
@@ -40,22 +114,41 @@ class ApiService {
     await _storage.write(key: 'access_token', value: access);
     await _storage.write(key: 'refresh_token', value: refresh);
     await _storage.write(key: 'user', value: json.encode(user));
+    await _storage.write(
+        key: 'status_assinatura',
+        value: body['status_assinatura'] as String? ?? 'PENDENTE');
   }
 
-  Future<Map<String, String>> getAuthHeader() async {
-    final token = await _storage.read(key: 'access_token');
-    if (token == null || token.isEmpty) return {};
-    return {'Authorization': 'Bearer $token'};
-  }
-
-  Future<Map<String, dynamic>?> getStoredUser() async {
-    final s = await _storage.read(key: 'user');
-    if (s == null) return null;
-    try {
-      return json.decode(s) as Map<String, dynamic>;
-    } catch (_) {
-      return null;
+  Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    required String password2,
+    required String nomeCompleto,
+  }) async {
+    final url =
+        Uri.parse('$kApiBaseUrlEmulator/api/usuarios/usuarios/registrar/');
+    final resp = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'password': password,
+          'password2': password2,
+          'username': email.split('@').first,
+          'nome_completo': nomeCompleto,
+          'tipo_usuario': 'proprietario',
+        }));
+    final body = json.decode(resp.body) as Map<String, dynamic>;
+    if (resp.statusCode == 201) {
+      await _storage.write(key: 'access_token', value: body['access'] as String);
+      await _storage.write(
+          key: 'refresh_token', value: body['refresh'] as String);
+      await _storage.write(key: 'user', value: json.encode(body['user']));
+      await _storage.write(
+          key: 'status_assinatura',
+          value: body['status_assinatura'] as String? ?? 'PENDENTE');
+      return {'success': true};
     }
+    return {'success': false, 'error': body};
   }
 
   Future<void> logout() async {
@@ -64,8 +157,7 @@ class ApiService {
     await _storage.delete(key: 'user');
   }
 
-  /// Try to refresh access token using stored refresh_token.
-  /// Returns true if a new access token was saved.
+  /// Tenta renovar o access token usando o refresh token armazenado.
   Future<bool> refreshAccessToken() async {
     final refresh = await _storage.read(key: 'refresh_token');
     if (refresh == null || refresh.isEmpty) return false;
@@ -73,7 +165,6 @@ class ApiService {
     for (final path in _refreshPaths) {
       try {
         final url = Uri.parse('$kApiBaseUrlEmulator$path');
-        // Common payload expected by SimpleJWT: {"refresh": "..."}
         final resp = await http
             .post(url,
                 headers: {'Content-Type': 'application/json'},
@@ -89,77 +180,47 @@ class ApiService {
             return true;
           }
         }
-        // else try next candidate
       } catch (_) {
-        // Try next candidate
+        // tenta próximo path
       }
     }
 
     return false;
   }
 
-  /// Perform POST with Authorization header and automatic refresh-on-401 (single retry).
-  Future<http.Response> authenticatedPost(Uri url, Map<String, dynamic> body,
-      {Map<String, String>? extraHeaders}) async {
-    final token = await _storage.read(key: 'access_token');
-    final headers = <String, String>{'Content-Type': 'application/json'};
-    if (token != null && token.isNotEmpty)
-      headers['Authorization'] = 'Bearer $token';
-    if (extraHeaders != null) headers.addAll(extraHeaders);
+  // ─── Subscription status ──────────────────────────────────────────────────
 
-    var resp = await http
-        .post(url, headers: headers, body: json.encode(body))
-        .timeout(const Duration(seconds: 15));
-    if (resp.statusCode == 401) {
-      final refreshed = await refreshAccessToken();
-      if (refreshed) {
-        final newToken = await _storage.read(key: 'access_token');
-        final retryHeaders = <String, String>{
-          'Content-Type': 'application/json'
-        };
-        if (newToken != null && newToken.isNotEmpty)
-          retryHeaders['Authorization'] = 'Bearer $newToken';
-        if (extraHeaders != null) retryHeaders.addAll(extraHeaders);
-        resp = await http
-            .post(url, headers: retryHeaders, body: json.encode(body))
-            .timeout(const Duration(seconds: 15));
-      }
+  Future<String> getStatusAssinatura() async =>
+      await _storage.read(key: 'status_assinatura') ?? 'PENDENTE';
+
+  Future<String> verificarStatusAssinatura() async {
+    final resp = await authenticatedGet(
+        Uri.parse('$kApiBaseUrlEmulator/api/usuarios/me/'));
+    if (resp.statusCode == 200) {
+      final body = json.decode(resp.body) as Map<String, dynamic>;
+      final status = body['status_assinatura'] as String? ?? 'PENDENTE';
+      await _storage.write(key: 'status_assinatura', value: status);
+      return status;
     }
-    return resp;
+    return await getStatusAssinatura();
   }
 
-  Future<Map<String, dynamic>> register({
-    required String email,
-    required String password,
-    required String password2,
-    required String nomeCompleto,
-  }) async {
-    final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/usuarios/registrar/');
-    final resp = await http.post(url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': email,
-          'password': password,
-          'password2': password2,
-          'username': email.split('@').first,
-          'nome_completo': nomeCompleto,
-          'tipo_usuario': 'proprietario',
-        }));
-    final body = json.decode(resp.body) as Map<String, dynamic>;
-    if (resp.statusCode == 201) {
-      await _storage.write(key: 'access_token', value: body['access'] as String);
-      await _storage.write(key: 'refresh_token', value: body['refresh'] as String);
-      await _storage.write(key: 'user', value: json.encode(body['user']));
-      return {'success': true};
-    }
-    return {'success': false, 'error': body};
+  // ─── User / profile ───────────────────────────────────────────────────────
+
+  Future<Map<String, String>> getAuthHeader() async {
+    final token = await _getAccessToken();
+    if (token == null || token.isEmpty) return {};
+    return {'Authorization': 'Bearer $token'};
   }
 
-  Future<Map<String, dynamic>> fetchDashboard() async {
-    final url = Uri.parse('$kApiBaseUrlEmulator/api/dashboard/resumo/');
-    final resp = await authenticatedGet(url);
-    if (resp.statusCode == 200) return json.decode(resp.body) as Map<String, dynamic>;
-    return {};
+  Future<Map<String, dynamic>?> getStoredUser() async {
+    final s = await _storage.read(key: 'user');
+    if (s == null) return null;
+    try {
+      return json.decode(s) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>?> fetchMe() async {
@@ -178,8 +239,49 @@ class ApiService {
     return resp.statusCode == 200;
   }
 
+  // ─── Dashboard ────────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> fetchDashboard() async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/dashboard/resumo/');
+    final resp = await authenticatedGet(url);
+    if (resp.statusCode == 200) return json.decode(resp.body) as Map<String, dynamic>;
+    return {};
+  }
+
+  // ─── Propriedades / GIS ───────────────────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> fetchPropriedades() async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/cadastros/propriedades/');
+    final resp = await authenticatedGet(url);
+    if (resp.statusCode == 200) {
+      final body = json.decode(resp.body);
+      final results = body is Map ? body['results'] ?? body : body;
+      return (results as List).cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<void> atualizarCamadas(
+    int propriedadeId, {
+    Map<String, dynamic>? piquetes,
+    Map<String, dynamic>? infraestrutura,
+  }) async {
+    final url = Uri.parse(
+        '$kApiBaseUrlEmulator/api/cadastros/propriedades/$propriedadeId/camadas/');
+    final body = <String, dynamic>{};
+    if (piquetes != null) body['geojson_piquetes_talhoes'] = piquetes;
+    if (infraestrutura != null) body['geojson_infraestrutura'] = infraestrutura;
+    final resp = await authenticatedPatch(url, body);
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao salvar camadas: ${resp.statusCode}');
+    }
+  }
+
+  // ─── Animais / Pesagens ───────────────────────────────────────────────────
+
   Future<Map<String, dynamic>?> fetchAnimalDetail(int animalId) async {
-    final url = Uri.parse('$kApiBaseUrlEmulator/api/cadastros/animais/$animalId/');
+    final url =
+        Uri.parse('$kApiBaseUrlEmulator/api/cadastros/animais/$animalId/');
     final resp = await authenticatedGet(url);
     if (resp.statusCode == 200) return json.decode(resp.body) as Map<String, dynamic>;
     return null;
@@ -215,31 +317,89 @@ class ApiService {
     }
   }
 
-  /// Perform GET with Authorization header and automatic refresh-on-401 (single retry).
-  Future<http.Response> authenticatedGet(Uri url,
-      {Map<String, String>? extraHeaders}) async {
-    final token = await _storage.read(key: 'access_token');
-    final headers = <String, String>{};
-    if (token != null && token.isNotEmpty)
-      headers['Authorization'] = 'Bearer $token';
-    if (extraHeaders != null) headers.addAll(extraHeaders);
-
-    var resp = await http
-        .get(url, headers: headers)
-        .timeout(const Duration(seconds: 15));
-    if (resp.statusCode == 401) {
-      final refreshed = await refreshAccessToken();
-      if (refreshed) {
-        final newToken = await _storage.read(key: 'access_token');
-        final retryHeaders = <String, String>{};
-        if (newToken != null && newToken.isNotEmpty)
-          retryHeaders['Authorization'] = 'Bearer $newToken';
-        if (extraHeaders != null) retryHeaders.addAll(extraHeaders);
-        resp = await http
-            .get(url, headers: retryHeaders)
-            .timeout(const Duration(seconds: 15));
-      }
+  /// Verifica a versão mais recente disponível no servidor.
+  /// Endpoint público — não requer autenticação.
+  Future<Map<String, dynamic>> fetchVersaoApp() async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/versao/');
+    final resp = await http
+        .get(url)
+        .timeout(const Duration(seconds: 8));
+    if (resp.statusCode == 200) {
+      return json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
     }
-    return resp;
+    throw Exception('Versão indisponível (${resp.statusCode})');
+  }
+
+  // ─── Onboarding / questionário ───────────────────────────────────────────
+
+  Future<void> patchOnboarding(Map<String, dynamic> data) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/onboarding/etapa/');
+    final resp = await authenticatedPatch(url, data);
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao salvar questionário (${resp.statusCode})');
+    }
+  }
+
+  // ─── Planos de assinatura (público, sem preço) ────────────────────────────
+
+  Future<List<Map<String, dynamic>>> fetchPlanos() async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/assinaturas/planos/');
+    final resp = await http.get(url).timeout(const Duration(seconds: 10));
+    if (resp.statusCode == 200) {
+      final body = json.decode(utf8.decode(resp.bodyBytes));
+      final results = body is List ? body : (body['results'] ?? body);
+      return (results as List).cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  // ─── Financeiro ───────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> fetchFluxoCaixa() async {
+    final url = Uri.parse(
+        '$kApiBaseUrlEmulator/api/financeiro/transacoes/fluxo_caixa_mensal/');
+    final resp = await authenticatedGet(url);
+    if (resp.statusCode == 200) {
+      return json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+    }
+    return {};
+  }
+
+  Future<List<Map<String, dynamic>>> fetchTransacoes({String? tipo}) async {
+    var query = 'ordering=-data&page_size=50';
+    if (tipo != null) query += '&tipo=$tipo';
+    final url =
+        Uri.parse('$kApiBaseUrlEmulator/api/financeiro/transacoes/?$query');
+    final resp = await authenticatedGet(url);
+    if (resp.statusCode == 200) {
+      final body = json.decode(utf8.decode(resp.bodyBytes));
+      final results = body is Map ? body['results'] ?? body : body;
+      return (results as List).cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<void> criarTransacao({
+    required String tipo,
+    required double valor,
+    required String data,
+    required String descricao,
+    String? categoriaNome,
+  }) async {
+    final url =
+        Uri.parse('$kApiBaseUrlEmulator/api/financeiro/transacoes/');
+    final body = <String, dynamic>{
+      'tipo': tipo,
+      'valor': valor,
+      'data': data,
+      'descricao': descricao,
+      if (categoriaNome != null && categoriaNome.isNotEmpty)
+        'categoria': categoriaNome,
+    };
+    final resp = await authenticatedPost(url, body);
+    if (resp.statusCode != 201) {
+      final err = json.decode(resp.body);
+      throw Exception('Erro ao salvar: $err');
+    }
   }
 }

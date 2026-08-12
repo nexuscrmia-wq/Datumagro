@@ -1,6 +1,6 @@
 name: datumagro_mobile
 description: "Cliente Flutter offline-first para DatumAgro (MVP)"
-version: 0.1.0
+version: 1.2.0+3
 publish_to: "none"
 
 environment:
@@ -9,13 +9,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.5
+  http: ^1.2.0
   connectivity_plus: ^4.0.0
   drift: any
   drift_flutter: any
   path_provider: ^2.0.15
   provider: ^6.0.5
   flutter_secure_storage: ^8.0.0
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  url_launcher: ^6.3.0
+  # Scanner QR/barcode — inclui ML Kit (libbarhopper_v3, libimage_processing_util_jni, libsurface_util_jni)
+  mobile_scanner: ^5.2.3
 
 dev_dependencies:
   flutter_test:
@@ -23,9 +28,20 @@ dev_dependencies:
   build_runner: ^2.3.3
   drift_dev: any
   flutter_lints: ^2.0.0
-
-  # native SQLite bindings for Flutter (required by some drift setups)
   sqlite3_flutter_libs: any
+  flutter_launcher_icons: ^0.14.1
+
+# Geração automática de ícones do app — rode: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/logo_datumagro.jpeg"
+  min_sdk_android: 21
+  adaptive_icon_background: "#16241c"
+  adaptive_icon_foreground: "assets/images/logo_datumagro.jpeg"
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/banner_datumagro.jpeg
+    - assets/images/logo_datumagro.jpeg

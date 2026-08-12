@@ -3,15 +3,15 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from .models import Plano, Assinatura
-from .serializers import PlanoSerializer, AssinaturaSerializer
+from .serializers import PlanoSerializer, PlanoPublicoSerializer, AssinaturaSerializer
 
 class PlanoViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API endpoint que permite que os planos sejam visualizados.
-    Acessível por qualquer um para ver os planos disponíveis.
+    API pública de planos — sem preço, só features e destaque.
+    Preço é gerenciado exclusivamente pelo admin (datumagro-gestao/).
     """
     queryset = Plano.objects.filter(ativo=True)
-    serializer_class = PlanoSerializer
+    serializer_class = PlanoPublicoSerializer
     permission_classes = [permissions.AllowAny]
 
 
