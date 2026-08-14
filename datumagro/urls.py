@@ -10,6 +10,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 from datumagro.apps.core.views import (
     health, create_cliente_for_user, dashboard_resumo, politica_privacidade,
     onboarding_etapa, home, versao_app, redefinir_senha, download_apk, upload_apk,
+    painel_usuarios, painel_aprovar_usuario, painel_suspender_usuario, painel_atribuir_plano,
 )
 from datumagro.apps.usuarios.views import (
     equipe_membros, equipe_convidar, equipe_aceitar,
@@ -54,6 +55,12 @@ urlpatterns = [
 
     # Central de Ajuda / Base de Conhecimento
     path('api/ajuda/', include('datumagro.apps.ajuda.urls', namespace='ajuda')),
+
+    # Painel de gestão de usuários (superuser only)
+    path('painel/', painel_usuarios, name='painel-usuarios'),
+    path('painel/usuarios/<int:cliente_id>/aprovar/', painel_aprovar_usuario, name='painel-aprovar'),
+    path('painel/usuarios/<int:cliente_id>/suspender/', painel_suspender_usuario, name='painel-suspender'),
+    path('painel/usuarios/<int:cliente_id>/plano/', painel_atribuir_plano, name='painel-plano'),
 
     # APK: download público + upload restrito a admin (salva no Railway Volume)
     path('baixar/apk/', download_apk, name='download-apk'),

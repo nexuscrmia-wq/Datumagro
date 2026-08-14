@@ -401,3 +401,83 @@ def versao_app(request):
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
         'novidades': os.getenv('UPDATE_NOVIDADES', ''),
     })
+
+
+# ── Painel de Gestão de Usuários ────────────────────────────────────────────
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_POST
+from datumagro.apps.assinaturas.models import Plano, Assinatura
+
+
+@staff_member_required(login_url='/datumagro-gestao/login/')
+def painel_usuarios(request):
+    filtro = request.GET.get('filtro', 'todos')
+    clientes_qs = Cliente.objects.select_related('assinatura__plano').order_by('-data_cadastro')
+
+    def enrich(c):
+        assinatura = getattr(c, 'assinatura', None)
+        c.assinatura_plano = assinatura.plano.nome if assinatura and assinatura.plano else None
+        c.assinatura_plano_id = assinatura.plano_id if assinatura else None
+        return c
+
+    todos = [enrich(c) for c in clientes_qs]
+    pendentes = [c for c in todos if c.status_assinatura == 'PENDENTE']
+    ativos = [c for c in todos if c.status_assinatura == 'ATIVO']
+
+    return render(request, 'core/painel_usuarios.html', {
+        'pendentes': pendentes if filtro != 'ativo' else [],
+        'ativos': ativos if filtro != 'pendente' else [],
+        'pendentes_count': len(pendentes),
+        'ativos_count': len(ativos),
+        'total_count': len(todos),
+        'planos': Plano.objects.filter(ativo=True).order_by('valor_base_mensal'),
+        'filtro': filtro,
+    })
+
+
+@staff_member_required(login_url='/datumagro-gestao/login/')
+@require_POST
+def painel_aprovar_usuario(request, cliente_id):
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    cliente.status_assinatura = 'ATIVO'
+    cliente.save(update_fields=['status_assinatura'])
+    messages.success(request, f'✓ {cliente.nome_empresa} aprovado com sucesso!')
+    return redirect(f'/painel/?filtro=pendente')
+
+
+@staff_member_required(login_url='/datumagro-gestao/login/')
+@require_POST
+def painel_suspender_usuario(request, cliente_id):
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    cliente.status_assinatura = 'PENDENTE'
+    cliente.save(update_fields=['status_assinatura'])
+    messages.success(request, f'Conta de {cliente.nome_empresa} suspensa.')
+    return redirect('/painel/')
+
+
+@staff_member_required(login_url='/datumagro-gestao/login/')
+@require_POST
+def painel_atribuir_plano(request, cliente_id):
+    from datetime import timedelta
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    plano_id = request.POST.get('plano_id')
+    if not plano_id:
+        messages.error(request, 'Selecione um plano antes de salvar.')
+        return redirect('/painel/')
+    plano = get_object_or_404(Plano, pk=plano_id)
+    assinatura = getattr(cliente, 'assinatura', None)
+    if assinatura:
+        assinatura.plano = plano
+        assinatura.save(update_fields=['plano'])
+    else:
+        Assinatura.objects.create(
+            cliente=cliente,
+            plano=plano,
+            data_inicio=timezone.now(),
+            data_vencimento=timezone.now() + timedelta(days=30),
+        )
+    messages.success(request, f'Plano {plano.nome} atribuído a {cliente.nome_empresa}.')
+    return redirect('/painel/')
