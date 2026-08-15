@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:datumagro_mobile/data/database.dart';
 import '../services/api.dart';
+import '../config.dart';
 import 'animal_form.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -20,6 +22,12 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
   bool _loadingPesagens = false;
   String _registroGenetico = 'COM';
 
+  List<Map<String, dynamic>> _manejos = [];
+  bool _loadingManejos = false;
+
+  List<Map<String, dynamic>> _registros = [];
+  bool _loadingRegistros = false;
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +36,12 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
     _tabs.addListener(() {
       if (_tabs.index == 1 && _pesagens.isEmpty && !_loadingPesagens) {
         _fetchPesagens();
+      }
+      if (_tabs.index == 3 && _manejos.isEmpty && !_loadingManejos) {
+        _fetchManejos();
+      }
+      if (_tabs.index == 4 && _registros.isEmpty && !_loadingRegistros) {
+        _fetchRegistros();
       }
     });
     // Busca dados extras do servidor (registro genético) se já sincronizado
@@ -142,6 +156,437 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
     }
   }
 
+  Future<void> _fetchManejos() async {
+    if (_animal.serverId == null) return;
+    setState(() => _loadingManejos = true);
+    try {
+      final resp = await ApiService().authenticatedGet(
+        Uri.parse(
+            '$kApiBaseUrlEmulator/api/operacional/manejos-sanitarios/?animal=${_animal.serverId}'),
+      );
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final list = data is List ? data : (data['results'] ?? []);
+        setState(() => _manejos = List<Map<String, dynamic>>.from(list));
+      }
+    } catch (_) {
+    } finally {
+      setState(() => _loadingManejos = false);
+    }
+  }
+
+  Future<void> _fetchRegistros() async {
+    if (_animal.serverId == null) return;
+    setState(() => _loadingRegistros = true);
+    try {
+      final resp = await ApiService().authenticatedGet(
+        Uri.parse(
+            '$kApiBaseUrlEmulator/api/operacional/registros-reprodutivos/?matriz=${_animal.serverId}'),
+      );
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final list = data is List ? data : (data['results'] ?? []);
+        setState(() => _registros = List<Map<String, dynamic>>.from(list));
+      }
+    } catch (_) {
+    } finally {
+      setState(() => _loadingRegistros = false);
+    }
+  }
+
+  Future<void> _showAddManejo() async {
+    String tipo = 'VACINACAO';
+    final descCtrl = TextEditingController();
+    final produtoCtrl = TextEditingController();
+    final dosagemCtrl = TextEditingController();
+    final profCtrl = TextEditingController();
+    DateTime data = DateTime.now();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          title: const Text('Novo Registro de Saúde'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: tipo,
+                  decoration: const InputDecoration(labelText: 'Tipo'),
+                  items: const [
+                    DropdownMenuItem(value: 'VACINACAO', child: Text('Vacinação')),
+                    DropdownMenuItem(value: 'VERMIFUGACAO', child: Text('Vermifugação')),
+                    DropdownMenuItem(value: 'CARRAPATICIDA', child: Text('Carrapaticida')),
+                    DropdownMenuItem(value: 'SUPLEMENTACAO', child: Text('Suplementação')),
+                    DropdownMenuItem(value: 'OUTRO', child: Text('Outro')),
+                  ],
+                  onChanged: (v) => setD(() => tipo = v!),
+                ),
+                TextField(
+                    controller: descCtrl,
+                    decoration: const InputDecoration(
+                        labelText: 'Descrição', hintText: 'Ex: Febre Aftosa')),
+                TextField(
+                    controller: produtoCtrl,
+                    decoration: const InputDecoration(labelText: 'Produto')),
+                TextField(
+                    controller: dosagemCtrl,
+                    decoration: const InputDecoration(
+                        labelText: 'Dosagem', hintText: 'Ex: 2ml')),
+                TextField(
+                    controller: profCtrl,
+                    decoration: const InputDecoration(labelText: 'Veterinário')),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final d = await showDatePicker(
+                        context: ctx,
+                        initialDate: data,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030));
+                    if (d != null) setD(() => data = d);
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(labelText: 'Data'),
+                    child: Text(
+                        '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Salvar')),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    try {
+      final resp = await ApiService().authenticatedPost(
+        Uri.parse('$kApiBaseUrlEmulator/api/operacional/manejos-sanitarios/'),
+        {
+          'animal': _animal.serverId,
+          'tipo': tipo,
+          'descricao': descCtrl.text.trim(),
+          'produto': produtoCtrl.text.trim(),
+          'dosagem': dosagemCtrl.text.trim(),
+          'profissional': profCtrl.text.trim(),
+          'data':
+              '${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}',
+        },
+      );
+      if (!mounted) return;
+      if (resp.statusCode == 201) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Registro salvo!')));
+        _fetchManejos();
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erro: ${resp.statusCode}')));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Erro: $e')));
+    }
+  }
+
+  Future<void> _showAddRegistro() async {
+    String tipoEvento = 'COBERTURA';
+    String? resultadoDg;
+    final obsCtrl = TextEditingController();
+    DateTime dataEvento = DateTime.now();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          title: const Text('Novo Registro Reprodutivo'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: tipoEvento,
+                  decoration: const InputDecoration(labelText: 'Tipo de Evento'),
+                  items: const [
+                    DropdownMenuItem(value: 'COBERTURA', child: Text('Cobertura Natural')),
+                    DropdownMenuItem(value: 'INSEMINACAO', child: Text('Inseminação Artificial')),
+                    DropdownMenuItem(value: 'DIAGNOSTICO', child: Text('Diagnóstico de Gestação')),
+                    DropdownMenuItem(value: 'PARTO', child: Text('Parto')),
+                  ],
+                  onChanged: (v) => setD(() => tipoEvento = v!),
+                ),
+                if (tipoEvento == 'DIAGNOSTICO')
+                  DropdownButtonFormField<String?>(
+                    value: resultadoDg,
+                    decoration: const InputDecoration(labelText: 'Resultado DG'),
+                    items: const [
+                      DropdownMenuItem(value: null, child: Text('—')),
+                      DropdownMenuItem(value: 'PRENHA', child: Text('Prenha')),
+                      DropdownMenuItem(value: 'VAZIA', child: Text('Vazia')),
+                    ],
+                    onChanged: (v) => setD(() => resultadoDg = v),
+                  ),
+                TextField(
+                    controller: obsCtrl,
+                    decoration: const InputDecoration(labelText: 'Observações')),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final d = await showDatePicker(
+                        context: ctx,
+                        initialDate: dataEvento,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030));
+                    if (d != null) setD(() => dataEvento = d);
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(labelText: 'Data do Evento'),
+                    child: Text(
+                        '${dataEvento.day.toString().padLeft(2, '0')}/${dataEvento.month.toString().padLeft(2, '0')}/${dataEvento.year}'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Salvar')),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    try {
+      final body = <String, dynamic>{
+        'matriz': _animal.serverId,
+        'tipo_evento': tipoEvento,
+        'data_evento':
+            '${dataEvento.year}-${dataEvento.month.toString().padLeft(2, '0')}-${dataEvento.day.toString().padLeft(2, '0')}',
+        'observacao': obsCtrl.text.trim(),
+      };
+      if (resultadoDg != null) body['resultado_dg'] = resultadoDg;
+      final resp = await ApiService().authenticatedPost(
+        Uri.parse(
+            '$kApiBaseUrlEmulator/api/operacional/registros-reprodutivos/'),
+        body,
+      );
+      if (!mounted) return;
+      if (resp.statusCode == 201) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Registro salvo!')));
+        _fetchRegistros();
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erro: ${resp.statusCode}')));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Erro: $e')));
+    }
+  }
+
+  Widget _buildSaudeTab() {
+    if (_animal.serverId == null) {
+      return const Center(
+          child: Text('Sincronize o animal para ver registros de saúde.',
+              textAlign: TextAlign.center));
+    }
+    if (_loadingManejos) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return Column(
+      children: [
+        Expanded(
+          child: _manejos.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.vaccines, size: 48, color: Colors.grey.shade400),
+                      const SizedBox(height: 12),
+                      const Text('Nenhum registro de saúde',
+                          style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchManejos,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _manejos.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) {
+                      final m = _manejos[i];
+                      final tipo = m['tipo'] as String? ?? '';
+                      final tipoLabels = {
+                        'VACINACAO': ('Vacinação', Icons.vaccines, Colors.green),
+                        'VERMIFUGACAO': ('Vermifugação', Icons.bug_report, Colors.orange),
+                        'CARRAPATICIDA': ('Carrapaticida', Icons.pest_control, Colors.brown),
+                        'SUPLEMENTACAO': ('Suplementação', Icons.medication, Colors.blue),
+                        'OUTRO': ('Outro', Icons.medical_services, Colors.grey),
+                      };
+                      final (label, icon, color) = tipoLabels[tipo] ??
+                          ('Outro', Icons.medical_services, Colors.grey);
+                      return Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: color.withValues(alpha: 0.3))),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: color.withValues(alpha: 0.1),
+                            child: Icon(icon, color: color, size: 20),
+                          ),
+                          title: Text(m['descricao']?.toString().isNotEmpty == true
+                              ? m['descricao']
+                              : label),
+                          subtitle: Text(
+                              '${m['data'] ?? ''} ${m['produto']?.toString().isNotEmpty == true ? '• ${m['produto']}' : ''}'),
+                          trailing: m['profissional']?.toString().isNotEmpty == true
+                              ? Text(m['profissional'],
+                                  style: TextStyle(
+                                      fontSize: 11, color: Colors.grey.shade600))
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar Registro de Saúde'),
+              onPressed: _showAddManejo,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReproducaoTab() {
+    if (_animal.serverId == null) {
+      return const Center(
+          child: Text('Sincronize o animal para ver registros reprodutivos.',
+              textAlign: TextAlign.center));
+    }
+    if (_animal.sexo != 'F') {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.info_outline, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text('Registros reprodutivos\ndisponíveis apenas para fêmeas.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600)),
+          ],
+        ),
+      );
+    }
+    if (_loadingRegistros) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final eventoInfo = {
+      'COBERTURA': ('Cobertura Natural', Icons.favorite, Colors.red),
+      'INSEMINACAO': ('Inseminação Artificial', Icons.science, Colors.purple),
+      'DIAGNOSTICO': ('Diagnóstico Gestação', Icons.pregnant_woman, Colors.pink),
+      'PARTO': ('Parto', Icons.child_friendly, Colors.teal),
+    };
+    return Column(
+      children: [
+        Expanded(
+          child: _registros.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.favorite_border,
+                          size: 48, color: Colors.grey.shade400),
+                      const SizedBox(height: 12),
+                      const Text('Nenhum registro reprodutivo',
+                          style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchRegistros,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _registros.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) {
+                      final r = _registros[i];
+                      final tipo = r['tipo_evento'] as String? ?? '';
+                      final (label, icon, color) = eventoInfo[tipo] ??
+                          ('Evento', Icons.event, Colors.grey);
+                      final resultado = r['resultado_dg'] as String?;
+                      return Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: color.withValues(alpha: 0.3))),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: color.withValues(alpha: 0.1),
+                            child: Icon(icon, color: color, size: 20),
+                          ),
+                          title: Text(label),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(r['data_evento']?.toString() ?? ''),
+                              if (resultado != null)
+                                Text(resultado == 'PRENHA' ? '🟢 Prenha' : '🔴 Vazia',
+                                    style: const TextStyle(fontSize: 12)),
+                              if ((r['observacao'] ?? '').toString().isNotEmpty)
+                                Text(r['observacao'],
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey.shade600)),
+                            ],
+                          ),
+                          isThreeLine: true,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar Registro Reprodutivo'),
+              onPressed: _showAddRegistro,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sexoLabel = _animal.sexo == 'M' ? 'Macho' : 'Fêmea';
@@ -221,19 +666,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
           ),
 
           // ── Tab 4: Saúde ────────────────────────────────────
-          const _PlaceholderTab(
-            icon: Icons.vaccines,
-            title: 'Saúde',
-            subtitle:
-                'Histórico de vacinas, vermifugações e tratamentos veterinários.',
-          ),
+          _buildSaudeTab(),
 
           // ── Tab 5: Reprodução ───────────────────────────────
-          const _PlaceholderTab(
-            icon: Icons.favorite,
-            title: 'Reprodução',
-            subtitle: 'Coberturas, prenhezes e histórico de partos.',
-          ),
+          _buildReproducaoTab(),
         ],
       ),
     );
