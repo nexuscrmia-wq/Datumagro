@@ -804,6 +804,82 @@
       border: 1px solid rgba(201,162,39,.25);
     }
 
+    /* ── GALERIA DE SCREENSHOTS ── */
+    .app-gallery { background: var(--ink); padding: 80px 0; }
+    .app-gallery .section-head h2 { color: var(--paper); }
+    .app-gallery .section-head p  { color: #9db3a5; }
+
+    .gallery-tabs {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 40px; justify-content: center;
+    }
+    .gtab {
+      padding: 8px 20px; border-radius: 999px; border: 1.5px solid rgba(201,162,39,.3);
+      background: transparent; color: #9db3a5; font-family: inherit; font-size: .85rem;
+      font-weight: 500; cursor: pointer; transition: all .18s;
+    }
+    .gtab:hover { border-color: var(--tag-gold); color: var(--paper); }
+    .gtab.active { background: var(--tag-gold); border-color: var(--tag-gold); color: var(--ink); font-weight: 700; }
+
+    .gallery-stage {
+      display: flex; gap: 56px; align-items: center; justify-content: center;
+      margin-bottom: 36px; flex-wrap: wrap;
+    }
+
+    .phone-frame {
+      flex-shrink: 0;
+      background: #111;
+      border-radius: 36px;
+      padding: 12px;
+      box-shadow: 0 0 0 2px #2a2a2a, 0 24px 64px rgba(0,0,0,.7);
+      position: relative;
+      width: 270px;
+    }
+    .phone-inner {
+      border-radius: 26px;
+      overflow: hidden;
+      background: #111;
+      line-height: 0;
+    }
+    .phone-inner img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: opacity .25s ease;
+    }
+    .phone-inner img.fade { opacity: 0; }
+
+    .gallery-desc { max-width: 440px; }
+    .gdesc-item { display: none; }
+    .gdesc-item.active { display: block; }
+    .gdesc-tag {
+      display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .8px;
+      text-transform: uppercase; background: rgba(201,162,39,.15); color: var(--tag-gold);
+      border: 1px solid rgba(201,162,39,.3); border-radius: 4px; padding: 3px 10px; margin-bottom: 14px;
+    }
+    .gallery-desc h3 { color: var(--paper); font-size: clamp(1.2rem,3vw,1.6rem); margin-bottom: 12px; }
+    .gallery-desc p  { color: #9db3a5; line-height: 1.65; font-size: .95rem; margin-bottom: 20px; }
+    .gdesc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .gdesc-list li { color: #b5c9bb; font-size: .88rem; }
+
+    .gallery-thumbs {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    .gthumb {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: none; border: 2px solid rgba(255,255,255,.08);
+      border-radius: 12px; padding: 6px 8px; cursor: pointer;
+      transition: all .18s; color: #6a8070; font-size: .7rem; font-family: inherit;
+    }
+    .gthumb:hover { border-color: rgba(201,162,39,.4); color: var(--paper); }
+    .gthumb.active { border-color: var(--tag-gold); color: var(--tag-gold); }
+    .gthumb img { border-radius: 6px; width: 52px; height: auto; display: block; }
+
+    @media (max-width: 720px) {
+      .gallery-stage { flex-direction: column; gap: 32px; }
+      .phone-frame { width: 220px; }
+      .gallery-desc { max-width: 100%; }
+    }
+
     /* ── ESPÉCIES / MULTI-MANEJO ── */
     .especies-section { background: var(--paper-2); padding: 72px 0; }
     .sp-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px; }
@@ -883,6 +959,7 @@
     </div>
     <nav class="nav-links">
       <a href="#como-funciona">Como funciona</a>
+      <a href="#galeria-app">Ver o app</a>
       <a href="#especies">Espécies</a>
       <a href="#funcionalidades">Funcionalidades</a>
       <a href="#mapeamento">Mapeamento</a>
@@ -898,6 +975,7 @@
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     <a href="#como-funciona">Como funciona</a>
+    <a href="#galeria-app">Ver o app</a>
     <a href="#especies">Espécies</a>
     <a href="#funcionalidades">Funcionalidades</a>
     <a href="#mapeamento">Mapeamento</a>
@@ -1078,6 +1156,138 @@
         <p>Com o histórico vacinal em dia, gere o PDF com QR Code que comprova conformidade com o MAPA para transporte e exportação.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS REAIS DO APP -->
+<section class="app-gallery" id="galeria-app">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark" style="color:var(--tag-gold)">O app em ação</span>
+      <h2>Telas reais. Dados reais. No campo.</h2>
+      <p>Capturas do DatumAgro rodando num Samsung Galaxy Tab — o mesmo app que você baixa e usa hoje na sua fazenda.</p>
+    </div>
+
+    <div class="gallery-tabs" role="tablist">
+      <button class="gtab active" data-screen="dashboard">Dashboard</button>
+      <button class="gtab" data-screen="animais">Animais</button>
+      <button class="gtab" data-screen="pesagens">Curva de Peso</button>
+      <button class="gtab" data-screen="financeiro">Financeiro</button>
+      <button class="gtab" data-screen="mapa">Mapa</button>
+      <button class="gtab" data-screen="romaneio">Romaneio</button>
+    </div>
+
+    <div class="gallery-stage">
+      <!-- Phone frame -->
+      <div class="phone-frame reveal">
+        <div class="phone-inner">
+          <img id="gallery-img"
+               src="{% static 'images/screenshots/screen_dashboard.jpg' %}"
+               alt="Dashboard DatumAgro"
+               width="420" height="612"
+               loading="lazy">
+        </div>
+      </div>
+
+      <!-- Descrição ao lado -->
+      <div class="gallery-desc reveal" style="transition-delay:.1s">
+        <div class="gdesc-item active" data-screen="dashboard">
+          <span class="gdesc-tag">Dashboard</span>
+          <h3>Visão geral da fazenda em segundos</h3>
+          <p>KPIs em tempo real: animais ativos, alertas críticos, nascimentos do mês e embarques em andamento — tudo na tela inicial sem precisar navegar.</p>
+          <ul class="gdesc-list">
+            <li>✓ Animais ativos por propriedade</li>
+            <li>✓ Alertas sanitários críticos</li>
+            <li>✓ Ações rápidas para cada módulo</li>
+            <li>✓ Sincronização automática offline/online</li>
+          </ul>
+        </div>
+        <div class="gdesc-item" data-screen="animais">
+          <span class="gdesc-tag">Rebanho</span>
+          <h3>Cada animal com sua ficha completa</h3>
+          <p>Lista com brinco, raça e sexo de cada cabeça. Toque em qualquer animal para acessar pesagens, saúde e reprodução.</p>
+          <ul class="gdesc-list">
+            <li>✓ Nelore, Angus, Brangus e mais 10 raças</li>
+            <li>✓ Macho (M) e fêmea (F) identificados por cor</li>
+            <li>✓ Busca rápida por brinco</li>
+            <li>✓ Sincronização automática com a nuvem</li>
+          </ul>
+        </div>
+        <div class="gdesc-item" data-screen="pesagens">
+          <span class="gdesc-tag">GMD</span>
+          <h3>Curva de crescimento individual</h3>
+          <p>Gráfico de evolução de peso por animal — de 380kg a 450kg em 6 meses, com GMD calculado automaticamente a cada pesagem.</p>
+          <ul class="gdesc-list">
+            <li>✓ Gráfico de curva de peso individual</li>
+            <li>✓ GMD calculado automaticamente (g/dia)</li>
+            <li>✓ Histórico completo de pesagens</li>
+            <li>✓ Suporte a balança Bluetooth</li>
+          </ul>
+        </div>
+        <div class="gdesc-item" data-screen="financeiro">
+          <span class="gdesc-tag">Financeiro</span>
+          <h3>Receitas, despesas e saldo do mês</h3>
+          <p>Controle financeiro integrado: venda de gado, ração, vacinas e outros lançamentos com saldo positivo de R$2.377 na tela.</p>
+          <ul class="gdesc-list">
+            <li>✓ Saldo do mês em destaque</li>
+            <li>✓ Distribuição Receitas vs. Despesas visual</li>
+            <li>✓ Lançamentos com data e categoria</li>
+            <li>✓ Filtro por Receitas / Despesas / Todos</li>
+          </ul>
+        </div>
+        <div class="gdesc-item" data-screen="mapa">
+          <span class="gdesc-tag">Mapa</span>
+          <h3>Propriedade georreferenciada no app</h3>
+          <p>Mapa interativo com a área da propriedade, camadas de CAR, piquetes e infraestrutura — tudo sem precisar sair do app.</p>
+          <ul class="gdesc-list">
+            <li>✓ Importação automática pelo CAR</li>
+            <li>✓ Camadas CAR, Piquetes e Infra</li>
+            <li>✓ Área calculada em hectares</li>
+            <li>✓ Funciona com e sem internet</li>
+          </ul>
+        </div>
+        <div class="gdesc-item" data-screen="romaneio">
+          <span class="gdesc-tag">Romaneio</span>
+          <h3>Romaneio de pesagem com preço da @</h3>
+          <p>Informe o preço da arroba, adicione os animais com peso e o app calcula o valor total do lote automaticamente — gera PDF para assinar no curral.</p>
+          <ul class="gdesc-list">
+            <li>✓ Cálculo automático de arrobas (@)</li>
+            <li>✓ Valor total por lote em tempo real</li>
+            <li>✓ Exportação em PDF com 1 toque</li>
+            <li>✓ Pronto para assinatura no curral</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thumbnails -->
+    <div class="gallery-thumbs">
+      <button class="gthumb active" data-screen="dashboard" aria-label="Dashboard">
+        <img src="{% static 'images/screenshots/screen_dashboard.jpg' %}" alt="" width="60" height="87" loading="lazy">
+        <span>Dashboard</span>
+      </button>
+      <button class="gthumb" data-screen="animais" aria-label="Animais">
+        <img src="{% static 'images/screenshots/screen_animais.jpg' %}" alt="" width="60" height="87" loading="lazy">
+        <span>Animais</span>
+      </button>
+      <button class="gthumb" data-screen="pesagens" aria-label="Pesagens">
+        <img src="{% static 'images/screenshots/screen_pesagens.jpg' %}" alt="" width="60" height="87" loading="lazy">
+        <span>Pesagens</span>
+      </button>
+      <button class="gthumb" data-screen="financeiro" aria-label="Financeiro">
+        <img src="{% static 'images/screenshots/screen_financeiro.jpg' %}" alt="" width="60" height="87" loading="lazy">
+        <span>Financeiro</span>
+      </button>
+      <button class="gthumb" data-screen="mapa" aria-label="Mapa">
+        <img src="{% static 'images/screenshots/screen_mapa.jpg' %}" alt="" width="60" height="87" loading="lazy">
+        <span>Mapa</span>
+      </button>
+      <button class="gthumb" data-screen="romaneio" aria-label="Romaneio">
+        <img src="{% static 'images/screenshots/screen_romaneio.jpg' %}" alt="" width="60" height="87" loading="lazy">
+        <span>Romaneio</span>
+      </button>
+    </div>
+
   </div>
 </section>
 
@@ -1621,6 +1831,59 @@
 </footer>
 
 <script>
+  // ── Galeria de Screenshots ──────────────────────────────────────────────
+  (function() {
+    const SCREENS = {
+      dashboard:  '{% static "images/screenshots/screen_dashboard.jpg" %}',
+      animais:    '{% static "images/screenshots/screen_animais.jpg" %}',
+      pesagens:   '{% static "images/screenshots/screen_pesagens.jpg" %}',
+      financeiro: '{% static "images/screenshots/screen_financeiro.jpg" %}',
+      mapa:       '{% static "images/screenshots/screen_mapa.jpg" %}',
+      romaneio:   '{% static "images/screenshots/screen_romaneio.jpg" %}',
+    };
+    const ALTS = {
+      dashboard:  'Dashboard DatumAgro com KPIs da fazenda',
+      animais:    'Lista de animais — Nelore, Angus, Brangus',
+      pesagens:   'Curva de peso individual com GMD calculado',
+      financeiro: 'Módulo financeiro — receitas e despesas do mês',
+      mapa:       'Mapa interativo da propriedade com camadas CAR',
+      romaneio:   'Romaneio de pesagem com calculadora de arrobas',
+    };
+
+    const img    = document.getElementById('gallery-img');
+    const tabs   = document.querySelectorAll('.gtab');
+    const thumbs = document.querySelectorAll('.gthumb');
+    const descs  = document.querySelectorAll('.gdesc-item');
+
+    function switchTo(screen) {
+      // Fade out
+      img.classList.add('fade');
+      setTimeout(() => {
+        img.src = SCREENS[screen];
+        img.alt = ALTS[screen];
+        img.classList.remove('fade');
+      }, 220);
+
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.screen === screen));
+      thumbs.forEach(t => t.classList.toggle('active', t.dataset.screen === screen));
+      descs.forEach(d => d.classList.toggle('active', d.dataset.screen === screen));
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => switchTo(t.dataset.screen)));
+    thumbs.forEach(t => t.addEventListener('click', () => switchTo(t.dataset.screen)));
+
+    // Auto-rotate every 4s
+    const order = Object.keys(SCREENS);
+    let cur = 0;
+    const interval = setInterval(() => {
+      // Só roda se nenhum thumb/tab foi clicado recentemente — detecta hover
+      const gallery = document.querySelector('.app-gallery');
+      if (gallery && gallery.matches(':hover')) return;
+      cur = (cur + 1) % order.length;
+      switchTo(order[cur]);
+    }, 4000);
+  })();
+
   // Mobile hamburger
   const ham = document.getElementById('ham');
   const mob = document.getElementById('mobileMenu');
