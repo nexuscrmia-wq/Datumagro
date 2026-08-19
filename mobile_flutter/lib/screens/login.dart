@@ -49,8 +49,17 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on SocketException {
       setState(() => _loading = false);
+      // Tenta entrar com sessão salva (modo offline)
+      final api = ApiService();
+      final user = await api.getStoredUser();
+      final header = await api.getAuthHeader();
+      if (!mounted) return;
+      if (user != null && header.isNotEmpty) {
+        navigator.pushReplacementNamed('/dashboard');
+        return;
+      }
       messenger.showSnackBar(SnackBar(
-        content: const Text('Sem conexão com a internet. Verifique sua rede e tente novamente.'),
+        content: const Text('Sem conexão com a internet. Conecte-se para fazer login pela primeira vez.'),
         backgroundColor: Colors.orange.shade800,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 5),

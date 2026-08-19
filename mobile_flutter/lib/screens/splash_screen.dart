@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/api.dart';
 
@@ -41,8 +42,25 @@ class _SplashScreenState extends State<SplashScreen>
     final user = await api.getStoredUser();
     if (!mounted) return;
     if (user != null) {
-      await api.refreshAccessToken();
+      // Tenta renovar token — falha silenciosa se estiver offline
+      bool offline = false;
+      try {
+        await api.refreshAccessToken();
+      } on SocketException {
+        offline = true;
+      } catch (_) {}
+
       if (!mounted) return;
+
+      // Modo offline: se tem token salvo, entra direto no dashboard
+      if (offline) {
+        final header = await api.getAuthHeader();
+        if (header.isNotEmpty) {
+          Navigator.of(context).pushReplacementNamed('/dashboard');
+          return;
+        }
+      }
+
       final status = await api.getStatusAssinatura();
       if (!mounted) return;
       switch (status) {
@@ -50,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen>
           Navigator.of(context).pushReplacementNamed('/dashboard');
         case 'BLOQUEADO':
           Navigator.of(context).pushReplacementNamed('/pending', arguments: true);
-        default: // PENDENTE
+        default:
           Navigator.of(context).pushReplacementNamed('/pending');
       }
     } else {

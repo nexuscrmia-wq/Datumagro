@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -224,10 +225,18 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>?> fetchMe() async {
-    final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/usuarios/me/');
-    final resp = await authenticatedGet(url);
-    if (resp.statusCode == 200) return json.decode(resp.body) as Map<String, dynamic>;
-    return null;
+    try {
+      final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/usuarios/me/');
+      final resp = await authenticatedGet(url);
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body) as Map<String, dynamic>;
+        await _storage.write(key: 'user', value: json.encode(data));
+        return data;
+      }
+    } on SocketException {
+      // offline: return cached user
+    }
+    return getStoredUser();
   }
 
   Future<bool> deleteAccount(String password) async {
@@ -241,11 +250,31 @@ class ApiService {
 
   // ─── Dashboard ────────────────────────────────────────────────────────────
 
-  Future<Map<String, dynamic>> fetchDashboard() async {
-    final url = Uri.parse('$kApiBaseUrlEmulator/api/dashboard/resumo/');
-    final resp = await authenticatedGet(url);
-    if (resp.statusCode == 200) return json.decode(resp.body) as Map<String, dynamic>;
+  Future<Map<String, dynamic>> fetchDashboard({bool forceOnline = false}) async {
+    try {
+      final url = Uri.parse('$kApiBaseUrlEmulator/api/dashboard/resumo/');
+      final resp = await authenticatedGet(url);
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body) as Map<String, dynamic>;
+        await _storage.write(key: 'cache_dashboard', value: json.encode(data));
+        return data;
+      }
+    } on SocketException {
+      // offline: return cached dashboard
+    }
+    final cached = await _storage.read(key: 'cache_dashboard');
+    if (cached != null) return json.decode(cached) as Map<String, dynamic>;
     return {};
+  }
+
+  Future<bool> isOffline() async {
+    try {
+      final url = Uri.parse('$kApiBaseUrlEmulator/api/health/');
+      await http.get(url).timeout(const Duration(seconds: 4));
+      return false;
+    } catch (_) {
+      return true;
+    }
   }
 
   // ─── Propriedades / GIS ───────────────────────────────────────────────────

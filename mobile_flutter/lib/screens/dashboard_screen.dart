@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api.dart';
@@ -19,6 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _user;
   bool _loading = true;
   String? _erro;
+  bool _offline = false;
 
   static bool _versionChecked = false;
   static const _verde = Color(0xFF2E7D32);
@@ -164,24 +164,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
     try {
       final api = ApiService();
+      final offline = await api.isOffline();
       final kpis = await api.fetchDashboard();
       final user = await api.fetchMe();
       if (!mounted) return;
       setState(() {
         _kpis = kpis;
         _user = user;
+        _offline = offline;
         _loading = false;
-      });
-    } on SocketException {
-      if (!mounted) return;
-      setState(() {
-        _erro = 'sem_internet';
-        _loading = false;
+        // Se não tem dados nem online nem cache, mostra erro
+        _erro = (kpis.isEmpty && user == null) ? 'sem_internet' : null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _erro = e.toString();
+        _erro = 'sem_internet';
         _loading = false;
       });
     }
@@ -238,7 +236,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ? const Center(child: CircularProgressIndicator(color: _verde))
             : _erro != null
                 ? _buildError()
-                : _buildContent(nome, tipo),
+                : Column(
+                    children: [
+                      if (_offline)
+                        Container(
+                          width: double.infinity,
+                          color: Colors.orange.shade700,
+                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                              SizedBox(width: 8),
+                              Text('Modo offline — exibindo dados salvos',
+                                  style: TextStyle(color: Colors.white, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                      Expanded(child: _buildContent(nome, tipo)),
+                    ],
+                  ),
       ),
     );
   }
