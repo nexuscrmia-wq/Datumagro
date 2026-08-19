@@ -393,13 +393,14 @@ def redefinir_senha(request, token):
 @permission_classes([AllowAny])
 def versao_app(request):
     """Retorna a versão atual do APK para checagem in-app."""
-    versao = os.getenv('APP_VERSION', '1.2.0')
-    url_base = os.getenv('APP_URL', 'https://datumagro-web-production.up.railway.app')
+    versao = os.getenv('APP_VERSION', '1.4.0')
+    # Usa sempre o host real da requisição para garantir URL correta em qualquer domínio
+    url_base = f"{request.scheme}://{request.get_host()}"
     return Response({
         'versao': versao,
         'url_download': f'{url_base}/baixar/apk/',
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
-        'novidades': os.getenv('UPDATE_NOVIDADES', ''),
+        'novidades': os.getenv('UPDATE_NOVIDADES', 'Suporte a modo offline, novas telas de Saúde e Reprodução, criação de embarques.'),
     })
 
 
