@@ -21,6 +21,7 @@ dependencies:
   url_launcher: ^6.3.0
   # Scanner QR/barcode — inclui ML Kit (libbarhopper_v3, libimage_processing_util_jni, libsurface_util_jni)
   mobile_scanner: ^5.2.3
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

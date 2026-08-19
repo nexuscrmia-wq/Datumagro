@@ -239,6 +239,22 @@ class ApiService {
     return getStoredUser();
   }
 
+  Future<Map<String, dynamic>?> uploadFotoPerfil(String filePath) async {
+    final token = await _getAccessToken() ?? '';
+    final uri = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/me/');
+    final request = http.MultipartRequest('PATCH', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..files.add(await http.MultipartFile.fromPath('foto_perfil', filePath));
+    final streamed = await request.send().timeout(const Duration(seconds: 30));
+    final resp = await http.Response.fromStream(streamed);
+    if (resp.statusCode == 200) {
+      final data = json.decode(resp.body) as Map<String, dynamic>;
+      await _storage.write(key: 'user', value: json.encode(data));
+      return data;
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>?> updateMe(Map<String, dynamic> fields) async {
     final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/me/');
     final resp = await authenticatedPatch(url, fields);
@@ -308,6 +324,13 @@ class ApiService {
       return (results as List).cast<Map<String, dynamic>>();
     }
     return [];
+  }
+
+  Future<Map<String, dynamic>?> criarPropriedade(Map<String, dynamic> dados) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/cadastros/propriedades/');
+    final resp = await authenticatedPost(url, dados);
+    if (resp.statusCode == 201) return json.decode(resp.body) as Map<String, dynamic>;
+    return null;
   }
 
   Future<void> atualizarCamadas(

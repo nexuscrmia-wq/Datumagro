@@ -505,6 +505,215 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
     return _buildMap();
   }
 
+  Widget _buildVazio() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90, height: 90,
+              decoration: BoxDecoration(
+                color: _verde.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.terrain, size: 44, color: _verde),
+            ),
+            const SizedBox(height: 20),
+            const Text('Nenhuma propriedade cadastrada',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            const Text(
+              'Cadastre sua fazenda ou propriedade para usar o mapa, desenhar piquetes e marcar infraestrutura.',
+              style: TextStyle(color: Colors.black54, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: _verde),
+              onPressed: _showCadastrarPropriedade,
+              icon: const Icon(Icons.add_location_alt),
+              label: const Text('Cadastrar propriedade'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _fetchPropriedades,
+              child: const Text('Atualizar lista'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const _ufs = [
+    'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT',
+    'PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO',
+  ];
+
+  Future<void> _showCadastrarPropriedade() async {
+    final nomeCtrl = TextEditingController();
+    final cidadeCtrl = TextEditingController();
+    final haCtrl = TextEditingController();
+    String uf = 'MG';
+    String objetivo = 'ENGORDA';
+    bool saving = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setInner) => Padding(
+          padding: EdgeInsets.only(
+              left: 20, right: 20, top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Nova Propriedade',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nomeCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome da propriedade *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.home_outlined),
+                    hintText: 'Ex: Fazenda Santa Maria',
+                  ),
+                  textCapitalization: TextCapitalization.words,
+                ),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: cidadeCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Cidade *',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.location_city),
+                      ),
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 100,
+                    child: DropdownButtonFormField<String>(
+                      value: uf,
+                      decoration: const InputDecoration(
+                        labelText: 'UF',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _ufs.map((u) =>
+                        DropdownMenuItem(value: u, child: Text(u))).toList(),
+                      onChanged: (v) => setInner(() => uf = v ?? uf),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: haCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Área (hectares)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.landscape),
+                        hintText: 'Ex: 150.5',
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: objetivo,
+                      decoration: const InputDecoration(
+                        labelText: 'Objetivo',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'CRIA', child: Text('Cria')),
+                        DropdownMenuItem(value: 'RECRIA', child: Text('Recria')),
+                        DropdownMenuItem(value: 'ENGORDA', child: Text('Engorda')),
+                      ],
+                      onChanged: (v) => setInner(() => objetivo = v ?? objetivo),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                        backgroundColor: _verde,
+                        padding: const EdgeInsets.symmetric(vertical: 14)),
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            if (nomeCtrl.text.trim().isEmpty ||
+                                cidadeCtrl.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Preencha nome e cidade.')),
+                              );
+                              return;
+                            }
+                            setInner(() => saving = true);
+                            final dados = <String, dynamic>{
+                              'nome_propriedade': nomeCtrl.text.trim(),
+                              'cidade': cidadeCtrl.text.trim(),
+                              'estado': uf,
+                              'objetivo_producao': objetivo,
+                              if (haCtrl.text.isNotEmpty)
+                                'hectares': double.tryParse(
+                                    haCtrl.text.replaceAll(',', '.')),
+                            };
+                            final nova = await _api.criarPropriedade(dados);
+                            if (!ctx.mounted) return;
+                            Navigator.of(ctx).pop();
+                            if (nova != null) {
+                              setState(() {
+                                _propriedades.add(nova);
+                                _loadProp(nova);
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Propriedade cadastrada!'),
+                                    backgroundColor: _verde),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Erro ao cadastrar. Tente novamente.'),
+                                    backgroundColor: Colors.red),
+                              );
+                            }
+                          },
+                    child: saving
+                        ? const SizedBox(
+                            width: 20, height: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : const Text('Salvar propriedade',
+                            style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPicker() {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8E9),
@@ -516,22 +725,8 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
       body: _loadingList
           ? const Center(child: CircularProgressIndicator(color: _verde))
           : _propriedades.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.map_outlined,
-                          size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text('Nenhuma propriedade cadastrada.',
-                          style: TextStyle(color: Colors.grey)),
-                      const SizedBox(height: 8),
-                      TextButton(
-                          onPressed: _fetchPropriedades,
-                          child: const Text('Tentar novamente')),
-                    ],
-                  ),
-                )
+              ? _buildVazio()
+
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: _propriedades.length,
