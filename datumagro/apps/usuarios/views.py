@@ -278,6 +278,22 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             'access': str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def change_password(self, request):
+        """Troca de senha autenticada."""
+        old_password = request.data.get('old_password', '')
+        new_password = request.data.get('new_password', '')
+        if not old_password or not new_password:
+            return Response({'error': 'Campos obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(new_password) < 6:
+            return Response({'error': 'A nova senha deve ter pelo menos 6 caracteres.'}, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if not user.check_password(old_password):
+            return Response({'error': 'Senha atual incorreta.'}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        return Response({'message': 'Senha alterada com sucesso.'})
+
     @action(detail=False, methods=['post'])
     def reset_password(self, request):
         """

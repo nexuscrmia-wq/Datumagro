@@ -239,6 +239,26 @@ class ApiService {
     return getStoredUser();
   }
 
+  Future<Map<String, dynamic>?> updateMe(Map<String, dynamic> fields) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/me/');
+    final resp = await authenticatedPatch(url, fields);
+    if (resp.statusCode == 200) {
+      final data = json.decode(resp.body) as Map<String, dynamic>;
+      await _storage.write(key: 'user', value: json.encode(data));
+      return data;
+    }
+    return null;
+  }
+
+  Future<bool> changePassword(String senhaAtual, String novaSenha) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/usuarios/change_password/');
+    final resp = await authenticatedPost(url, {
+      'old_password': senhaAtual,
+      'new_password': novaSenha,
+    });
+    return resp.statusCode == 200;
+  }
+
   Future<bool> deleteAccount(String password) async {
     final refresh = await _storage.read(key: 'refresh_token');
     final url = Uri.parse('$kApiBaseUrlEmulator/api/usuarios/excluir-conta/');
