@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/api.dart';
 
@@ -46,6 +47,14 @@ class _LoginScreenState extends State<LoginScreen> {
         default: // PENDENTE
           navigator.pushReplacementNamed('/pending');
       }
+    } on SocketException {
+      setState(() => _loading = false);
+      messenger.showSnackBar(SnackBar(
+        content: const Text('Sem conexão com a internet. Verifique sua rede e tente novamente.'),
+        backgroundColor: Colors.orange.shade800,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+      ));
     } catch (e) {
       setState(() => _loading = false);
       messenger.showSnackBar(SnackBar(

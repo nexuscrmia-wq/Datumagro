@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api.dart';
@@ -171,6 +172,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _user = user;
         _loading = false;
       });
+    } on SocketException {
+      if (!mounted) return;
+      setState(() {
+        _erro = 'sem_internet';
+        _loading = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -237,23 +244,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildError() {
+    final semInternet = _erro == 'sem_internet';
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.wifi_off, size: 56, color: Colors.grey),
-          const SizedBox(height: 12),
-          const Text('Sem conexão com o servidor',
-              style: TextStyle(fontSize: 16, color: Colors.grey)),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
-            onPressed: _load,
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            label: const Text('Tentar novamente',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(semInternet ? Icons.wifi_off : Icons.cloud_off,
+                size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              semInternet ? 'Sem conexão com a internet' : 'Sem conexão com o servidor',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              semInternet
+                  ? 'O DatumAgro precisa de internet para funcionar.\nConecte-se ao Wi-Fi ou ative os dados móveis e tente novamente.'
+                  : 'Verifique sua conexão e tente novamente.',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
+              onPressed: _load,
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              label: const Text('Tentar novamente', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -406,6 +428,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 icon: Icons.star_outline,
                 color: const Color(0xFFF9A825),
                 onTap: () => Navigator.of(context).pushNamed('/planos'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _ActionButton(
+                label: 'Financeiro',
+                icon: Icons.account_balance_wallet_outlined,
+                color: const Color(0xFF00695C),
+                onTap: () => Navigator.of(context).pushNamed('/financeiro'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionButton(
+                label: 'Equipe',
+                icon: Icons.group_outlined,
+                color: const Color(0xFF6A1B9A),
+                onTap: () => Navigator.of(context).pushNamed('/equipe'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionButton(
+                label: 'Alertas',
+                icon: Icons.notifications_outlined,
+                color: const Color(0xFFE65100),
+                onTap: () => Navigator.of(context).pushNamed('/alertas'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionButton(
+                label: 'Logística',
+                icon: Icons.local_shipping_outlined,
+                color: const Color(0xFF37474F),
+                onTap: () => Navigator.of(context).pushNamed('/logistica'),
               ),
             ),
           ],
