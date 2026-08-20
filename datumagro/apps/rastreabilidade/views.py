@@ -8,14 +8,16 @@ from rest_framework.response import Response
 from .models import PerfilPublicoAnimal
 from .serializers import PerfilPublicoManagementSerializer, DadosRastreabilidadeSerializer
 from .services import gerar_qr_code_para_perfil
+from datumagro.apps.usuarios.permissions import IsProprietarioOrGerente
 
 # --- View para a API (Gerenciamento do Produtor) ---
 class PerfilPublicoAPIViewSet(viewsets.ModelViewSet):
     """
-    API endpoint para o produtor gerenciar os perfis de rastreabilidade.
+    Gerenciamento dos perfis de rastreabilidade (QR Code / passaporte).
+    Restrito a Proprietário e Gerente — peão não emite documentos sanitários.
     """
     serializer_class = PerfilPublicoManagementSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
     def get_queryset(self):
         from datumagro.apps.cadastros.models import Cliente

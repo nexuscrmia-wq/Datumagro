@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 
 from .models import Alerta
 from .serializers import AlertaSerializer
+from datumagro.apps.usuarios.permissions import IsProprietarioOrGerente
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
     O usuário pode listar seus alertas e marcá-los como resolvidos.
     """
     serializer_class = AlertaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
     def get_queryset(self):
         """Retorna apenas os alertas do cliente do usuário logado."""
@@ -68,7 +69,7 @@ class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
 
 class AlertasIAView(APIView):
     """Sistema de alertas inteligentes baseado em análise de dados"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
     def get(self, request):
         try:
@@ -176,7 +177,7 @@ class AlertasIAView(APIView):
 
 class MetricasDesempenhoView(APIView):
     """Métricas de desempenho com cache"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
     @method_decorator(cache_page(60 * 60))  # 🚀 Cache de 1 hora para métricas pesadas
     def get(self, request):
@@ -246,7 +247,7 @@ class MetricasDesempenhoView(APIView):
 
 class InsightsView(APIView):
     """Retorna insights de IA baseados nos dados da fazenda."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
     def get(self, request):
         try:
@@ -278,7 +279,7 @@ class InsightsView(APIView):
 
 class RecomendacoesView(APIView):
     """Retorna recomendações de manejo baseadas nos dados da fazenda."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
     def get(self, request):
         try:
@@ -310,7 +311,7 @@ class RecomendacoesView(APIView):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsProprietarioOrGerente])
 def webhook_ia(request):
     """Webhook para integração com sistemas externos de IA"""
     try:

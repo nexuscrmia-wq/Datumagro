@@ -474,4 +474,25 @@ class ApiService {
       throw Exception('Erro ao salvar: $err');
     }
   }
+
+  // Retorna manejos sanitários com data_prevista nos próximos 7 dias
+  Future<List<Map<String, dynamic>>> fetchManejosVencendo() async {
+    final hoje = DateTime.now();
+    final limite = hoje.add(const Duration(days: 7));
+    final limiteStr = limite.toIso8601String().split('T').first;
+    final url = Uri.parse(
+        '$kApiBaseUrlEmulator/api/operacional/manejos-sanitarios/?data_prevista__lte=$limiteStr&status=PENDENTE');
+    final resp = await _authenticatedRequest(
+      (token) => http.get(url, headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      }),
+    );
+    if (resp.statusCode == 200) {
+      final body = json.decode(resp.body);
+      final results = body is Map ? body['results'] ?? body : body;
+      return (results as List).cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
 }

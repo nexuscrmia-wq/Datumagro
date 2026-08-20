@@ -3,19 +3,19 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated  # Usaremos autenticação por Token
+from rest_framework.permissions import IsAuthenticated
+from datumagro.apps.usuarios.permissions import IsProprietarioOrGerente
 from .serializers import DadosRfidPesagemSerializer
 from .services import processar_dados_rfid_pesagem
 
 
 class RegistroAutomaticoView(APIView):
     """
-    Endpoint principal para receber dados de hardware.
+    Endpoint para receber dados de hardware (balança + RFID).
     Ex: POST /api/integracoes/registrar-pesagem/
-
-    A autenticação será feita via API Token associado ao usuário/cliente.
+    Restrito a Proprietário e Gerente — chaves de integração ficam fora do acesso do peão.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsProprietarioOrGerente]
 
     def post(self, request):
         """

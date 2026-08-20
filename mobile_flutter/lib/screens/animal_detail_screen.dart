@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:datumagro_mobile/data/database.dart';
 import '../services/api.dart';
 import '../config.dart';
@@ -88,9 +90,48 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
       MaterialPageRoute(builder: (_) => AnimalFormScreen(animal: _animal)),
     );
     if (updated == true && mounted) {
-      // Reload from DB not needed — the form updated the record in Drift.
-      // For simplicity we just pop back; the list's StreamBuilder will refresh.
       Navigator.of(context).pop(true);
+    }
+  }
+
+  Future<void> _compartilharWhatsApp() async {
+    final a = _animal;
+    final nascimento = a.dataNascimento;
+    final idade = nascimento != null
+        ? '${DateTime.now().difference(nascimento).inDays ~/ 30} meses'
+        : 'N/D';
+    final sexoLabel = a.sexo == 'M' ? 'Macho' : 'Fêmea';
+
+    final linhas = [
+      '*Relatório DatumAgro*',
+      '─────────────────────',
+      '*Brinco:* ${a.brinco}',
+      '*Raça:* ${a.raca ?? 'N/D'}',
+      '*Sexo:* $sexoLabel',
+      '*Categoria:* ${a.categoria ?? 'N/D'}',
+      '*Idade:* $idade',
+    ];
+
+    if (_pesagens.isNotEmpty) {
+      final ultima = _pesagens.first;
+      final peso = ultima['peso_kg']?.toString() ?? '';
+      final data = ultima['data_pesagem']?.toString() ?? '';
+      linhas.add('*Última pesagem:* $peso kg ($data)');
+    }
+
+    linhas.add('─────────────────────');
+    linhas.add('_Gerado pelo app DatumAgro_');
+
+    final texto = Uri.encodeComponent(linhas.join('\n'));
+    final uri = Uri.parse('https://wa.me/?text=$texto');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('WhatsApp não encontrado no dispositivo.')),
+        );
+      }
     }
   }
 
@@ -600,6 +641,11 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
         title: Text(_animal.brinco),
         actions: [
           IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Compartilhar via WhatsApp',
+            onPressed: _compartilharWhatsApp,
+          ),
+          IconButton(
             icon: const Icon(Icons.edit),
             tooltip: 'Editar',
             onPressed: _openEdit,
@@ -918,145 +964,151 @@ class _GeneticoBadge extends StatelessWidget {
 
 // ─── Gráfico de Curva de Peso ────────────────────────────────────────────────
 
-class _WeightChart extends StatelessWidget {
+class _WeightChart extends StatefulWidget {
   final List<Map<String, dynamic>> pesagens;
 
   const _WeightChart({required this.pesagens});
 
   @override
+  State<_WeightChart> createState() => _WeightChartState();
+}
+
+class _WeightChartState extends State<_WeightChart> {
+  int? _touchedIndex;
+
+  @override
   Widget build(BuildContext context) {
-    // Ordena cronologicamente para o gráfico (pesagens vêm ordenadas por -data)
-    final ordered = pesagens.reversed.toList();
-    if (ordered.length < 2) {
-      return const SizedBox.shrink();
+    final ordered = widget.pesagens.reversed.toList();
+    if (ordered.length < 2) return const SizedBox.shrink();
+
+    final color = Theme.of(context).colorScheme.primary;
+
+    final spots = <FlSpot>[];
+    final labels = <String>[];
+    for (int i = 0; i < ordered.length; i++) {
+      final peso = double.tryParse(ordered[i]['peso_kg']?.toString() ?? '') ?? 0.0;
+      final raw = ordered[i]['data_pesagem'] as String? ?? '';
+      // Format date to dd/MM
+      String label = raw;
+      if (raw.length >= 10) {
+        final parts = raw.substring(0, 10).split('-');
+        if (parts.length == 3) label = '${parts[2]}/${parts[1]}';
+      }
+      spots.add(FlSpot(i.toDouble(), peso));
+      labels.add(label);
     }
 
-    final points = ordered.map((p) {
-      final peso = double.tryParse(p['peso_kg']?.toString() ?? '') ?? 0.0;
-      final data = p['data_pesagem'] as String? ?? '';
-      return _WeightPoint(data: data, pesoKg: peso);
-    }).toList();
+    final minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    final padding = ((maxY - minY) * 0.15).clamp(2.0, double.infinity);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Curva de Peso',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary)),
-            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 8, bottom: 8),
+              child: Text('Curva de Peso',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: color)),
+            ),
             SizedBox(
-              height: 160,
-              child: CustomPaint(
-                size: const Size(double.infinity, 160),
-                painter: _WeightChartPainter(
-                  points: points,
-                  lineColor: Theme.of(context).colorScheme.primary,
+              height: 180,
+              child: LineChart(
+                LineChartData(
+                  minY: minY - padding,
+                  maxY: maxY + padding,
+                  lineTouchData: LineTouchData(
+                    touchCallback: (event, response) {
+                      setState(() {
+                        if (response?.lineBarSpots != null && event.isInterestedForInteractions) {
+                          _touchedIndex = response!.lineBarSpots!.first.spotIndex;
+                        } else {
+                          _touchedIndex = null;
+                        }
+                      });
+                    },
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (_) => color.withAlpha(220),
+                      getTooltipItems: (spots) => spots.map((s) {
+                        final idx = s.spotIndex;
+                        return LineTooltipItem(
+                          '${s.y.toStringAsFixed(1)} kg\n${labels[idx]}',
+                          const TextStyle(color: Colors.white, fontSize: 12),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (_) => FlLine(
+                      color: Colors.grey.withAlpha(40),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 44,
+                        getTitlesWidget: (value, meta) {
+                          if (value == meta.min || value == meta.max) return const SizedBox.shrink();
+                          return Text('${value.toStringAsFixed(0)}kg',
+                              style: TextStyle(fontSize: 9, color: Colors.grey.shade500));
+                        },
+                      ),
+                    ),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 22,
+                        interval: (spots.length > 6 ? (spots.length / 4).ceilToDouble() : 1),
+                        getTitlesWidget: (value, meta) {
+                          final i = value.toInt();
+                          if (i < 0 || i >= labels.length) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(labels[i],
+                                style: TextStyle(fontSize: 9, color: Colors.grey.shade500)),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      curveSmoothness: 0.25,
+                      color: color,
+                      barWidth: 2.5,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, _, __, i) => FlDotCirclePainter(
+                          radius: i == _touchedIndex ? 6 : 4,
+                          color: color,
+                          strokeColor: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: color.withAlpha(30),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(points.first.data,
-                    style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                Text(points.last.data,
-                    style: const TextStyle(fontSize: 10, color: Colors.grey)),
-              ],
             ),
           ],
         ),
       ),
     );
   }
-}
-
-class _WeightPoint {
-  final String data;
-  final double pesoKg;
-  const _WeightPoint({required this.data, required this.pesoKg});
-}
-
-class _WeightChartPainter extends CustomPainter {
-  final List<_WeightPoint> points;
-  final Color lineColor;
-
-  const _WeightChartPainter({required this.points, required this.lineColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
-
-    final minY = points.map((p) => p.pesoKg).reduce((a, b) => a < b ? a : b);
-    final maxY = points.map((p) => p.pesoKg).reduce((a, b) => a > b ? a : b);
-    final rangeY = (maxY - minY).clamp(1.0, double.infinity);
-
-    double toX(int i) => size.width * i / (points.length - 1);
-    double toY(double v) =>
-        size.height - (size.height * 0.1) - ((v - minY) / rangeY) * (size.height * 0.8);
-
-    // Grid lines
-    final gridPaint = Paint()
-      ..color = Colors.grey.withAlpha(40)
-      ..strokeWidth = 1;
-    for (int i = 0; i <= 4; i++) {
-      final y = size.height * 0.1 + (size.height * 0.8) * i / 4;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-      final weight = maxY - (rangeY * i / 4);
-      final tp = TextPainter(
-        text: TextSpan(
-          text: '${weight.toStringAsFixed(0)} kg',
-          style: TextStyle(
-              fontSize: 9, color: Colors.grey.shade500),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(2, y - 10));
-    }
-
-    // Area fill
-    final fillPath = Path();
-    fillPath.moveTo(toX(0), size.height);
-    for (int i = 0; i < points.length; i++) {
-      fillPath.lineTo(toX(i), toY(points[i].pesoKg));
-    }
-    fillPath.lineTo(toX(points.length - 1), size.height);
-    fillPath.close();
-    canvas.drawPath(
-      fillPath,
-      Paint()..color = lineColor.withAlpha(30),
-    );
-
-    // Line
-    final linePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    path.moveTo(toX(0), toY(points[0].pesoKg));
-    for (int i = 1; i < points.length; i++) {
-      path.lineTo(toX(i), toY(points[i].pesoKg));
-    }
-    canvas.drawPath(path, linePaint);
-
-    // Dots
-    final dotPaint = Paint()..color = lineColor;
-    final dotBg = Paint()..color = Colors.white;
-    for (int i = 0; i < points.length; i++) {
-      final dx = toX(i);
-      final dy = toY(points[i].pesoKg);
-      canvas.drawCircle(Offset(dx, dy), 5, dotBg);
-      canvas.drawCircle(Offset(dx, dy), 4, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_WeightChartPainter old) =>
-      old.points != points || old.lineColor != lineColor;
 }

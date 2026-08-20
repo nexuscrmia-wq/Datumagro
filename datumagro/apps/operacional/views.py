@@ -10,17 +10,18 @@ from .serializers import (
 )
 from .services import recomendar_proximo_piquete
 from datumagro.apps.usuarios.permissions import (
-    PermissaoAnimais, PermissaoLotes, CanDeleteData
+    PermissaoAnimais, PermissaoLotes, CanDeleteData,
+    IsOperadorCampo, PermissaoLotesExtendida,
 )
 
 
 class BaseOperacionalViewSet(viewsets.ModelViewSet):
     """
-    ViewSet base com 2 camadas de segurança:
+    ViewSet base — operações de campo (pesagem, sanitário, reprodutivo):
     1. Multi-tenant: filtra pelo cliente do usuário
-    2. Role-based: Funcionário vê apenas suas propriedades designadas
+    2. Role-based: Funcionário/peão pode registrar (POST/PUT/PATCH); DELETE só Proprietário
     """
-    permission_classes = [permissions.IsAuthenticated, PermissaoAnimais, CanDeleteData]
+    permission_classes = [permissions.IsAuthenticated, IsOperadorCampo]
 
     def _get_cliente(self):
         from datumagro.apps.cadastros.models import Cliente
@@ -83,13 +84,15 @@ class RegistroReprodutivoViewSet(BaseOperacionalViewSet):
 
 
 class LoteViewSet(BaseOperacionalViewSet):
+    """Lotes: criar = Proprietário+Gerente; movimentar (PATCH) = todos; deletar = Proprietário."""
     serializer_class = LoteSerializer
-    permission_classes = [permissions.IsAuthenticated, PermissaoLotes, CanDeleteData]
+    permission_classes = [permissions.IsAuthenticated, PermissaoLotesExtendida]
 
 
 class PiqueteViewSet(BaseOperacionalViewSet):
+    """Piquetes/baias/galpões: criar = Proprietário+Gerente; mover = todos; deletar = Proprietário."""
     serializer_class = PiqueteSerializer
-    permission_classes = [permissions.IsAuthenticated, PermissaoLotes, CanDeleteData]
+    permission_classes = [permissions.IsAuthenticated, PermissaoLotesExtendida]
 
     @action(detail=False, methods=['get'])
     def recomendar(self, request):
