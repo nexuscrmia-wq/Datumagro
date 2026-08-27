@@ -6,6 +6,7 @@ import 'package:datumagro_mobile/data/database.dart';
 import '../services/api.dart';
 import '../config.dart';
 import 'animal_form.dart';
+import 'balanca_sheet.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
   final Animal animal;
@@ -135,6 +136,18 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
     }
   }
 
+  Future<void> _abrirBalanca(TextEditingController pesoCtrl) async {
+    final peso = await showModalBottomSheet<double>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const BalancaSheet(),
+    );
+    if (peso != null) {
+      pesoCtrl.text = peso.toStringAsFixed(1);
+    }
+  }
+
   Future<void> _showAddPesagem() async {
     final pesoCtrl = TextEditingController();
     final dataCtrl = TextEditingController(
@@ -148,12 +161,24 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: pesoCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                  labelText: 'Peso (kg)', hintText: '385.0'),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: pesoCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                        labelText: 'Peso (kg)', hintText: '385.0'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: 'Capturar da balança Bluetooth',
+                  icon: const Icon(Icons.bluetooth),
+                  onPressed: () => _abrirBalanca(pesoCtrl),
+                ),
+              ],
             ),
             TextField(
               controller: dataCtrl,
