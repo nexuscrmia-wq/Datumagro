@@ -142,16 +142,73 @@ class Animal(models.Model):
     """
     # --- LISTAS DE ESCOLHA PARA OS CAMPOS ---
     SEXO_CHOICES = [('M', 'Macho'), ('F', 'Fêmea')]
-    RACA_CHOICES = [('NELORE', 'Nelore'), ('ANGUS', 'Angus'), ('BRAHMAN', 'Brahman'), ('BRANGUS', 'Brangus'),
-                    ('SENEPOL', 'Senepol'), ('GUZERA', 'Guzerá'), ('TABAPUA', 'Tabapuã'), ('GIR', 'Gir Leiteiro'),
-                    ('GIROLANDO', 'Girolando'), ('HEREFORD', 'Hereford'), ('BRAFORD', 'Braford'), ('CARACU', 'Caracu'),
-                    ('OUTRA', 'Outra/Mestiço')]
-    TEMPERAMENTO_CHOICES = [('MANSO', 'Manso'), ('NORMAL', 'Normal'), ('BRABO', 'Brabo'), ('AGRESSIVO', 'Agressivo')]
-    CATEGORIA_CHOICES = [('BEZERRO', 'Bezerro(a)'), ('NOVILHA', 'Novilha'), ('GARROTE', 'Garrote'), ('TOURO', 'Touro'),
-                         ('MATRIZ', 'Matriz (Vaca)'), ('BOI', 'Boi (Engorda)')]
-    APTIDAO_CHOICES = [('CORTE', 'Corte'), ('LEITE', 'Leite'), ('DUPLA', 'Dupla Aptidão')]
-    STATUS_REPRODUTIVO_CHOICES = [('VAZIA', 'Vazia'), ('PRENHA', 'Prenha'), ('LACTANTE', 'Em Lactação'),
-                                  ('SECA', 'Seca')]
+
+    RACA_CHOICES = [
+        # ── Bovinos de Corte ──────────────────────────────────────────────
+        ('NELORE', 'Nelore'), ('ANGUS', 'Angus'), ('BRAHMAN', 'Brahman'),
+        ('BRANGUS', 'Brangus'), ('SENEPOL', 'Senepol'), ('GUZERA', 'Guzerá'),
+        ('TABAPUA', 'Tabapuã'), ('GIR', 'Gir'), ('BRAFORD', 'Braford'),
+        ('HEREFORD', 'Hereford'), ('CARACU', 'Caracu'),
+        # ── Bovinos de Leite ─────────────────────────────────────────────
+        ('GIROLANDO', 'Girolando'), ('HOLANDES', 'Holandês (PB)'),
+        ('JERSEY', 'Jersey'), ('PARDO_SUICO', 'Pardo Suíço'),
+        # ── Equinos ──────────────────────────────────────────────────────
+        ('QUARTO_MILHA', 'Quarto de Milha'), ('CRIOULO', 'Crioulo'),
+        ('PAINT_HORSE', 'Paint Horse'), ('MANGALARGA', 'Mangalarga Marchador'),
+        ('ARABE', 'Árabe'), ('PSI', 'PSI (Puro Sangue Inglês)'),
+        ('LUSITANO', 'Lusitano'), ('APPALOOSA', 'Appaloosa'),
+        ('CAMPOLINA', 'Campolina'), ('SELA_BR', 'Sela Brasileira'),
+        # ── Suínos ───────────────────────────────────────────────────────
+        ('LANDRACE', 'Landrace'), ('LARGE_WHITE', 'Large White'),
+        ('PIETRAIN', 'Pietrain'), ('DUROC', 'Duroc'),
+        ('HAMPSHIRE', 'Hampshire'), ('MOURA', 'Moura'), ('PIAU', 'Piau'),
+        # ── Ovinos ───────────────────────────────────────────────────────
+        ('DORPER', 'Dorper'), ('SANTA_INES', 'Santa Inês'),
+        ('TEXEL', 'Texel'), ('ILE_FRANCE', 'Ile de France'),
+        ('SUFFOLK', 'Suffolk'), ('BERGAMASCA', 'Bergamasca'),
+        # ── Caprinos ─────────────────────────────────────────────────────
+        ('BOER', 'Boer'), ('ANGLO_NUB', 'Anglo-Nubiano'),
+        ('SAANEN', 'Saanen'), ('TOGGENBURG', 'Toggenburg'),
+        ('ALPINA_BR', 'Alpina Brasileira'),
+        # ── Geral ────────────────────────────────────────────────────────
+        ('OUTRA', 'Outra/Mestiço'),
+    ]
+
+    TEMPERAMENTO_CHOICES = [
+        ('MANSO', 'Manso'), ('NORMAL', 'Normal'), ('BRABO', 'Brabo'), ('AGRESSIVO', 'Agressivo'),
+    ]
+
+    CATEGORIA_CHOICES = [
+        # ── Bovinos ──────────────────────────────────────────────────────
+        ('BEZERRO', 'Bezerro(a)'), ('NOVILHA', 'Novilha'), ('GARROTE', 'Garrote'),
+        ('TOURO', 'Touro'), ('MATRIZ', 'Matriz (Vaca)'), ('BOI', 'Boi (Engorda)'),
+        # ── Equinos ──────────────────────────────────────────────────────
+        ('POTRO', 'Potro/Potranca'), ('CAPAO', 'Capão'),
+        ('EGUA', 'Égua'), ('GARANHAO', 'Garanhão'),
+        # ── Suínos ───────────────────────────────────────────────────────
+        ('LEITAO', 'Leitão'), ('SUINO_CRESC', 'Em Crescimento'),
+        ('SUINO_TERM', 'Em Terminação'), ('PORCA', 'Porca'), ('VARRAO', 'Varrão'),
+        # ── Ovinos / Caprinos ────────────────────────────────────────────
+        ('CORDEIRO', 'Cordeiro/Cabrito'), ('OVELHA', 'Ovelha/Cabra'),
+        ('CARNEIRO', 'Carneiro/Bode'),
+    ]
+
+    APTIDAO_CHOICES = [
+        # Bovinos
+        ('CORTE', 'Corte'), ('LEITE', 'Leite'), ('DUPLA', 'Dupla Aptidão'),
+        # Equinos
+        ('TRABALHO', 'Trabalho'), ('ESPORTE', 'Esporte / Lazer'),
+        # Ovinos / Caprinos
+        ('LA', 'Lã'),
+        # Geral
+        ('REPRODUCAO', 'Reprodução'), ('CARNE', 'Carne'),
+    ]
+
+    STATUS_REPRODUTIVO_CHOICES = [
+        ('VAZIA', 'Vazia'), ('PRENHA', 'Prenha'),
+        ('LACTANTE', 'Em Lactação'), ('SECA', 'Seca'),
+    ]
+
     REGISTRO_GENETICO_CHOICES = [
         ('PO', 'Puro de Origem (PO)'),
         ('PC', 'Puro por Cruza (PC)'),

@@ -402,14 +402,14 @@ def redefinir_senha(request, token):
 @permission_classes([AllowAny])
 def versao_app(request):
     """Retorna a versão atual do APK para checagem in-app."""
-    versao = '1.6.2'  # atualizar aqui a cada release
+    versao = '1.6.3'  # atualizar aqui a cada release
     # Usa sempre o host real da requisição para garantir URL correta em qualquer domínio
     url_base = f"{request.scheme}://{request.get_host()}"
     return Response({
         'versao': versao,
         'url_download': f'{url_base}/baixar/apk/',
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
-        'novidades': os.getenv('UPDATE_NOVIDADES', 'Cadastro de animais melhorado: dropdowns para raça, categoria, aptidão e mais. Seleção de data com calendário. Campos de reprodução condicionais por sexo.'),
+        'novidades': os.getenv('UPDATE_NOVIDADES', 'Multi-espécie: cadastro agora suporta Equinos, Suínos, Ovinos e Caprinos com raças, categorias e aptidões específicas por espécie.'),
     })
 
 

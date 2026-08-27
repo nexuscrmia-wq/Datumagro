@@ -8,27 +8,135 @@ import 'package:drift/drift.dart' show Value;
 
 import '../services/api.dart';
 
-// ─── Opções com labels do backend ────────────────────────────────────────────
+// ─── Configurações por espécie ────────────────────────────────────────────────
 
-const _racas = [
-  ('NELORE', 'Nelore'), ('ANGUS', 'Angus'), ('BRAHMAN', 'Brahman'),
-  ('BRANGUS', 'Brangus'), ('SENEPOL', 'Senepol'), ('GUZERA', 'Guzerá'),
-  ('TABAPUA', 'Tabapuã'), ('GIR', 'Gir Leiteiro'), ('GIROLANDO', 'Girolando'),
-  ('HEREFORD', 'Hereford'), ('BRAFORD', 'Braford'), ('CARACU', 'Caracu'),
-  ('OUTRA', 'Outra/Mestiço'),
-];
+class _EspecieConfig {
+  final String label;           // nome amigável da espécie
+  final String idLabel;         // rótulo do campo identificação
+  final String idHint;          // hint do campo identificação
+  final List<(String, String)> racas;
+  final List<(String, String)> categorias;
+  final List<(String, String)> aptidoes;
+  final bool temStatus;         // tem status_reprodutivo para fêmeas
+  final bool temReprodutor;     // tem campo "é reprodutor" para machos
 
-const _categorias = [
-  ('BEZERRO', 'Bezerro(a)'), ('NOVILHA', 'Novilha'), ('GARROTE', 'Garrote'),
-  ('TOURO', 'Touro'), ('MATRIZ', 'Matriz (Vaca)'), ('BOI', 'Boi (Engorda)'),
-];
+  const _EspecieConfig({
+    required this.label,
+    required this.idLabel,
+    required this.idHint,
+    required this.racas,
+    required this.categorias,
+    required this.aptidoes,
+    this.temStatus = true,
+    this.temReprodutor = true,
+  });
+}
+
+const _configs = <String, _EspecieConfig>{
+  'BOVINOS_CORTE': _EspecieConfig(
+    label: 'Bovinos de Corte',
+    idLabel: 'Número do brinco / ID',
+    idHint: 'Ex: 0042 ou BR-001',
+    racas: [
+      ('NELORE', 'Nelore'), ('ANGUS', 'Angus'), ('BRAHMAN', 'Brahman'),
+      ('BRANGUS', 'Brangus'), ('SENEPOL', 'Senepol'), ('GUZERA', 'Guzerá'),
+      ('TABAPUA', 'Tabapuã'), ('GIR', 'Gir'), ('BRAFORD', 'Braford'),
+      ('HEREFORD', 'Hereford'), ('CARACU', 'Caracu'), ('OUTRA', 'Outra/Mestiço'),
+    ],
+    categorias: [
+      ('BEZERRO', 'Bezerro(a)'), ('NOVILHA', 'Novilha'), ('GARROTE', 'Garrote'),
+      ('TOURO', 'Touro'), ('MATRIZ', 'Matriz (Vaca)'), ('BOI', 'Boi (Engorda)'),
+    ],
+    aptidoes: [('CORTE', 'Corte'), ('DUPLA', 'Dupla Aptidão')],
+  ),
+  'BOVINOS_LEITE': _EspecieConfig(
+    label: 'Bovinos de Leite',
+    idLabel: 'Número do brinco / ID',
+    idHint: 'Ex: 0042 ou BR-001',
+    racas: [
+      ('GIROLANDO', 'Girolando'), ('HOLANDES', 'Holandês (PB)'),
+      ('JERSEY', 'Jersey'), ('PARDO_SUICO', 'Pardo Suíço'),
+      ('GIR', 'Gir Leiteiro'), ('GUZERA', 'Guzerá'), ('CARACU', 'Caracu'),
+      ('OUTRA', 'Outra/Mestiço'),
+    ],
+    categorias: [
+      ('BEZERRO', 'Bezerro(a)'), ('NOVILHA', 'Novilha'), ('GARROTE', 'Garrote'),
+      ('TOURO', 'Touro'), ('MATRIZ', 'Matriz (Vaca)'), ('BOI', 'Descarte'),
+    ],
+    aptidoes: [('LEITE', 'Leite'), ('DUPLA', 'Dupla Aptidão')],
+  ),
+  'EQUINOS': _EspecieConfig(
+    label: 'Equinos',
+    idLabel: 'Nome / Registro',
+    idHint: 'Ex: Relâmpago ou ABQM-12345',
+    racas: [
+      ('QUARTO_MILHA', 'Quarto de Milha'), ('CRIOULO', 'Crioulo'),
+      ('PAINT_HORSE', 'Paint Horse'), ('MANGALARGA', 'Mangalarga Marchador'),
+      ('ARABE', 'Árabe'), ('PSI', 'PSI (Puro Sangue Inglês)'),
+      ('LUSITANO', 'Lusitano'), ('APPALOOSA', 'Appaloosa'),
+      ('CAMPOLINA', 'Campolina'), ('SELA_BR', 'Sela Brasileira'),
+      ('OUTRA', 'Outra/Mestiço'),
+    ],
+    categorias: [
+      ('POTRO', 'Potro / Potranca'), ('CAPAO', 'Capão'),
+      ('EGUA', 'Égua'), ('GARANHAO', 'Garanhão'),
+    ],
+    aptidoes: [
+      ('TRABALHO', 'Trabalho'), ('ESPORTE', 'Esporte / Lazer'),
+      ('REPRODUCAO', 'Reprodução'), ('CORTE', 'Carne'),
+    ],
+    temStatus: true,
+    temReprodutor: true,
+  ),
+  'SUINOS': _EspecieConfig(
+    label: 'Suínos',
+    idLabel: 'Tatuagem / Brinco',
+    idHint: 'Ex: SUB-001',
+    racas: [
+      ('LANDRACE', 'Landrace'), ('LARGE_WHITE', 'Large White'),
+      ('PIETRAIN', 'Pietrain'), ('DUROC', 'Duroc'),
+      ('HAMPSHIRE', 'Hampshire'), ('MOURA', 'Moura'), ('PIAU', 'Piau'),
+      ('OUTRA', 'Outra/Mestiço'),
+    ],
+    categorias: [
+      ('LEITAO', 'Leitão'), ('SUINO_CRESC', 'Em Crescimento'),
+      ('SUINO_TERM', 'Em Terminação'), ('PORCA', 'Porca'), ('VARRAO', 'Varrão'),
+    ],
+    aptidoes: [('CARNE', 'Carne'), ('REPRODUCAO', 'Reprodução')],
+  ),
+  'OVINOS_CAPRINOS': _EspecieConfig(
+    label: 'Ovinos e Caprinos',
+    idLabel: 'Brinco / ID',
+    idHint: 'Ex: OV-001',
+    racas: [
+      // Ovinos
+      ('DORPER', 'Dorper'), ('SANTA_INES', 'Santa Inês'),
+      ('TEXEL', 'Texel'), ('ILE_FRANCE', 'Ile de France'),
+      ('SUFFOLK', 'Suffolk'), ('BERGAMASCA', 'Bergamasca'),
+      // Caprinos
+      ('BOER', 'Boer'), ('ANGLO_NUB', 'Anglo-Nubiano'),
+      ('SAANEN', 'Saanen'), ('TOGGENBURG', 'Toggenburg'),
+      ('ALPINA_BR', 'Alpina Brasileira'),
+      ('OUTRA', 'Outra/Mestiço'),
+    ],
+    categorias: [
+      ('CORDEIRO', 'Cordeiro / Cabrito'), ('OVELHA', 'Ovelha / Cabra'),
+      ('CARNEIRO', 'Carneiro / Bode'),
+    ],
+    aptidoes: [
+      ('CARNE', 'Carne'), ('LEITE', 'Leite'), ('LA', 'Lã'),
+      ('DUPLA', 'Dupla Aptidão'),
+    ],
+  ),
+};
+
+_EspecieConfig _cfgFor(String esp) =>
+    _configs[esp] ?? _configs['BOVINOS_CORTE']!;
+
+// ─── Opções comuns ────────────────────────────────────────────────────────────
 
 const _temperamentos = [
   ('MANSO', 'Manso'), ('NORMAL', 'Normal'), ('BRABO', 'Brabo'), ('AGRESSIVO', 'Agressivo'),
-];
-
-const _aptidoes = [
-  ('CORTE', 'Corte'), ('LEITE', 'Leite'), ('DUPLA', 'Dupla Aptidão'),
 ];
 
 const _statusReprod = [
@@ -67,6 +175,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
 
   bool _saving = false;
   int _propriedadeId = 1;
+  String _tipoEspecie = 'BOVINOS_CORTE';
 
   static const _verde = Color(0xFF2E7D32);
   static const _storage = FlutterSecureStorage();
@@ -74,7 +183,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPropriedade();
+    _loadContext();
     final a = widget.animal;
     if (a != null) {
       _brinco.text = a.brinco;
@@ -87,29 +196,37 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
       _statusReprodutivo = a.statusReprodutivo;
       _isReprodutor = a.isReprodutor;
       _caracteristicas.text = a.caracteristicas ?? '';
-      // registroGenetico não está no modelo Drift local — mantém COM
     }
   }
 
-  Future<void> _loadPropriedade() async {
-    // Tenta ler o ID da propriedade do usuário armazenado
+  Future<void> _loadContext() async {
     try {
       final s = await _storage.read(key: 'user');
       if (s != null) {
         final data = json.decode(s) as Map<String, dynamic>;
+        final especie = data['tipo_especie'] as String? ?? 'BOVINOS_CORTE';
         final props = data['propriedades'] as List<dynamic>?;
-        if (props != null && props.isNotEmpty) {
-          final id = (props.first as Map)['id'];
-          if (id != null && mounted) setState(() => _propriedadeId = id as int);
-          return;
-        }
+        setState(() {
+          _tipoEspecie = especie;
+          // Ao trocar espécie, garante que os campos escolhidos ainda são válidos
+          final cfg = _cfgFor(especie);
+          if (_raca != null && !cfg.racas.any((r) => r.$1 == _raca)) _raca = null;
+          if (_categoria != null && !cfg.categorias.any((c) => c.$1 == _categoria)) {
+            _categoria = null;
+          }
+          if (_aptidao != null && !cfg.aptidoes.any((a) => a.$1 == _aptidao)) {
+            _aptidao = null;
+          }
+          if (props != null && props.isNotEmpty) {
+            _propriedadeId = (props.first as Map)['id'] as int? ?? 1;
+          }
+        });
+        return;
       }
     } catch (_) {}
-
-    // Fallback: buscar primeira propriedade da API
+    // Fallback: primeira propriedade da API
     try {
-      final api = ApiService();
-      final list = await api.fetchPropriedades();
+      final list = await ApiService().fetchPropriedades();
       if (list.isNotEmpty && mounted) {
         setState(() => _propriedadeId = list.first['id'] as int? ?? 1);
       }
@@ -129,7 +246,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _dataNasc ?? DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime(1990),
       lastDate: DateTime.now(),
       helpText: 'Data de nascimento',
       locale: const Locale('pt', 'BR'),
@@ -152,10 +269,14 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
     final db = Provider.of<AppDatabase>(context, listen: false);
     final now = DateTime.now();
     final isEdit = widget.animal != null;
+    final cfg = _cfgFor(_tipoEspecie);
+
+    final statusFinal = (cfg.temStatus && _sexo == 'F') ? _statusReprodutivo : null;
+    final reprodutorFinal = (cfg.temReprodutor && _sexo == 'M') ? _isReprodutor : false;
 
     try {
       if (isEdit) {
-        final updated = widget.animal!.copyWith(
+        await db.updateAnimalEntry(widget.animal!.copyWith(
           brinco: _brinco.text.trim(),
           raca: Value(_raca),
           sexo: Value(_sexo),
@@ -163,12 +284,11 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
           categoria: Value(_categoria),
           temperamento: Value(_temperamento),
           aptidao: Value(_aptidao),
-          statusReprodutivo: Value(_sexo == 'F' ? _statusReprodutivo : null),
-          isReprodutor: _sexo == 'M' ? _isReprodutor : false,
+          statusReprodutivo: Value(statusFinal),
+          isReprodutor: reprodutorFinal,
           caracteristicas: Value(_caracteristicas.text.trim()),
           updatedAt: Value(now),
-        );
-        await db.updateAnimalEntry(updated);
+        ));
         await db.enqueue(
           'update', 'animal',
           json.encode({
@@ -180,8 +300,8 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
             'categoria': _categoria,
             'temperamento': _temperamento,
             'aptidao': _aptidao,
-            'status_reprodutivo': _sexo == 'F' ? _statusReprodutivo : null,
-            'is_reprodut': _sexo == 'M' ? _isReprodutor : false,
+            'status_reprodutivo': statusFinal,
+            'is_reprodut': reprodutorFinal,
             'registro_genetico': _registroGenetico,
             'caracteristicas_adicionais': _caracteristicas.text.trim(),
           }),
@@ -197,8 +317,8 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
           categoria: Value(_categoria),
           temperamento: Value(_temperamento),
           aptidao: Value(_aptidao),
-          statusReprodutivo: Value(_sexo == 'F' ? _statusReprodutivo : null),
-          isReprodutor: Value(_sexo == 'M' ? _isReprodutor : false),
+          statusReprodutivo: Value(statusFinal),
+          isReprodutor: Value(reprodutorFinal),
           caracteristicas: Value(_caracteristicas.text.trim()),
           fotoPerfil: const Value(''),
           ativo: const Value(true),
@@ -216,8 +336,8 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
             'categoria': _categoria,
             'temperamento': _temperamento,
             'aptidao': _aptidao,
-            'status_reprodutivo': _sexo == 'F' ? _statusReprodutivo : null,
-            'is_reprodut': _sexo == 'M' ? _isReprodutor : false,
+            'status_reprodutivo': statusFinal,
+            'is_reprodut': reprodutorFinal,
             'registro_genetico': _registroGenetico,
             'caracteristicas_adicionais': _caracteristicas.text.trim(),
             'foto_perfil': '',
@@ -244,10 +364,12 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.animal != null;
+    final cfg = _cfgFor(_tipoEspecie);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(isEdit ? 'Editar Animal' : 'Novo Animal',
+        title: Text(isEdit ? 'Editar ${cfg.label}' : 'Novo ${cfg.label}',
             style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: _verde,
         foregroundColor: Colors.white,
@@ -262,7 +384,8 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
             TextButton.icon(
               onPressed: _save,
               icon: const Icon(Icons.check, color: Colors.white),
-              label: const Text('Salvar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: const Text('Salvar',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
         ],
       ),
@@ -271,22 +394,26 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ── Identificação ───────────────────────────────────────────
+
+            // ── Identificação ─────────────────────────────────────────
             _Section(title: 'Identificação', children: [
               _Field(
                 child: TextFormField(
                   controller: _brinco,
-                  decoration: _dec('Número do brinco / ID', Icons.tag),
+                  decoration: _dec(cfg.idLabel, Icons.tag, hint: cfg.idHint),
                   textCapitalization: TextCapitalization.characters,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Brinco é obrigatório' : null,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null,
                 ),
               ),
               _Field(
                 child: DropdownButtonFormField<String>(
                   value: _raca,
-                  decoration: _dec('Raça', Icons.biotech_outlined),
+                  decoration: _dec('Raça / Linhagem', Icons.biotech_outlined),
                   isExpanded: true,
-                  items: _racas.map((r) => DropdownMenuItem(value: r.$1, child: Text(r.$2))).toList(),
+                  items: cfg.racas
+                      .map((r) => DropdownMenuItem(value: r.$1, child: Text(r.$2)))
+                      .toList(),
                   onChanged: (v) => setState(() => _raca = v),
                   validator: (v) => v == null ? 'Selecione a raça' : null,
                 ),
@@ -294,9 +421,12 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
               _Field(
                 child: DropdownButtonFormField<String>(
                   value: _registroGenetico,
-                  decoration: _dec('Registro genético', Icons.workspace_premium_outlined),
+                  decoration:
+                      _dec('Registro genético', Icons.workspace_premium_outlined),
                   isExpanded: true,
-                  items: _registros.map((r) => DropdownMenuItem(value: r.$1, child: Text(r.$2))).toList(),
+                  items: _registros
+                      .map((r) => DropdownMenuItem(value: r.$1, child: Text(r.$2)))
+                      .toList(),
                   onChanged: (v) => setState(() => _registroGenetico = v ?? 'COM'),
                 ),
               ),
@@ -304,31 +434,41 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
 
             const SizedBox(height: 12),
 
-            // ── Dados básicos ───────────────────────────────────────────
+            // ── Dados básicos ─────────────────────────────────────────
             _Section(title: 'Dados básicos', children: [
               _Field(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Sexo', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    Text('Sexo',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                     const SizedBox(height: 6),
                     SegmentedButton<String>(
                       segments: const [
-                        ButtonSegment(value: 'M', label: Text('Macho'), icon: Icon(Icons.male)),
-                        ButtonSegment(value: 'F', label: Text('Fêmea'), icon: Icon(Icons.female)),
+                        ButtonSegment(
+                            value: 'M',
+                            label: Text('Macho'),
+                            icon: Icon(Icons.male)),
+                        ButtonSegment(
+                            value: 'F',
+                            label: Text('Fêmea'),
+                            icon: Icon(Icons.female)),
                       ],
                       selected: {_sexo},
                       onSelectionChanged: (s) => setState(() {
                         _sexo = s.first;
-                        // Limpa campos condicionais ao trocar sexo
                         if (_sexo == 'M') _statusReprodutivo = null;
                         if (_sexo == 'F') _isReprodutor = false;
                       }),
                       style: ButtonStyle(
                         foregroundColor: WidgetStateProperty.resolveWith((s) =>
-                            s.contains(WidgetState.selected) ? Colors.white : _verde),
+                            s.contains(WidgetState.selected)
+                                ? Colors.white
+                                : _verde),
                         backgroundColor: WidgetStateProperty.resolveWith((s) =>
-                            s.contains(WidgetState.selected) ? _verde : Colors.transparent),
+                            s.contains(WidgetState.selected)
+                                ? _verde
+                                : Colors.transparent),
                       ),
                     ),
                   ],
@@ -342,11 +482,15 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
                     decoration: _dec('Data de nascimento', Icons.cake_outlined),
                     child: Text(
                       _dataNasc != null
-                          ? '${_dataNasc!.day.toString().padLeft(2, '0')}/${_dataNasc!.month.toString().padLeft(2, '0')}/${_dataNasc!.year}'
+                          ? '${_dataNasc!.day.toString().padLeft(2, '0')}/'
+                            '${_dataNasc!.month.toString().padLeft(2, '0')}/'
+                            '${_dataNasc!.year}'
                           : 'Toque para selecionar',
                       style: TextStyle(
                         fontSize: 16,
-                        color: _dataNasc != null ? Colors.black87 : Colors.grey.shade500,
+                        color: _dataNasc != null
+                            ? Colors.black87
+                            : Colors.grey.shade500,
                       ),
                     ),
                   ),
@@ -357,16 +501,20 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
                   value: _categoria,
                   decoration: _dec('Categoria', Icons.category_outlined),
                   isExpanded: true,
-                  items: _categorias.map((c) => DropdownMenuItem(value: c.$1, child: Text(c.$2))).toList(),
+                  items: cfg.categorias
+                      .map((c) => DropdownMenuItem(value: c.$1, child: Text(c.$2)))
+                      .toList(),
                   onChanged: (v) => setState(() => _categoria = v),
                 ),
               ),
               _Field(
                 child: DropdownButtonFormField<String>(
                   value: _aptidao,
-                  decoration: _dec('Aptidão', Icons.agriculture_outlined),
+                  decoration: _dec('Aptidão / Finalidade', Icons.agriculture_outlined),
                   isExpanded: true,
-                  items: _aptidoes.map((a) => DropdownMenuItem(value: a.$1, child: Text(a.$2))).toList(),
+                  items: cfg.aptidoes
+                      .map((a) => DropdownMenuItem(value: a.$1, child: Text(a.$2)))
+                      .toList(),
                   onChanged: (v) => setState(() => _aptidao = v),
                 ),
               ),
@@ -375,7 +523,9 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
                   value: _temperamento,
                   decoration: _dec('Temperamento', Icons.mood_outlined),
                   isExpanded: true,
-                  items: _temperamentos.map((t) => DropdownMenuItem(value: t.$1, child: Text(t.$2))).toList(),
+                  items: _temperamentos
+                      .map((t) => DropdownMenuItem(value: t.$1, child: Text(t.$2)))
+                      .toList(),
                   onChanged: (v) => setState(() => _temperamento = v),
                 ),
               ),
@@ -383,49 +533,56 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
 
             const SizedBox(height: 12),
 
-            // ── Reprodução (condicional) ─────────────────────────────────
+            // ── Reprodução (condicional) ──────────────────────────────
             _Section(title: 'Reprodução', children: [
-              if (_sexo == 'F') ...[
+              if (cfg.temStatus && _sexo == 'F')
                 _Field(
                   child: DropdownButtonFormField<String>(
                     value: _statusReprodutivo,
-                    decoration: _dec('Status reprodutivo', Icons.child_friendly_outlined),
+                    decoration:
+                        _dec('Status reprodutivo', Icons.child_friendly_outlined),
                     isExpanded: true,
-                    items: _statusReprod.map((s) => DropdownMenuItem(value: s.$1, child: Text(s.$2))).toList(),
+                    items: _statusReprod
+                        .map((s) => DropdownMenuItem(value: s.$1, child: Text(s.$2)))
+                        .toList(),
                     onChanged: (v) => setState(() => _statusReprodutivo = v),
                   ),
                 ),
-              ],
-              if (_sexo == 'M') ...[
+              if (cfg.temReprodutor && _sexo == 'M')
                 _Field(
                   child: SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     value: _isReprodutor,
                     onChanged: (v) => setState(() => _isReprodutor = v),
-                    title: const Text('É reprodutor (touro)'),
-                    subtitle: const Text('Ative se este macho é usado como reprodutor'),
+                    title: Text(_tipoEspecie == 'EQUINOS'
+                        ? 'É garanhão (reprodutor)'
+                        : _tipoEspecie == 'SUINOS'
+                            ? 'É varrão (reprodutor)'
+                            : 'É reprodutor (touro/carneiro/bode)'),
                     activeThumbColor: _verde,
                   ),
                 ),
-              ],
-              if (_sexo == 'F' && _statusReprodutivo == null && _sexo == 'F')
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Text(
-                    'Selecione o status reprodutivo para fêmeas em idade adulta.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              if (!cfg.temStatus && !cfg.temReprodutor)
+                const _Field(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      'Sem campos reprodutivos específicos para esta espécie.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ),
                 ),
             ]),
 
             const SizedBox(height: 12),
 
-            // ── Observações ─────────────────────────────────────────────
+            // ── Observações ──────────────────────────────────────────
             _Section(title: 'Observações', children: [
               _Field(
                 child: TextFormField(
                   controller: _caracteristicas,
-                  decoration: _dec('Características adicionais', Icons.notes_outlined),
+                  decoration:
+                      _dec('Características adicionais', Icons.notes_outlined),
                   maxLines: 3,
                   minLines: 2,
                   textCapitalization: TextCapitalization.sentences,
@@ -434,19 +591,27 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
             ]),
 
             const SizedBox(height: 24),
+
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: _verde,
                 minimumSize: const Size.fromHeight(52),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: _saving ? null : _save,
               icon: _saving
-                  ? const SizedBox(width: 18, height: 18,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
                   : const Icon(Icons.check),
-              label: Text(isEdit ? 'Salvar alterações' : 'Cadastrar animal',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              label: Text(
+                isEdit ? 'Salvar alterações' : 'Cadastrar ${cfg.label.toLowerCase()}',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -455,13 +620,16 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
     );
   }
 
-  InputDecoration _dec(String label, IconData icon) => InputDecoration(
+  InputDecoration _dec(String label, IconData icon, {String? hint}) =>
+      InputDecoration(
         labelText: label,
+        hintText: hint,
         prefixIcon: Icon(icon, color: _verde),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       );
 }
 
@@ -490,7 +658,8 @@ class _Section extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
-              BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+              BoxShadow(
+                  color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
             ],
           ),
           child: Column(children: children),
