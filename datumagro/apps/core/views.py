@@ -409,7 +409,7 @@ def versao_app(request):
         'versao': versao,
         'url_download': f'{url_base}/baixar/apk/',
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
-        'novidades': os.getenv('UPDATE_NOVIDADES', 'Suporte a modo offline, novas telas de Saúde e Reprodução, criação de embarques.'),
+        'novidades': os.getenv('UPDATE_NOVIDADES', 'Correção de estabilidade: app abre corretamente em todos os celulares. Edição de perfil e foto funcionando.'),
     })
 
 
