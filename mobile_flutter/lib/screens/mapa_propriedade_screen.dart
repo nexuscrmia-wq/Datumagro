@@ -660,13 +660,14 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
                         : () async {
                             if (nomeCtrl.text.trim().isEmpty ||
                                 cidadeCtrl.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(ctx).showSnackBar(
                                 const SnackBar(
                                     content: Text('Preencha nome e cidade.')),
                               );
                               return;
                             }
                             setInner(() => saving = true);
+                            final messenger = ScaffoldMessenger.of(ctx);
                             final dados = <String, dynamic>{
                               'nome_propriedade': nomeCtrl.text.trim(),
                               'cidade': cidadeCtrl.text.trim(),
@@ -684,13 +685,13 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
                                 _propriedades.add(nova);
                                 _loadProp(nova);
                               });
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 const SnackBar(
                                     content: Text('Propriedade cadastrada!'),
                                     backgroundColor: _verde),
                               );
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 const SnackBar(
                                     content: Text('Erro ao cadastrar. Tente novamente.'),
                                     backgroundColor: Colors.red),

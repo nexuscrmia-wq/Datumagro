@@ -55,6 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
       // Modo offline: se tem token salvo, entra direto no dashboard
       if (offline) {
         final header = await api.getAuthHeader();
+        if (!mounted) return;
         if (header.isNotEmpty) {
           Navigator.of(context).pushReplacementNamed('/dashboard');
           return;

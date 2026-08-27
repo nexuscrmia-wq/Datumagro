@@ -33,7 +33,7 @@ class BleScaleService implements BaseScaleService {
       for (final r in results) {
         final name = r.device.platformName.isNotEmpty
             ? r.device.platformName
-            : r.advertisementData.localName;
+            : r.advertisementData.advName;
         if (name.isEmpty) continue;
         // Inclui qualquer dispositivo com nome — o usuário escolhe qual é a balança
         final already = found.any((s) => s.id == r.device.remoteId.str);

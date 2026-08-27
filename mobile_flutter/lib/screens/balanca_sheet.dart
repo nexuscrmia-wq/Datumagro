@@ -417,7 +417,7 @@ class _BalancaSheetState extends State<BalancaSheet> {
               children: [
                 Switch(
                   value: _modoRapido,
-                  activeColor: _verde,
+                  activeThumbColor: _verde,
                   onChanged: (v) => setState(() {
                     _modoRapido = v;
                     if (!v) _autoFillTimer?.cancel();
