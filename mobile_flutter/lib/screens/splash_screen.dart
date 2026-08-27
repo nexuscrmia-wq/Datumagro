@@ -38,9 +38,28 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _checkAuth() async {
     await Future.delayed(const Duration(milliseconds: 1400));
     if (!mounted) return;
+
+    // Timeout global de 12s — garante que o app nunca trava na splash
+    // (flutter_secure_storage pode lançar PlatformException em instalações frescas)
+    try {
+      await _doCheckAuth().timeout(const Duration(seconds: 12));
+    } catch (_) {
+      if (mounted) Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
+  Future<void> _doCheckAuth() async {
     final api = ApiService();
-    final user = await api.getStoredUser();
+    Map<String, dynamic>? user;
+    try {
+      user = await api.getStoredUser();
+    } catch (_) {
+      // PlatformException do flutter_secure_storage em alguns Android 11
+      user = null;
+    }
+
     if (!mounted) return;
+
     if (user != null) {
       // Tenta renovar token — falha silenciosa se estiver offline
       bool offline = false;
@@ -48,21 +67,31 @@ class _SplashScreenState extends State<SplashScreen>
         await api.refreshAccessToken();
       } on SocketException {
         offline = true;
-      } catch (_) {}
+      } catch (_) {
+        offline = true;
+      }
 
       if (!mounted) return;
 
       // Modo offline: se tem token salvo, entra direto no dashboard
       if (offline) {
-        final header = await api.getAuthHeader();
+        String? token;
+        try {
+          final header = await api.getAuthHeader();
+          token = header['Authorization'];
+        } catch (_) {}
         if (!mounted) return;
-        if (header.isNotEmpty) {
+        if (token != null && token.isNotEmpty) {
           Navigator.of(context).pushReplacementNamed('/dashboard');
           return;
         }
       }
 
-      final status = await api.getStatusAssinatura();
+      String status = 'PENDENTE';
+      try {
+        status = await api.getStatusAssinatura();
+      } catch (_) {}
+
       if (!mounted) return;
       switch (status) {
         case 'ATIVO':
