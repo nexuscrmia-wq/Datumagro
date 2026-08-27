@@ -3,6 +3,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.conf import settings
+from django.views.static import serve
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenRefreshView
 from datumagro.apps.usuarios.views import CustomTokenObtainPairView
@@ -77,4 +79,7 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(permission_classes=[IsAuthenticated]), name='schema'),
     path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema', permission_classes=[IsAuthenticated]), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema', permission_classes=[IsAuthenticated]), name='redoc'),
+
+    # Media files (fotos de perfil, uploads) — Railway usa filesystem local
+    path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
 ]

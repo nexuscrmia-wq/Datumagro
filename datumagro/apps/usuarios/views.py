@@ -386,13 +386,16 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     def me(self, request):
         """Retorna informações do usuário logado com permissões."""
         user = request.user
+        foto_url = None
+        if user.foto_perfil:
+            foto_url = request.build_absolute_uri(user.foto_perfil.url)
         user_data = {
             'id': user.id,
             'email': user.email,
             'nome_completo': user.nome_completo or user.first_name,
             'tipo_usuario': user.tipo_usuario,
             'tipo_usuario_display': user.get_tipo_usuario_display(),
-            'foto_perfil': user.foto_perfil.url if user.foto_perfil else None,
+            'foto_perfil': foto_url,
             'telefone': user.telefone,
             'usuario_obj': user,
         }
@@ -414,17 +417,29 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        data = dict(serializer.data)
-
+    def _enrich(self, request, data):
+        """Adiciona campos calculados e normaliza foto_perfil para URL absoluta."""
         user = request.user
         cliente = _resolver_cliente(user)
         data['tipo_especie'] = cliente.tipo_especie if cliente else 'BOVINOS_CORTE'
         data['status_assinatura'] = _status_from_cliente(user, cliente)
+        # Garante URL absoluta para foto_perfil
+        foto = data.get('foto_perfil')
+        if foto and not foto.startswith('http'):
+            data['foto_perfil'] = request.build_absolute_uri(foto)
+        return data
 
-        return Response(data)
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(self._enrich(request, dict(serializer.data)))
+
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True  # sempre parcial — nunca exige todos os campos
+        response = super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            response.data = self._enrich(request, dict(response.data))
+        return response
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

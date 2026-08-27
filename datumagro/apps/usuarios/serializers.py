@@ -38,7 +38,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get('password') != attrs.get('password2'):
             raise serializers.ValidationError({"password": "As senhas não coincidem."})
-        # Validação de limite de funcionários usando o usuário no contexto (proprietário)
+        # Limite de funcionários só se aplica ao criar (não em PATCH de perfil)
+        if self.instance is not None:
+            return attrs
         request = self.context.get('request') if hasattr(self, 'context') else None
         if request and hasattr(request, 'user'):
             owner = request.user
@@ -49,10 +51,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
                 plano = getattr(assinatura, 'plano', None) if assinatura else None
                 if plano is not None:
                     max_func = getattr(plano, 'max_funcionarios', 0)
-                    # Conta funcionários já vinculados às propriedades do cliente
                     from datumagro.apps.usuarios.models import Usuario as UsuarioModel
                     current_count = UsuarioModel.objects.filter(
-                        tipo_usuario=UsuarioModel.TipoUsuario.FUNCIONARIO if hasattr(UsuarioModel, 'TipoUsuario') else 'funcionario',
+                        tipo_usuario='funcionario',
                         propriedades__cliente=cliente
                     ).distinct().count()
                     if current_count >= max_func:
@@ -159,22 +160,20 @@ class FuncionarioRegistroSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get('password') != attrs.get('password2'):
             raise serializers.ValidationError({"password": "As senhas não coincidem."})
-        # Validação do limite de funcionários usando o usuário no contexto (proprietário)
         request = self.context.get('request') if hasattr(self, 'context') else None
         if request and hasattr(request, 'user'):
             owner = request.user
-            owner_perfil = getattr(owner, 'perfilusuario', None)
-            cliente = getattr(owner_perfil, 'cliente', None) if owner_perfil else None
+            prop = owner.propriedades.select_related('cliente').first()
+            cliente = prop.cliente if prop else None
             if cliente:
                 assinatura = getattr(cliente, 'assinatura', None)
                 plano = getattr(assinatura, 'plano', None) if assinatura else None
                 if plano is not None:
                     max_func = getattr(plano, 'max_funcionarios', 0)
-                    # Conta funcionários já vinculados às propriedades do cliente
                     from django.contrib.auth import get_user_model
                     UsuarioModel = get_user_model()
                     current_count = UsuarioModel.objects.filter(
-                        tipo_usuario=UsuarioModel.TipoUsuario.FUNCIONARIO if hasattr(UsuarioModel, 'TipoUsuario') else 'funcionario',
+                        tipo_usuario='funcionario',
                         propriedades__cliente=cliente
                     ).distinct().count()
                     if current_count >= max_func:
