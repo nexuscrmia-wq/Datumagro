@@ -25,6 +25,8 @@ dependencies:
   fl_chart: ^0.69.0
   flutter_local_notifications: ^18.0.0
   flutter_blue_plus: ^1.35.3
+  flutter_bluetooth_serial:
+    path: packages/flutter_bluetooth_serial
 
 dev_dependencies:
   flutter_test:
