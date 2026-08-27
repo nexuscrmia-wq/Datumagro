@@ -60,12 +60,21 @@ def politica_privacidade(request):
     return render(request, 'privacidade.html')
 
 
-@require_GET
 def download_apk(request):
-    """Serve o APK do DatumAgro via streaming. O arquivo fica no Railway Volume."""
+    """Serve o APK do DatumAgro. Aceita GET e HEAD (Chrome Android manda HEAD primeiro)."""
+    if request.method not in ('GET', 'HEAD'):
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['GET', 'HEAD'])
     apk_path = _apk_path()
     if not os.path.isfile(apk_path):
         raise Http404("APK não disponível no momento.")
+    if request.method == 'HEAD':
+        from django.http import HttpResponse
+        size = os.path.getsize(apk_path)
+        resp = HttpResponse(content_type='application/vnd.android.package-archive')
+        resp['Content-Length'] = size
+        resp['Content-Disposition'] = 'attachment; filename="DatumAgro.apk"'
+        return resp
     return FileResponse(
         open(apk_path, 'rb'),
         as_attachment=True,
