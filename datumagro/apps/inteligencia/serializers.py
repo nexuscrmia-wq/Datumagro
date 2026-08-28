@@ -18,4 +18,4 @@ class AlertaSerializer(serializers.ModelSerializer):
             'animal',
             'animal_brinco',
         ]
-        read_only_fields = fields
+        read_only_fields = ['id', 'data_criacao', 'animal_brinco', 'status']

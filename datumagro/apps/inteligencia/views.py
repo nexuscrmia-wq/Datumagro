@@ -22,48 +22,47 @@ from datumagro.apps.usuarios.permissions import IsProprietarioOrGerente
 logger = logging.getLogger(__name__)
 
 
-class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
+class AlertaViewSet(viewsets.ModelViewSet):
     """
-    API endpoint para visualizar e gerenciar os alertas gerados pela IA.
-    O usuário pode listar seus alertas e marcá-los como resolvidos.
+    API endpoint para criar, visualizar e gerenciar alertas.
+    Criação manual pelo usuário + alertas gerados pela IA.
     """
     serializer_class = AlertaSerializer
     permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
-    def get_queryset(self):
-        """Retorna apenas os alertas do cliente do usuário logado."""
+    def _resolver_cliente(self):
         from datumagro.apps.cadastros.models import Cliente
-        prop = self.request.user.propriedades.select_related('cliente').first()
-        cliente = prop.cliente if prop else Cliente.objects.filter(
-            email_contato=self.request.user.email).first()
+        user = self.request.user
+        prop = user.propriedades.select_related('cliente').first()
+        return prop.cliente if prop else Cliente.objects.filter(email_contato=user.email).first()
+
+    def get_queryset(self):
+        cliente = self._resolver_cliente()
         if not cliente:
             return Alerta.objects.none()
         return Alerta.objects.filter(cliente=cliente).order_by('-data_criacao')
 
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        cliente = self._resolver_cliente()
+        if not cliente:
+            raise ValidationError('Usuário sem cliente vinculado.')
+        serializer.save(cliente=cliente)
+
     @action(detail=True, methods=['post'])
     def marcar_como_resolvido(self, request, pk=None):
-        """
-        Ação customizada para marcar um alerta como 'RESOLVIDO'.
-        URL: /api/inteligencia/alertas/{id}/marcar_como_resolvido/
-        """
-        perfil = getattr(request.user, 'perfilusuario', None)
-        cliente = getattr(perfil, 'cliente', None) if perfil else None
-        if not cliente:
-            return Response({'detail': 'Usuário sem cliente vinculado.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        """Marca um alerta como RESOLVIDO."""
         alerta = self.get_object()
         alerta.status = 'RESOLVIDO'
         alerta.save()
-        
+
         logger.info("Alerta marcado como resolvido", extra={
             'user_id': request.user.id,
             'alerta_id': alerta.id,
-            'tipo': alerta.tipo
+            'tipo': alerta.tipo_alerta,
         })
-        
-        # Invalidar cache de alertas
+
         cache.delete(f"user_{request.user.id}_alertas_ia")
-        
         return Response({'status': 'Alerta marcado como resolvido'}, status=status.HTTP_200_OK)
 
 
