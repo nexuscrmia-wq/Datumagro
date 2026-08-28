@@ -402,14 +402,14 @@ def redefinir_senha(request, token):
 @permission_classes([AllowAny])
 def versao_app(request):
     """Retorna a versão atual do APK para checagem in-app."""
-    versao = '1.6.4'  # atualizar aqui a cada release
+    versao = '1.6.5'  # atualizar aqui a cada release
     # Usa sempre o host real da requisição para garantir URL correta em qualquer domínio
     url_base = f"{request.scheme}://{request.get_host()}"
     return Response({
         'versao': versao,
         'url_download': f'{url_base}/baixar/apk/',
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
-        'novidades': os.getenv('UPDATE_NOVIDADES', 'Alertas: crie alertas manuais (sanitário, reprodutivo, manejo e mais), marque como resolvido e exclua. Além do multi-espécie da v1.6.3.'),
+        'novidades': os.getenv('UPDATE_NOVIDADES', 'Correções: embarques, equipe e alertas funcionando. Notificação de atualização não aparece mais repetidamente. Foto de perfil persistente.'),
     })
 
 

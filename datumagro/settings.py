@@ -158,7 +158,12 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Em produção: Railway Volume via env var MEDIA_STORAGE_PATH=/app/apk_storage/media
+_media_env = os.environ.get('MEDIA_STORAGE_PATH', '')
+MEDIA_ROOT = Path(_media_env) if _media_env else BASE_DIR / 'media'
+# Garante que os subdiretórios de upload existam (necessário em container Railway)
+for _subdir in ('perfis', 'car'):
+    os.makedirs(MEDIA_ROOT / _subdir, exist_ok=True)
 
 # APK — Railway Volume montado em /app/apk_storage/ em produção
 APK_STORAGE_PATH = os.environ.get(

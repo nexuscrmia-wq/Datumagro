@@ -481,13 +481,25 @@ def _status_from_cliente(user, cliente):
 
 
 def _get_cliente_equipe(user):
-    """Retorna o Cliente associado ao usuário (via perfil ou email)."""
+    """Retorna o Cliente associado ao usuário com a mesma cadeia de fallbacks do BaseViewSet."""
     from datumagro.apps.cadastros.models import Cliente
+    # 1. perfilusuario.cliente (legado)
     perfil = getattr(user, 'perfilusuario', None)
     cliente = getattr(perfil, 'cliente', None) if perfil else None
-    if not cliente:
-        cliente = Cliente.objects.filter(email_contato=user.email).first()
-    return cliente
+    if cliente:
+        return cliente
+    # 2. propriedade M2M (funcionários)
+    prop = user.propriedades.select_related('cliente').first()
+    if prop:
+        return prop.cliente
+    # 3. email_contato
+    cliente = Cliente.objects.filter(email_contato=user.email).first()
+    if cliente:
+        return cliente
+    # 4. único cliente no sistema (proprietário sem M2M/email configurado)
+    if Cliente.objects.count() == 1:
+        return Cliente.objects.first()
+    return None
 
 
 def _permissions_flutter(user):

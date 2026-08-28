@@ -20,7 +20,7 @@ class RastreamentoSerializer(serializers.ModelSerializer):
 class EmbarqueSerializer(serializers.ModelSerializer):
     itens = ItemEmbarqueSerializer(many=True, read_only=True)
     rastreamento = RastreamentoSerializer(many=True, read_only=True)
-    
+
     total_peso = serializers.SerializerMethodField()
     total_valor = serializers.SerializerMethodField()
     quantidade_itens = serializers.SerializerMethodField()
@@ -28,6 +28,7 @@ class EmbarqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Embarque
         fields = '__all__'
+        read_only_fields = ['responsavel']
 
     def get_total_peso(self, obj: Embarque) -> float:
         return float(sum(item.peso_total_kg for item in obj.itens.all()))

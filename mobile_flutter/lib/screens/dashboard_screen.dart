@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api.dart';
 import '../config.dart';
@@ -22,6 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   static bool _versionChecked = false;
   static const _verde = Color(0xFF2E7D32);
+  static const _storage = FlutterSecureStorage();
 
   final _ajudaService = AjudaService(ApiService());
 
@@ -46,14 +48,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final obrigatorio = info['obrigatorio'] as bool? ?? false;
       final novidades = info['novidades'] as String? ?? '';
       final urlDownload = info['url_download'] as String? ?? '';
-      if (_isNewerVersion(serverVersion, kAppVersion)) {
-        _showUpdateDialog(
-          versao: serverVersion,
-          obrigatorio: obrigatorio,
-          novidades: novidades,
-          urlDownload: urlDownload,
-        );
+      if (!_isNewerVersion(serverVersion, kAppVersion)) return;
+
+      // Não mostrar de novo se o usuário já dispensou esta versão
+      if (!obrigatorio) {
+        final dismissed = await _storage.read(key: 'update_dismissed_version');
+        if (dismissed == serverVersion) return;
       }
+
+      if (!mounted) return;
+      _showUpdateDialog(
+        versao: serverVersion,
+        obrigatorio: obrigatorio,
+        novidades: novidades,
+        urlDownload: urlDownload,
+      );
     } catch (_) {
       // Falha silenciosa — conectividade não impede o dashboard de funcionar
     }
@@ -134,7 +143,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             if (!obrigatorio)
               TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
+                onPressed: () async {
+                  await _storage.write(
+                    key: 'update_dismissed_version',
+                    value: versao,
+                  );
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                },
                 child: const Text('Agora não'),
               ),
             FilledButton.icon(
