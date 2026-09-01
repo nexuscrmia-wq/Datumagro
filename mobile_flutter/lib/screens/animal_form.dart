@@ -249,7 +249,6 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
       firstDate: DateTime(1990),
       lastDate: DateTime.now(),
       helpText: 'Data de nascimento',
-      locale: const Locale('pt', 'BR'),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: Theme.of(ctx).colorScheme.copyWith(primary: _verde),

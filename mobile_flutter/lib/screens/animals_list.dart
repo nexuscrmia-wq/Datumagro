@@ -45,7 +45,11 @@ class _AnimalsListScreenState extends State<AnimalsListScreen> {
   void initState() {
     super.initState();
     db = Provider.of<AppDatabase>(context, listen: false);
-    _secureStorage.read(key: 'access_token').then((v) => setState(() => token = v ?? ''));
+    _secureStorage.read(key: 'access_token').then((v) {
+      setState(() => token = v ?? '');
+      // Sincroniza ao abrir a tela para garantir dados atualizados em qualquer dispositivo
+      if ((v ?? '').isNotEmpty) _runSync(silent: true);
+    });
     _secureStorage.read(key: 'user').then((s) {
       if (s == null) return;
       try {
@@ -64,11 +68,18 @@ class _AnimalsListScreenState extends State<AnimalsListScreen> {
       _lastSyncAttempt = now;
       final t = await _secureStorage.read(key: 'access_token');
       if ((t ?? token).isEmpty || !mounted) return;
-      try {
-        await SyncService(db: db, baseUrl: '$kApiBaseUrlEmulator/api/cadastros', api: ApiService()).sync();
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sincronizado ✓')));
-      } catch (_) {}
+      await _runSync(silent: false);
     });
+  }
+
+  Future<void> _runSync({bool silent = false}) async {
+    _lastSyncAttempt = DateTime.now();
+    try {
+      await SyncService(db: db, baseUrl: '$kApiBaseUrlEmulator/api/cadastros', api: ApiService()).sync();
+      if (!silent && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sincronizado ✓')));
+      }
+    } catch (_) {}
   }
 
   @override

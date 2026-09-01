@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import '../config.dart';
 import '../services/api.dart';
 
@@ -37,48 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.of(context).pushReplacementNamed('/login');
   }
 
-  // ── Upload de foto ────────────────────────────────────────────────────────
-
-  Future<void> _pickFoto() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: _verde),
-              title: const Text('Tirar foto'),
-              onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: _verde),
-              title: const Text('Escolher da galeria'),
-              onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (source == null || !mounted) return;
-
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 600);
-    if (picked == null || !mounted) return;
-
-    setState(() => _loading = true);
-    final updated = await ApiService().uploadFotoPerfil(picked.path);
-    if (!mounted) return;
-    setState(() {
-      if (updated != null) _user = updated;
-      _loading = false;
-    });
-    messenger.showSnackBar(SnackBar(
-      content: Text(updated != null ? 'Foto atualizada!' : 'Erro ao enviar foto.'),
-      backgroundColor: updated != null ? _verde : Colors.red,
-    ));
-  }
 
   // ── Editar nome e telefone ────────────────────────────────────────────────
 
@@ -398,41 +355,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Center(
                   child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: _pickFoto,
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 42,
-                              backgroundColor: _verde,
-                              backgroundImage: _user?['foto_perfil'] != null &&
-                                      (_user!['foto_perfil'] as String).isNotEmpty
-                                  ? NetworkImage(_user!['foto_perfil'] as String)
-                                  : null,
-                              child: _user?['foto_perfil'] == null ||
-                                      (_user!['foto_perfil'] as String).isEmpty
-                                  ? Text(inicial,
-                                      style: const TextStyle(
-                                          fontSize: 36,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold))
-                                  : null,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
-                                decoration: const BoxDecoration(
-                                  color: _verde,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.camera_alt,
-                                    size: 15, color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
+                      CircleAvatar(
+                        radius: 42,
+                        backgroundColor: _verde,
+                        child: Text(inicial,
+                            style: const TextStyle(
+                                fontSize: 36,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 12),
                       Text(
