@@ -54,6 +54,7 @@ class AppDatabase extends _$AppDatabase {
   Future<bool> updateAnimalEntry(Animal animal) => update(animals).replace(animal);
   Future<int> deleteAnimalEntry(int id) => (delete(animals)..where((t) => t.id.equals(id))).go();
 
+  Future<Animal?> getById(int id) => (select(animals)..where((t) => t.id.equals(id))).getSingleOrNull();
   Future<Animal?> getByServerId(int serverId) => (select(animals)..where((t) => t.serverId.equals(serverId))).getSingleOrNull();
 
   Future<int> upsertByServerId(int? serverId, AnimalsCompanion companion) async {

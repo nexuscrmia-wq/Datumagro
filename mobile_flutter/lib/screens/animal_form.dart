@@ -7,6 +7,7 @@ import 'package:datumagro_mobile/data/database.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../services/api.dart';
+import 'animal_detail_screen.dart';
 
 // ─── Configurações por espécie ────────────────────────────────────────────────
 
@@ -345,6 +346,23 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
           }),
           clientId: 'tmp-${now.millisecondsSinceEpoch}',
         );
+
+        // Após criar, abre o detalhe do animal para o usuário adicionar
+        // pesagens, saúde e reprodução nas abas correspondentes
+        final criado = await db.getById(id);
+        if (!mounted) return;
+        if (criado != null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Animal cadastrado! Use as abas para adicionar pesagens, saúde e reprodução.'),
+            duration: Duration(seconds: 4),
+          ));
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => AnimalDetailScreen(animal: criado)),
+          );
+        } else {
+          Navigator.of(context).pop(true);
+        }
+        return;
       }
 
       if (mounted) Navigator.of(context).pop(true);
