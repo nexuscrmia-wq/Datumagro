@@ -875,7 +875,12 @@ def _get_user_cliente_sync(user):
     prop = user.propriedades.select_related('cliente').first()
     if prop:
         return prop.cliente
-    return Cliente.objects.filter(email_contato=user.email).first()
+    cliente = Cliente.objects.filter(email_contato=user.email).first()
+    if cliente:
+        return cliente
+    if Cliente.objects.count() == 1:
+        return Cliente.objects.first()
+    return None
 
 
 def _animal_to_sync_dict(animal):

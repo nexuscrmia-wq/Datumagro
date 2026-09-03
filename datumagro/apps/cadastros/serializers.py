@@ -25,6 +25,8 @@ class AnimalSerializer(serializers.ModelSerializer):
     pai_brinco = serializers.CharField(source='pai.brinco', read_only=True, default=None)
     mae_brinco = serializers.CharField(source='mae.brinco', read_only=True, default=None)
     idade_meses = serializers.SerializerMethodField()
+    # Aceita qualquer texto (raça livre) além das choices pré-definidas
+    raca = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Animal

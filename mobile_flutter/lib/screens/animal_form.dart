@@ -163,6 +163,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _brinco = TextEditingController();
   final _caracteristicas = TextEditingController();
+  final _racaCustom = TextEditingController();
 
   String? _raca;
   String _sexo = 'M';
@@ -211,7 +212,10 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
           _tipoEspecie = especie;
           // Ao trocar espécie, garante que os campos escolhidos ainda são válidos
           final cfg = _cfgFor(especie);
-          if (_raca != null && !cfg.racas.any((r) => r.$1 == _raca)) _raca = null;
+          if (_raca != null && !cfg.racas.any((r) => r.$1 == _raca)) {
+            _racaCustom.text = _raca!;
+            _raca = 'OUTRA';
+          }
           if (_categoria != null && !cfg.categorias.any((c) => c.$1 == _categoria)) {
             _categoria = null;
           }
@@ -238,6 +242,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
   void dispose() {
     _brinco.dispose();
     _caracteristicas.dispose();
+    _racaCustom.dispose();
     super.dispose();
   }
 
@@ -271,6 +276,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
     final isEdit = widget.animal != null;
     final cfg = _cfgFor(_tipoEspecie);
 
+    final racaFinal = _raca == 'OUTRA' ? _racaCustom.text.trim() : _raca;
     final statusFinal = (cfg.temStatus && _sexo == 'F') ? _statusReprodutivo : null;
     final reprodutorFinal = (cfg.temReprodutor && _sexo == 'M') ? _isReprodutor : false;
 
@@ -278,7 +284,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
       if (isEdit) {
         await db.updateAnimalEntry(widget.animal!.copyWith(
           brinco: _brinco.text.trim(),
-          raca: Value(_raca),
+          raca: Value(racaFinal),
           sexo: Value(_sexo),
           dataNascimento: Value(_dataNasc),
           categoria: Value(_categoria),
@@ -294,7 +300,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
           json.encode({
             'id': widget.animal!.serverId ?? widget.animal!.id,
             'brinco': _brinco.text.trim(),
-            'raca': _raca,
+            'raca': racaFinal,
             'sexo': _sexo,
             'data_nascimento': _dataNasc?.toIso8601String(),
             'categoria': _categoria,
@@ -311,7 +317,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
         final id = await db.insertAnimal(AnimalsCompanion.insert(
           propriedadeId: _propriedadeId,
           brinco: _brinco.text.trim(),
-          raca: Value(_raca),
+          raca: Value(racaFinal),
           sexo: Value(_sexo),
           dataNascimento: Value(_dataNasc),
           categoria: Value(_categoria),
@@ -330,7 +336,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
             'id': id,
             'propriedade': _propriedadeId,
             'brinco': _brinco.text.trim(),
-            'raca': _raca,
+            'raca': racaFinal,
             'sexo': _sexo,
             'data_nascimento': _dataNasc?.toIso8601String(),
             'categoria': _categoria,
@@ -431,10 +437,23 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
                   items: cfg.racas
                       .map((r) => DropdownMenuItem(value: r.$1, child: Text(r.$2)))
                       .toList(),
-                  onChanged: (v) => setState(() => _raca = v),
+                  onChanged: (v) => setState(() {
+                    _raca = v;
+                    if (v != 'OUTRA') _racaCustom.clear();
+                  }),
                   validator: (v) => v == null ? 'Selecione a raça' : null,
                 ),
               ),
+              if (_raca == 'OUTRA')
+                _Field(
+                  child: TextFormField(
+                    controller: _racaCustom,
+                    decoration: _dec('Nome da raça / mestiço', Icons.edit_outlined),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Informe a raça' : null,
+                  ),
+                ),
               _Field(
                 child: DropdownButtonFormField<String>(
                   value: _registroGenetico,

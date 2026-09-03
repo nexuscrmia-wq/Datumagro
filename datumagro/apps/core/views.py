@@ -402,14 +402,14 @@ def redefinir_senha(request, token):
 @permission_classes([AllowAny])
 def versao_app(request):
     """Retorna a versão atual do APK para checagem in-app."""
-    versao = '1.6.7'  # atualizar aqui a cada release
+    versao = '1.6.8'  # atualizar aqui a cada release
     # Usa sempre o host real da requisição para garantir URL correta em qualquer domínio
     url_base = f"{request.scheme}://{request.get_host()}"
     return Response({
         'versao': versao,
         'url_download': f'{url_base}/baixar/apk/',
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
-        'novidades': os.getenv('UPDATE_NOVIDADES', 'Ao cadastrar um animal, o app agora abre direto nas abas de Pesagem, Saúde e Reprodução. Botão de ajuda (?) corrigido. Sincronização automática entre dispositivos.'),
+        'novidades': os.getenv('UPDATE_NOVIDADES', 'Raça livre: ao selecionar "Outra/Mestiço", agora é possível digitar qualquer raça. Sincronização entre dispositivos corrigida para proprietários.'),
     })
 
 
