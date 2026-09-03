@@ -402,7 +402,7 @@ def redefinir_senha(request, token):
 @permission_classes([AllowAny])
 def versao_app(request):
     """Retorna a versão atual do APK para checagem in-app."""
-    versao = '1.6.8'  # atualizar aqui a cada release
+    versao = '1.6.9'  # atualizar aqui a cada release
     # Usa sempre o host real da requisição para garantir URL correta em qualquer domínio
     url_base = f"{request.scheme}://{request.get_host()}"
     return Response({

@@ -597,8 +597,7 @@ class _NovaTransacaoSheetState extends State<_NovaTransacaoSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isReceita = _tipo == 'RECEITA';
-    final cor = isReceita ? _verde : _vermelho;
+    final cor = _tipo == 'RECEITA' ? _verde : _tipo == 'INICIAL' ? Colors.teal : _vermelho;
 
     return Padding(
       padding:
@@ -641,7 +640,7 @@ class _NovaTransacaoSheetState extends State<_NovaTransacaoSheet> {
                     onTap: () => setState(() => _tipo = 'DESPESA'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _TipoBtn(
                     label: 'Receita',
@@ -649,6 +648,19 @@ class _NovaTransacaoSheetState extends State<_NovaTransacaoSheet> {
                     cor: _verde,
                     selected: _tipo == 'RECEITA',
                     onTap: () => setState(() => _tipo = 'RECEITA'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _TipoBtn(
+                    label: 'Caixa Inicial',
+                    icon: Icons.account_balance_wallet_outlined,
+                    cor: Colors.teal,
+                    selected: _tipo == 'INICIAL',
+                    onTap: () => setState(() {
+                      _tipo = 'INICIAL';
+                      if (_descCtrl.text.isEmpty) _descCtrl.text = 'Caixa Inicial';
+                    }),
                   ),
                 ),
               ],

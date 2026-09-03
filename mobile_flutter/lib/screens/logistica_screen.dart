@@ -355,13 +355,15 @@ class _LogisticaScreenState extends State<LogisticaScreen> {
     padding: const EdgeInsets.all(16),
     itemCount: _filtered.length,
     separatorBuilder: (_, __) => const SizedBox(height: 10),
-    itemBuilder: (_, i) => _EmbarqueCard(embarque: _filtered[i]),
+    itemBuilder: (_, i) => _EmbarqueCard(embarque: _filtered[i], api: _api, onUpdated: _load),
   );
 }
 
 class _EmbarqueCard extends StatelessWidget {
   final Map<String, dynamic> embarque;
-  const _EmbarqueCard({required this.embarque});
+  final ApiService api;
+  final VoidCallback onUpdated;
+  const _EmbarqueCard({required this.embarque, required this.api, required this.onUpdated});
 
   static const _statusInfo = {
     'PLA': ('Planejado',      Color(0xFF78909C), Icons.schedule),
@@ -394,7 +396,21 @@ class _EmbarqueCard extends StatelessWidget {
     final (tipoLabel, tipoColor, tipoIcon) =
         _tipoInfo[tipo] ?? ('?', Colors.grey, Icons.swap_horiz);
 
-    return Card(
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => _StatusUpdateSheet(
+          embarque: embarque,
+          api: api,
+          onUpdated: onUpdated,
+        ),
+      ),
+      child: Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -435,6 +451,7 @@ class _EmbarqueCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -482,6 +499,126 @@ class _InfoRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(child: Text(text, style: TextStyle(fontSize: 13, color: c))),
       ],
+    );
+  }
+}
+
+class _StatusUpdateSheet extends StatefulWidget {
+  final Map<String, dynamic> embarque;
+  final ApiService api;
+  final VoidCallback onUpdated;
+  const _StatusUpdateSheet({required this.embarque, required this.api, required this.onUpdated});
+
+  @override
+  State<_StatusUpdateSheet> createState() => _StatusUpdateSheetState();
+}
+
+class _StatusUpdateSheetState extends State<_StatusUpdateSheet> {
+  static const _statusOpts = [
+    ('PLA', 'Planejado',     Color(0xFF78909C), Icons.schedule),
+    ('PRE', 'Pré-Embarque',  Color(0xFF1976D2), Icons.inventory_2_outlined),
+    ('NAV', 'Em Trânsito',   Color(0xFF00838F), Icons.directions_boat_outlined),
+    ('POR', 'No Porto',      Color(0xFFE65100), Icons.anchor),
+    ('FIN', 'Finalizado',    Color(0xFF2E7D32), Icons.check_circle_outline),
+    ('CAN', 'Cancelado',     Color(0xFFD32F2F), Icons.cancel_outlined),
+  ];
+
+  late String _status;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _status = widget.embarque['status'] as String? ?? 'PLA';
+  }
+
+  Future<void> _salvar() async {
+    setState(() => _saving = true);
+    final id = widget.embarque['id'];
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/logistica/embarques/$id/');
+    try {
+      final resp = await widget.api.authenticatedPatch(url, {'status': _status});
+      if (!mounted) return;
+      if (resp.statusCode == 200) {
+        Navigator.of(context).pop();
+        widget.onUpdated();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Status atualizado!'), backgroundColor: Color(0xFF2E7D32)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ${resp.statusCode}'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final numero = widget.embarque['numero_embarque'] as String? ?? '—';
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 20, right: 20, top: 12,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Embarque $numero',
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          const Text('Alterar status do embarque',
+            style: TextStyle(fontSize: 13, color: Colors.grey)),
+          const SizedBox(height: 16),
+          ..._statusOpts.map((opt) {
+            final (code, label, color, icon) = opt;
+            return RadioListTile<String>(
+              value: code,
+              groupValue: _status,
+              onChanged: (v) => setState(() => _status = v!),
+              activeColor: color,
+              title: Row(
+                children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: 8),
+                  Text(label),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _saving ? null : _salvar,
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
+              child: _saving
+                  ? const SizedBox(width: 20, height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Salvar status'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }

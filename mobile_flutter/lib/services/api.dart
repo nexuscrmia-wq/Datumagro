@@ -326,11 +326,21 @@ class ApiService {
     return [];
   }
 
-  Future<Map<String, dynamic>?> criarPropriedade(Map<String, dynamic> dados) async {
+  Future<(Map<String, dynamic>?, String?)> criarPropriedade(Map<String, dynamic> dados) async {
     final url = Uri.parse('$kApiBaseUrlEmulator/api/cadastros/propriedades/');
     final resp = await authenticatedPost(url, dados);
-    if (resp.statusCode == 201) return json.decode(resp.body) as Map<String, dynamic>;
-    return null;
+    if (resp.statusCode == 201) {
+      return (json.decode(resp.body) as Map<String, dynamic>, null);
+    }
+    String erro = 'Erro ${resp.statusCode}';
+    try {
+      final body = json.decode(resp.body);
+      if (body is Map) {
+        final detail = body['detail'] ?? body.values.firstOrNull?.toString();
+        if (detail != null) erro = detail.toString();
+      }
+    } catch (_) {}
+    return (null, erro);
   }
 
   Future<void> atualizarCamadas(

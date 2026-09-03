@@ -38,6 +38,7 @@ class Transacao(models.Model):
     TIPO_CHOICES = [
         ('RECEITA', 'Receita'),
         ('DESPESA', 'Despesa'),
+        ('INICIAL', 'Caixa Inicial'),
     ]
     STATUS_CHOICES = [
         ('PENDENTE', 'Pendente'),

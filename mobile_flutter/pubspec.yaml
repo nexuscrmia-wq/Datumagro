@@ -1,6 +1,6 @@
 name: datumagro_mobile
 description: "Cliente Flutter offline-first para DatumAgro (MVP)"
-version: 1.6.8+15
+version: 1.6.9+16
 publish_to: "none"
 
 environment:

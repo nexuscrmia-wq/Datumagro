@@ -222,7 +222,12 @@ class IsImportacaoInternacional(BasePermission):
 
         from datumagro.apps.cadastros.models import Cliente
         prop = request.user.propriedades.select_related('cliente').first()
-        cliente = prop.cliente if prop else Cliente.objects.filter(email_contato=request.user.email).first()
+        if prop:
+            cliente = prop.cliente
+        else:
+            cliente = Cliente.objects.filter(email_contato=request.user.email).first()
+            if not cliente and Cliente.objects.count() == 1:
+                cliente = Cliente.objects.first()
         if not cliente:
             return False
 

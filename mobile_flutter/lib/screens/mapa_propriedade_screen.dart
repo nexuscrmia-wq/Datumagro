@@ -677,7 +677,7 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
                                 'hectares': double.tryParse(
                                     haCtrl.text.replaceAll(',', '.')),
                             };
-                            final nova = await _api.criarPropriedade(dados);
+                            final (nova, erro) = await _api.criarPropriedade(dados);
                             if (!ctx.mounted) return;
                             Navigator.of(ctx).pop();
                             if (nova != null) {
@@ -692,8 +692,8 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
                               );
                             } else {
                               messenger.showSnackBar(
-                                const SnackBar(
-                                    content: Text('Erro ao cadastrar. Tente novamente.'),
+                                SnackBar(
+                                    content: Text(erro ?? 'Erro ao cadastrar.'),
                                     backgroundColor: Colors.red),
                               );
                             }
