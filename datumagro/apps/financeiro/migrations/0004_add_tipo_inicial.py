@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='transacaofinanceira',
+            model_name='transacao',
             name='tipo',
             field=models.CharField(
                 max_length=10,
