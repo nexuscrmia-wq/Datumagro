@@ -218,12 +218,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         backgroundColor: _verde,
         foregroundColor: Colors.white,
-        title: Column(
+        title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('DatumAgro', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('v$kAppVersion', style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.normal)),
+            Text('DatumAgro', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('v$kAppVersion', style: TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.normal)),
           ],
         ),
         actions: [
