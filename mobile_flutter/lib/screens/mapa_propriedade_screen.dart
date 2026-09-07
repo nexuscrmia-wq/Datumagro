@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../services/api.dart';
+import '../ajuda/ajuda_bottom_sheet.dart';
+import '../ajuda/ajuda_service.dart';
 
 // ── Tipos de infraestrutura disponíveis ──────────────────────────────────────
 const _kInfraTypes = [
@@ -193,6 +195,7 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
 
   final _api = ApiService();
   final _mapController = MapController();
+  final _ajudaService = AjudaService(ApiService());
 
   // Seleção de propriedade
   List<Map<String, dynamic>> _propriedades = [];
@@ -776,6 +779,11 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
         title: Text(nomeProp,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Ajuda',
+            onPressed: () => mostrarAjuda(context, service: _ajudaService, moduloSlug: 'mapa'),
+          ),
           if (_hasChanges)
             _saving
                 ? const Padding(

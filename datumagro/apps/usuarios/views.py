@@ -4,7 +4,10 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+import logging
 import uuid
+
+logger = logging.getLogger(__name__)
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -593,9 +596,28 @@ def equipe_convidar(request):
         tipo_usuario=_cargo_to_tipo(cargo),
     )
 
+    base_url_convite = request.build_absolute_uri('/')[:-1]
+    link_convite = f"{base_url_convite}/entrar-equipe/?t={convite.token}"
+    try:
+        send_mail(
+            subject="Você foi convidado para a equipe no DatumAgro",
+            message=(
+                f"Olá!\n\n"
+                f"Você recebeu um convite para participar da equipe no DatumAgro como {cargo}.\n\n"
+                f"Código de convite: {convite.codigo}\n"
+                f"Ou acesse diretamente pelo link:\n{link_convite}\n\n"
+                f"Este convite expira em {convite.expira_em.strftime('%d/%m/%Y às %H:%M')}.\n\n"
+                f"— Equipe DatumAgro"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+    except Exception as exc:
+        logger.warning("Falha ao enviar e-mail de convite para %s: %s", email, exc)
+
     # Retorna no formato TeamMember para compatibilidade com o Flutter atual,
     # mais os campos extras do convite (código e link para compartilhar).
-    base_url = request.build_absolute_uri('/')[:-1]
     return Response({
         'id': convite.id,
         'user': {'email': email or 'Convite aberto', 'nome': 'Aguardando aceite'},
@@ -606,7 +628,7 @@ def equipe_convidar(request):
         'invite': {
             'codigo': convite.codigo,
             'token': convite.token,
-            'link': f'{base_url}/entrar-equipe/?t={convite.token}',
+            'link': link_convite,
             'expira_em': convite.expira_em.isoformat(),
         },
     }, status=201)
@@ -778,3 +800,92 @@ def excluir_conta(request):
     user.propriedades.clear()
 
     return Response({'detail': 'Conta excluída com sucesso.'}, status=200)
+
+
+from django.http import HttpResponse as _HttpResponse
+from django.views.decorators.http import require_GET as _require_GET
+
+@_require_GET
+def entrar_equipe_landing(request):
+    """
+    Landing page do convite de equipe.
+    O link enviado por e-mail aponta aqui (?t=<token>).
+    Tenta abrir o app via scheme datumagro://; fallback mostra o código.
+    """
+    token = request.GET.get('t', '')
+    codigo = request.GET.get('c', '')
+
+    # Busca o código do convite para exibi-lo no fallback
+    codigo_display = codigo
+    if token and not codigo_display:
+        try:
+            convite_obj = ConviteEquipe.objects.get(token=token)
+            if convite_obj.is_valid:
+                codigo_display = convite_obj.codigo
+        except ConviteEquipe.DoesNotExist:
+            pass
+
+    deep_link = f"datumagro://entrar-equipe?t={token}" if token else "datumagro://entrar-equipe"
+
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convite — DatumAgro</title>
+<style>
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F6F9F5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}}
+  .card{{background:#fff;border-radius:16px;padding:40px 32px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.10);text-align:center}}
+  .mark{{width:64px;height:64px;background:#2E7D32;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#fff;font-weight:700}}
+  h1{{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:8px}}
+  p{{font-size:14px;color:#666;line-height:1.6;margin-bottom:24px}}
+  .btn{{display:block;background:#2E7D32;color:#fff;text-decoration:none;padding:14px 24px;border-radius:10px;font-size:16px;font-weight:600;margin-bottom:16px}}
+  .code-box{{background:#EEF4EC;border:2px dashed #52B788;border-radius:10px;padding:16px;margin:20px 0}}
+  .code{{font-size:32px;font-weight:700;letter-spacing:8px;color:#2E7D32;font-family:monospace}}
+  .code-label{{font-size:12px;color:#7A907C;margin-top:4px}}
+  .divider{{display:flex;align-items:center;gap:12px;margin:20px 0;color:#aaa;font-size:13px}}
+  .divider::before,.divider::after{{content:'';flex:1;height:1px;background:#e0e0e0}}
+  #fallback{{display:none}}
+  .small{{font-size:12px;color:#aaa;margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="mark">DA</div>
+  <h1>Você foi convidado!</h1>
+  <p>Você recebeu um convite para participar de uma equipe no <strong>DatumAgro</strong>.</p>
+
+  <a class="btn" id="open-app" href="{deep_link}">Abrir no DatumAgro</a>
+
+  <div id="fallback">
+    <div class="divider">ou entre com o código</div>
+    {'<div class="code-box"><div class="code">' + codigo_display + '</div><div class="code-label">Código de convite</div></div>' if codigo_display else '<p>Use o link enviado no app para aceitar o convite.</p>'}
+    <p class="small">Abra o DatumAgro → menu Equipe → "Tenho um código"</p>
+  </div>
+
+  <p class="small">Não tem o app ainda? <a href="https://datumagro-web-production.up.railway.app/baixar/apk/" style="color:#2E7D32">Baixar DatumAgro</a></p>
+</div>
+<script>
+  // Tenta abrir o app; depois de 1.8s mostra o fallback
+  var opened = false;
+  document.getElementById('open-app').addEventListener('click', function(e) {{
+    e.preventDefault();
+    window.location = '{deep_link}';
+    setTimeout(function() {{
+      if (!document.hidden) document.getElementById('fallback').style.display = 'block';
+    }}, 1800);
+  }});
+  // Auto-redireciona se acessar pelo link direto (não pelo botão)
+  window.addEventListener('load', function() {{
+    if (window.location.search.indexOf('t=') !== -1) {{
+      window.location = '{deep_link}';
+      setTimeout(function() {{
+        document.getElementById('fallback').style.display = 'block';
+      }}, 1800);
+    }}
+  }});
+</script>
+</body>
+</html>"""
+    return _HttpResponse(html, content_type='text/html; charset=utf-8')

@@ -22,6 +22,7 @@ dependencies:
   # Scanner QR/barcode — inclui ML Kit (libbarhopper_v3, libimage_processing_util_jni, libsurface_util_jni)
   mobile_scanner: ^5.2.3
   image_picker: ^1.1.2
+  app_links: ^6.3.4
   fl_chart: ^0.69.0
   flutter_local_notifications: ^18.0.0
   flutter_blue_plus: ^1.35.3

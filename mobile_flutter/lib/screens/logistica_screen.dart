@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/api.dart';
 import '../config.dart';
+import '../ajuda/ajuda_bottom_sheet.dart';
+import '../ajuda/ajuda_service.dart';
 
 class LogisticaScreen extends StatefulWidget {
   const LogisticaScreen({super.key});
@@ -13,6 +15,7 @@ class LogisticaScreen extends StatefulWidget {
 class _LogisticaScreenState extends State<LogisticaScreen> {
   static const _cinza = Color(0xFF37474F);
   final _api = ApiService();
+  final _ajudaService = AjudaService(ApiService());
 
   List<Map<String, dynamic>> _embarques = [];
   bool _loading = true;
@@ -261,6 +264,11 @@ class _LogisticaScreenState extends State<LogisticaScreen> {
         backgroundColor: _cinza,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Ajuda',
+            onPressed: () => mostrarAjuda(context, service: _ajudaService, moduloSlug: 'logistica'),
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),

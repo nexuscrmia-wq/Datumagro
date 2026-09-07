@@ -17,6 +17,7 @@ from datumagro.apps.core.views import (
 from datumagro.apps.usuarios.views import (
     equipe_membros, equipe_convidar, equipe_aceitar,
     equipe_remover, equipe_permissoes, excluir_conta,
+    entrar_equipe_landing,
 )
 
 urlpatterns = [
@@ -54,6 +55,9 @@ urlpatterns = [
 
     # Recuperação de senha via browser (link enviado por email)
     path('redefinir-senha/<str:token>/', redefinir_senha, name='redefinir-senha'),
+
+    # Landing page do convite de equipe (link enviado por e-mail)
+    path('entrar-equipe/', entrar_equipe_landing, name='entrar-equipe'),
 
     # Central de Ajuda / Base de Conhecimento
     path('api/ajuda/', include('datumagro.apps.ajuda.urls', namespace='ajuda')),

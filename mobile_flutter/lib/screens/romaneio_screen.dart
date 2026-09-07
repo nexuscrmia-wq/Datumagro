@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/romaneio_service.dart';
+import '../ajuda/ajuda_bottom_sheet.dart';
+import '../ajuda/ajuda_service.dart';
+import '../services/api.dart';
 
 class _AnimalEntry {
   final TextEditingController brinco = TextEditingController();
@@ -22,6 +25,7 @@ class RomaneioScreen extends StatefulWidget {
 }
 
 class _RomaneioScreenState extends State<RomaneioScreen> {
+  final _ajudaService = AjudaService(ApiService());
   final _precoCtrl = TextEditingController(text: '280.00');
   final _fazendaCtrl = TextEditingController();
   final _vendedorCtrl = TextEditingController();
@@ -129,6 +133,11 @@ class _RomaneioScreenState extends State<RomaneioScreen> {
         title: const Text('Romaneio de Pesagem',
             style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Ajuda',
+            onPressed: () => mostrarAjuda(context, service: _ajudaService, moduloSlug: 'romaneio'),
+          ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             tooltip: 'Calcular + Gerar PDF',

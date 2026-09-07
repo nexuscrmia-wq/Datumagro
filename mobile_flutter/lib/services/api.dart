@@ -284,6 +284,38 @@ class ApiService {
     return resp.statusCode == 200;
   }
 
+  // ─── Convite de equipe ───────────────────────────────────────────────────
+
+  /// Aceita um convite de equipe via token (deep link) ou código manual.
+  /// Retorna `(userData, accessToken, refreshToken)` em caso de sucesso ou lança exceção.
+  Future<Map<String, dynamic>> aceitarConvite({
+    required String token,
+    required String nome,
+    required String email,
+    required String password,
+  }) async {
+    final url = Uri.parse('$kApiBaseUrlEmulator/api/equipe/aceitar/');
+    final resp = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'token': token,
+          'nome': nome,
+          'email': email,
+          'password': password,
+          'password2': password,
+        }));
+    if (resp.statusCode == 201) {
+      final data = json.decode(resp.body) as Map<String, dynamic>;
+      await _storage.write(key: 'access_token', value: data['access'] as String);
+      await _storage.write(key: 'refresh_token', value: data['refresh'] as String);
+      await _storage.write(key: 'user', value: json.encode(data['user']));
+      return data;
+    }
+    final body = json.decode(resp.body);
+    final detail = (body is Map ? body['detail'] : null) ?? 'Erro ao aceitar convite.';
+    throw Exception(detail.toString());
+  }
+
   // ─── Dashboard ────────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>> fetchDashboard({bool forceOnline = false}) async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:app_links/app_links.dart';
 import 'data/database.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login.dart';
@@ -14,6 +15,7 @@ import 'screens/equipe_screen.dart';
 import 'screens/alertas_screen.dart';
 import 'screens/logistica_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/aceitar_convite_screen.dart';
 import 'services/api.dart';
 import 'services/notificacao_service.dart';
 
@@ -28,12 +30,45 @@ void main() {
   ));
 }
 
-class DatumAgroApp extends StatelessWidget {
+class DatumAgroApp extends StatefulWidget {
   const DatumAgroApp({super.key});
+
+  @override
+  State<DatumAgroApp> createState() => _DatumAgroAppState();
+}
+
+class _DatumAgroAppState extends State<DatumAgroApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() {
+    final appLinks = AppLinks();
+    // Link que abriu o app quando estava fechado
+    appLinks.getInitialLink().then((uri) {
+      if (uri != null) _handleLink(uri);
+    });
+    // Links recebidos com o app aberto
+    appLinks.uriLinkStream.listen(_handleLink, onError: (_) {});
+  }
+
+  void _handleLink(Uri uri) {
+    if (uri.scheme == 'datumagro' && uri.host == 'entrar-equipe') {
+      final token = uri.queryParameters['t'] ?? '';
+      if (token.isNotEmpty) {
+        _navigatorKey.currentState?.pushNamed('/aceitar-convite', arguments: token);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'DatumAgro',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -61,6 +96,11 @@ class DatumAgroApp extends StatelessWidget {
           return PendingApprovalScreen(bloqueado: bloqueado);
         },
         '/alertas': (context) => const AlertasScreen(),
+        '/aceitar-convite': (context) {
+          final token =
+              ModalRoute.of(context)?.settings.arguments as String? ?? '';
+          return AceitarConviteScreen(token: token);
+        },
       },
     );
   }

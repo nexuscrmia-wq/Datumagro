@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../config.dart';
 import '../services/api.dart';
 
@@ -12,6 +13,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _user;
   bool _loading = true;
+  bool _uploadingFoto = false;
 
   static const _verde = Color(0xFF2E7D32);
 
@@ -30,12 +32,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Future<void> _pickAndUploadFoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, color: _verde),
+              title: const Text('Tirar foto'),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: _verde),
+              title: const Text('Escolher da galeria'),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+            ),
+            if ((_user?['foto_perfil'] as String?)?.isNotEmpty == true)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text('Remover foto', style: TextStyle(color: Colors.red)),
+                onTap: () => Navigator.of(ctx).pop(null),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted) return;
+
+    // Usuário fechou o sheet sem escolher
+    if (source == null && (_user?['foto_perfil'] as String?)?.isEmpty != false) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Remover foto
+    if (source == null) {
+      setState(() => _uploadingFoto = true);
+      final updated = await ApiService().updateMe({'foto_perfil': ''});
+      if (!mounted) return;
+      setState(() {
+        _uploadingFoto = false;
+        if (updated != null) _user = updated;
+      });
+      return;
+    }
+
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _uploadingFoto = true);
+    final updated = await ApiService().uploadFotoPerfil(picked.path);
+    if (!mounted) return;
+    setState(() {
+      _uploadingFoto = false;
+      if (updated != null) {
+        _user = updated;
+      } else {
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Erro ao salvar foto. Tente novamente.'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    });
+  }
+
   Future<void> _logout() async {
     await ApiService().logout();
     if (!mounted) return;
     Navigator.of(context).pushReplacementNamed('/login');
   }
 
+  Widget _buildAvatar(String inicial) {
+    final fotoUrl = _user?['foto_perfil'] as String?;
+    if (fotoUrl != null && fotoUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 42,
+        backgroundColor: _verde,
+        backgroundImage: NetworkImage(fotoUrl),
+        onBackgroundImageError: (_, __) {},
+        child: _uploadingFoto
+            ? const CircularProgressIndicator(color: Colors.white)
+            : null,
+      );
+    }
+    return CircleAvatar(
+      radius: 42,
+      backgroundColor: _verde,
+      child: _uploadingFoto
+          ? const CircularProgressIndicator(color: Colors.white)
+          : Text(inicial,
+              style: const TextStyle(
+                  fontSize: 36,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold)),
+    );
+  }
 
   // ── Editar nome e telefone ────────────────────────────────────────────────
 
@@ -355,14 +452,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Center(
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 42,
-                        backgroundColor: _verde,
-                        child: Text(inicial,
-                            style: const TextStyle(
-                                fontSize: 36,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                      GestureDetector(
+                        onTap: _uploadingFoto ? null : _pickAndUploadFoto,
+                        child: Stack(
+                          children: [
+                            _buildAvatar(inicial),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: _verde,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: _uploadingFoto
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(5),
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white, strokeWidth: 2))
+                                    : const Icon(Icons.camera_alt,
+                                        size: 14, color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -457,10 +573,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
 
                 const SizedBox(height: 24),
-                Center(
+                const Center(
                   child: Text('DatumAgro v$kAppVersion',
                       style:
-                          const TextStyle(color: Colors.black38, fontSize: 12)),
+                          TextStyle(color: Colors.black38, fontSize: 12)),
                 ),
                 const SizedBox(height: 8),
               ],

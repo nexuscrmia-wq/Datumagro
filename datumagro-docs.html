@@ -1,0 +1,1197 @@
+<title>DatumAgro Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F6F9F5;--surface:#FFFFFF;--surface-raised:#EEF4EC;
+  --forest:#1B4332;--leaf:#2D6A4F;--sage:#40916C;--mint:#74C69D;
+  --text:#161A15;--text-2:#4A5E4C;--muted:#7A907C;
+  --border:#D2E4D6;--border-light:#E8F2EA;
+  --get-bg:#E8F5E9;--get-c:#2E7D32;
+  --post-bg:#E3F2FD;--post-c:#1565C0;
+  --patch-bg:#FFF3E0;--patch-c:#E65100;
+  --del-bg:#FFEBEE;--del-c:#C62828;
+  --sb:#1B4332;--sb-text:#C8E6C9;--sb-muted:rgba(200,230,201,.5);
+  --mono:'IBM Plex Mono','Courier New',monospace;
+  --sans:'Source Sans 3',system-ui,sans-serif;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0F1510;--surface:#171E18;--surface-raised:#1D2A1F;
+  --text:#E0EAE1;--text-2:#9EB89F;--muted:#6A7D6B;
+  --border:#2A3D2C;--border-light:#1E2E20;
+  --get-bg:#1A3020;--get-c:#81C784;
+  --post-bg:#0D1F3A;--post-c:#64B5F6;
+  --patch-bg:#2A1800;--patch-c:#FFB74D;
+  --del-bg:#2A0A0A;--del-c:#EF9A9A;
+  --sb:#0D1F15;--sb-text:#A5D6A7;
+}}
+:root[data-theme="dark"]{
+  --ground:#0F1510;--surface:#171E18;--surface-raised:#1D2A1F;
+  --text:#E0EAE1;--text-2:#9EB89F;--muted:#6A7D6B;
+  --border:#2A3D2C;--border-light:#1E2E20;
+  --get-bg:#1A3020;--get-c:#81C784;
+  --post-bg:#0D1F3A;--post-c:#64B5F6;
+  --patch-bg:#2A1800;--patch-c:#FFB74D;
+  --del-bg:#2A0A0A;--del-c:#EF9A9A;
+  --sb:#0D1F15;--sb-text:#A5D6A7;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:15px;line-height:1.65;color:var(--text);background:var(--ground);display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.sb{width:252px;min-width:252px;background:var(--sb);height:100vh;position:sticky;top:0;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.sb-head{padding:22px 18px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.sb-mark{width:30px;height:30px;background:#52B788;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;color:#0a1a0f;flex-shrink:0}
+.sb-name{font-family:var(--mono);font-size:13.5px;font-weight:600;color:#fff}
+.sb-ver{font-size:11px;color:var(--sb-muted);font-family:var(--mono)}
+.sb-nav{flex:1;padding:6px 0 24px}
+.nav-group{margin-top:6px}
+.nav-label{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sb-muted);padding:10px 18px 3px;display:block}
+.nav-a{display:block;padding:5px 18px;font-size:13px;color:var(--sb-text);text-decoration:none;border-left:2px solid transparent;transition:background .1s,color .1s}
+.nav-a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-a.active{color:#fff;border-left-color:#52B788;background:rgba(82,183,136,.15)}
+
+/* ── Content ── */
+.content{flex:1;min-width:0;padding:48px 52px 96px;max-width:880px}
+
+/* ── Section ── */
+.sec{margin-bottom:60px;scroll-margin-top:20px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--sage);margin-bottom:6px}
+.sec-title{font-family:var(--mono);font-size:24px;font-weight:600;color:var(--text);margin-bottom:10px;line-height:1.3;text-wrap:balance}
+.sec-desc{font-size:15px;color:var(--text-2);max-width:660px;margin-bottom:24px;line-height:1.7}
+.sec-divider{border:none;border-top:1px solid var(--border);margin:0 0 28px}
+
+/* ── Sub-section ── */
+.sub{margin-bottom:36px}
+.sub-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);letter-spacing:.02em}
+
+/* ── Tables ── */
+.tbl-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;overflow-x:auto;margin-bottom:20px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:7px 12px;border-bottom:1px solid var(--border);background:var(--surface-raised);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--border-light);vertical-align:top;color:var(--text-2);line-height:1.5}
+tr:last-child td{border-bottom:none}
+.fn{font-family:var(--mono);font-size:12.5px;color:var(--leaf);white-space:nowrap}
+.ep{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all}
+.td-desc{font-size:13.5px}
+
+/* ── Badges ── */
+.m{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 6px;border-radius:4px;white-space:nowrap;vertical-align:middle}
+.m-get   {background:var(--get-bg); color:var(--get-c)}
+.m-post  {background:var(--post-bg);color:var(--post-c)}
+.m-patch {background:var(--patch-bg);color:var(--patch-c)}
+.m-put   {background:var(--patch-bg);color:var(--patch-c)}
+.m-del   {background:var(--del-bg); color:var(--del-c)}
+.perm{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:3px;background:var(--surface-raised);color:var(--muted);border:1px solid var(--border);white-space:nowrap}
+.type{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* ── Info box ── */
+.info{background:var(--surface-raised);border-left:3px solid var(--sage);padding:13px 16px;border-radius:0 6px 6px 0;font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.65}
+.info strong{color:var(--text)}
+
+code{font-family:var(--mono);font-size:12.5px;background:var(--surface-raised);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:var(--leaf)}
+
+/* ── Lists ── */
+ul.dl{list-style:none;padding:0;display:flex;flex-direction:column;gap:5px;margin-bottom:18px}
+ul.dl li{padding-left:14px;position:relative;font-size:14px;color:var(--text-2)}
+ul.dl li::before{content:'—';position:absolute;left:0;color:var(--border);font-family:var(--mono)}
+
+/* ── Screen icon row ── */
+.screen-hd{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.s-icon{width:40px;height:40px;background:var(--surface-raised);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+
+@media(max-width:720px){.sb{display:none}.content{padding:28px 20px 64px}}
+
+/* ── Print / PDF ── */
+.pdf-btn{display:flex;align-items:center;gap:8px;margin:12px 14px 0;padding:9px 14px;background:rgba(82,183,136,.18);border:1px solid rgba(82,183,136,.4);border-radius:7px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s;letter-spacing:.03em}
+.pdf-btn:hover{background:rgba(82,183,136,.32)}
+.pdf-btn svg{flex-shrink:0}
+@media print{
+  .sb{display:none!important}
+  body{display:block;background:#fff;color:#000;font-size:12pt}
+  .content{max-width:100%;padding:18pt 24pt 32pt}
+  .sec{page-break-inside:avoid;margin-bottom:32pt}
+  .eyebrow{color:#2D6A4F}
+  .sec-title{font-size:16pt;color:#000}
+  .sub-title{color:#000;border-bottom:1px solid #ccc}
+  .sec-desc{color:#333}
+  .fn,.ep,.type{color:#1B4332}
+  th{background:#f0f7f2;color:#333}
+  td{color:#333}
+  .m{border:1px solid currentColor}
+  .perm{border:1px solid #999;color:#555;background:#f5f5f5}
+  .tbl-wrap{border:1px solid #ccc;border-radius:4pt;overflow:visible}
+  .info{border-left:3px solid #2D6A4F;background:#f5faf6;color:#333}
+  code{background:#f0f0f0;border:1px solid #ddd;color:#1B4332}
+  a{color:#000;text-decoration:none}
+  .sec-divider{border-top:1px solid #ccc}
+}
+</style>
+
+<div class="sb">
+  <div class="sb-head">
+    <div class="sb-logo">
+      <div class="sb-mark">DA</div>
+      <span class="sb-name">DatumAgro</span>
+    </div>
+    <div class="sb-ver">v1.6.9 — Documentação Técnica</div>
+  </div>
+  <a class="pdf-btn" href="#" onclick="window.print();return false;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Baixar PDF
+  </a>
+  <nav class="sb-nav">
+    <div class="nav-group">
+      <span class="nav-label">Visão Geral</span>
+      <a class="nav-a" href="#visao-geral">Visão Geral</a>
+      <a class="nav-a" href="#autenticacao">Autenticação JWT</a>
+      <a class="nav-a" href="#multi-tenancy">Multi-tenancy</a>
+      <a class="nav-a" href="#offline-first">Offline-First</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-label">Backend</span>
+      <a class="nav-a" href="#cadastros">cadastros</a>
+      <a class="nav-a" href="#financeiro">financeiro</a>
+      <a class="nav-a" href="#logistica">logística</a>
+      <a class="nav-a" href="#usuarios">usuários</a>
+      <a class="nav-a" href="#core">core</a>
+      <a class="nav-a" href="#ajuda">ajuda</a>
+      <a class="nav-a" href="#assinaturas">assinaturas</a>
+      <a class="nav-a" href="#operacional">operacional</a>
+      <a class="nav-a" href="#rastreabilidade">rastreabilidade</a>
+      <a class="nav-a" href="#relatorios">relatórios</a>
+      <a class="nav-a" href="#notificacoes">notificações</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-label">Flutter Mobile</span>
+      <a class="nav-a" href="#fl-login">Login</a>
+      <a class="nav-a" href="#fl-dashboard">Dashboard</a>
+      <a class="nav-a" href="#fl-animais">Animais</a>
+      <a class="nav-a" href="#fl-financeiro">Financeiro</a>
+      <a class="nav-a" href="#fl-logistica">Logística</a>
+      <a class="nav-a" href="#fl-equipe">Equipe</a>
+      <a class="nav-a" href="#fl-romaneio">Romaneio</a>
+      <a class="nav-a" href="#fl-mapa">Mapa</a>
+      <a class="nav-a" href="#fl-perfil">Perfil</a>
+    </div>
+  </nav>
+</div>
+
+<main class="content">
+
+<!-- ══════════════════════════════════════════════════════ VISÃO GERAL -->
+<section class="sec" id="visao-geral">
+  <div class="eyebrow">Introdução</div>
+  <h1 class="sec-title">Visão Geral do Sistema</h1>
+  <p class="sec-desc">DatumAgro é uma plataforma SaaS de gestão pecuária multi-espécie. O backend é um serviço Django REST Framework hospedado no Railway; o app é Flutter offline-first com banco local Drift/SQLite. Toda a comunicação é autenticada via JWT (SimpleJWT).</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Stack</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Camada</th><th>Tecnologia</th><th>Detalhes</th></tr>
+        <tr><td class="fn">Backend</td><td class="type">Django 4 + DRF</td><td class="td-desc">Python, REST API, PostgreSQL (Railway), migrations, Celery opcional</td></tr>
+        <tr><td class="fn">Auth</td><td class="type">SimpleJWT</td><td class="td-desc">Access 24h · Refresh 30d · ROTATE_REFRESH_TOKENS · Blacklist on logout</td></tr>
+        <tr><td class="fn">Mobile</td><td class="type">Flutter 3</td><td class="td-desc">Dart, Drift (SQLite offline), flutter_secure_storage, flutter_map</td></tr>
+        <tr><td class="fn">Armazenamento</td><td class="type">Railway Volume</td><td class="td-desc">/app/apk_storage/ — APK e media; env APK_STORAGE_PATH / MEDIA_STORAGE_PATH</td></tr>
+        <tr><td class="fn">URL base</td><td class="type">Produção</td><td class="td-desc">https://datumagro-web-production.up.railway.app</td></tr>
+        <tr><td class="fn">Admin</td><td class="type">Django Admin</td><td class="td-desc">/datumagro-gestao/ (caminho não-padrão por segurança)</td></tr>
+        <tr><td class="fn">Versão app</td><td class="type">1.6.9 (+16)</td><td class="td-desc">config.dart → kAppVersion · pubspec version · core/views.py versao</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Espécies suportadas</div>
+    <div class="info">O sistema suporta <strong>5 espécies</strong>: <code>BOVINOS_CORTE</code>, <code>BOVINOS_LEITE</code>, <code>SUINOS</code>, <code>EQUINOS</code>, <code>OVINOS_CAPRINOS</code>. Campos, categorias e configurações do app variam por espécie.</div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Rotas raiz — urls.py</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Caminho</th><th>Destino</th></tr>
+        <tr><td class="ep">/api/token/</td><td class="td-desc">JWT obtain (SimpleJWT)</td></tr>
+        <tr><td class="ep">/api/token/refresh/</td><td class="td-desc">JWT refresh</td></tr>
+        <tr><td class="ep">/api/cadastros/</td><td class="td-desc">Router do app cadastros</td></tr>
+        <tr><td class="ep">/api/financeiro/</td><td class="td-desc">Router do app financeiro</td></tr>
+        <tr><td class="ep">/api/logistica/</td><td class="td-desc">Router do app logística</td></tr>
+        <tr><td class="ep">/api/usuarios/</td><td class="td-desc">Router do app usuários</td></tr>
+        <tr><td class="ep">/api/equipe/membros/</td><td class="td-desc">Lista membros da equipe (GET)</td></tr>
+        <tr><td class="ep">/api/equipe/convidar/</td><td class="td-desc">Envia convite (POST)</td></tr>
+        <tr><td class="ep">/api/equipe/aceitar/</td><td class="td-desc">Aceita convite por código/token (POST, AllowAny)</td></tr>
+        <tr><td class="ep">/api/equipe/membros/&lt;pk&gt;/remover/</td><td class="td-desc">Remove membro (DELETE)</td></tr>
+        <tr><td class="ep">/api/equipe/membros/&lt;pk&gt;/permissoes/</td><td class="td-desc">Atualiza permissões (PATCH)</td></tr>
+        <tr><td class="ep">/api/health/</td><td class="td-desc">Health check público</td></tr>
+        <tr><td class="ep">/api/versao/</td><td class="td-desc">Versão do app + URL de download</td></tr>
+        <tr><td class="ep">/baixar/apk/</td><td class="td-desc">Download do APK (Railway Volume)</td></tr>
+        <tr><td class="ep">/privacidade/</td><td class="td-desc">Política de privacidade (AllowAny, HTML)</td></tr>
+        <tr><td class="ep">/rastreabilidade/perfil/&lt;slug&gt;/</td><td class="td-desc">Perfil público do animal (AllowAny, HTML)</td></tr>
+        <tr><td class="ep">/painel/</td><td class="td-desc">Painel staff: lista clientes (is_staff)</td></tr>
+        <tr><td class="ep">/painel/usuarios/&lt;id&gt;/aprovar/</td><td class="td-desc">Aprova cliente (is_staff, POST)</td></tr>
+        <tr><td class="ep">/painel/usuarios/&lt;id&gt;/plano/</td><td class="td-desc">Atribui plano (is_staff, POST)</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ AUTENTICAÇÃO -->
+<section class="sec" id="autenticacao">
+  <div class="eyebrow">Segurança</div>
+  <h2 class="sec-title">Autenticação JWT</h2>
+  <p class="sec-desc">O sistema usa SimpleJWT. Todos os endpoints protegidos exigem o header <code>Authorization: Bearer &lt;access_token&gt;</code>. O Flutter gerencia o ciclo de vida dos tokens automaticamente.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Fluxo de tokens</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Token</th><th>Duração</th><th>Comportamento</th></tr>
+        <tr><td class="fn">Access Token</td><td class="type">24 horas</td><td class="td-desc">Enviado no header em toda requisição autenticada</td></tr>
+        <tr><td class="fn">Refresh Token</td><td class="type">30 dias</td><td class="td-desc">Armazenado em <code>flutter_secure_storage</code>; usado para renovar o access token</td></tr>
+        <tr><td class="fn">Auto-refresh</td><td class="type">Automático</td><td class="td-desc"><code>_authenticatedRequest()</code> no api.dart: ao receber 401, chama <code>refreshToken()</code> e retenta a requisição original uma vez</td></tr>
+        <tr><td class="fn">Blacklist</td><td class="type">On logout/delete</td><td class="td-desc">Ao fazer logout ou excluir conta, todos os refresh tokens são adicionados à blacklist do SimpleJWT</td></tr>
+        <tr><td class="fn">ROTATE_REFRESH</td><td class="type">Ativo</td><td class="td-desc">Cada refresh emite um novo refresh token (rotação automática)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints de autenticação</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/login/</td><td class="td-desc">Login principal — retorna access+refresh+tipo_especie+status_assinatura</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/token/refresh/</td><td class="td-desc">Renova access token com refresh token válido</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/registrar/</td><td class="td-desc">Cria Usuario + Cliente + Propriedade padrão; envia email de boas-vindas</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/me/alterar_senha/</td><td class="td-desc">Troca senha (requer senha atual)</td></tr>
+        <tr><td><span class="m m-del">DELETE</span></td><td class="ep">/api/usuarios/me/excluir_conta/</td><td class="td-desc">LGPD: anonimiza email (sha256), desativa conta, revoga todos os tokens</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ MULTI-TENANCY -->
+<section class="sec" id="multi-tenancy">
+  <div class="eyebrow">Arquitetura</div>
+  <h2 class="sec-title">Multi-tenancy</h2>
+  <p class="sec-desc">Cada recurso do sistema pertence a um <code>Cliente</code>. Todo ViewSet filtra automaticamente pelo cliente do usuário autenticado. Não há risco de vazamento de dados entre tenants.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Hierarquia de acesso</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Papel</th><th>tipo_usuario</th><th>Acesso</th></tr>
+        <tr><td class="fn">Proprietário</td><td class="type">PROPRIETARIO</td><td class="td-desc">Acesso total: todas as propriedades do cliente, CRUD completo, gerencia equipe e plano</td></tr>
+        <tr><td class="fn">Gerente</td><td class="type">GERENTE</td><td class="td-desc">Acesso a todas as propriedades; pode criar/editar dados; não gerencia plano</td></tr>
+        <tr><td class="fn">Funcionário</td><td class="type">FUNCIONARIO</td><td class="td-desc">Acesso restrito às propriedades no M2M <code>usuario.propriedades</code>; permissões granulares via JSONField</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Classes de permissão customizadas</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Classe</th><th>Regra</th></tr>
+        <tr><td class="fn">IsProprietario</td><td class="td-desc">Apenas <code>tipo_usuario == PROPRIETARIO</code></td></tr>
+        <tr><td class="fn">IsGerente</td><td class="td-desc">PROPRIETARIO ou GERENTE</td></tr>
+        <tr><td class="fn">IsProprietarioOrGerente</td><td class="td-desc">PROPRIETARIO ou GERENTE — bloqueia FUNCIONARIO em endpoints estratégicos</td></tr>
+        <tr><td class="fn">IsOperadorCampo</td><td class="td-desc">GET: todos autenticados; POST/PATCH: todos; DELETE: somente quem tem <code>can_delete_dados</code></td></tr>
+        <tr><td class="fn">PermissaoPropriedades</td><td class="td-desc">GET: <code>can_view_propriedades</code>; escrita: somente PROPRIETARIO</td></tr>
+        <tr><td class="fn">PermissaoFinanceiro</td><td class="td-desc">GET: <code>can_view_financeiro</code>; escrita: <code>can_edit_financeiro</code></td></tr>
+        <tr><td class="fn">IsImportacaoInternacional</td><td class="td-desc">Verifica <code>plano.acesso_importacao_internacional</code> para embarques IMP</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Permissões granulares do Funcionário</div>
+    <div class="info">Armazenadas como JSONField em <code>Usuario</code>: <code>can_view_animais</code>, <code>can_edit_animais</code>, <code>can_view_financeiro</code>, <code>can_edit_financeiro</code>, <code>can_view_relatorios</code>, <code>can_manage_usuarios</code>, <code>can_delete_dados</code>, <code>can_manage_lotes</code>, <code>can_view_vacinas</code>, <code>can_edit_vacinas</code>, <code>can_view_alertas</code>, <code>can_view_propriedades</code>.</div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Cadeia de lookup de cliente (3 níveis)</div>
+    <div class="info">Toda função que resolve o cliente do usuário segue essa ordem: <strong>1.</strong> M2M <code>user.propriedades → propriedade.cliente</code> · <strong>2.</strong> <code>Cliente.objects.filter(email_contato=user.email).first()</code> · <strong>3.</strong> <code>Cliente.objects.first()</code> (se count==1 — fallback single-tenant). Implementado em <code>BaseViewSet._get_user_cliente</code>, <code>_get_user_cliente_sync</code>, <code>_get_cliente_equipe</code> e <code>IsImportacaoInternacional</code>.</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ OFFLINE-FIRST -->
+<section class="sec" id="offline-first">
+  <div class="eyebrow">Arquitetura</div>
+  <h2 class="sec-title">Arquitetura Offline-First</h2>
+  <p class="sec-desc">O app funciona sem conexão. O banco local Drift (SQLite) é a fonte de verdade no dispositivo. Alterações são enfileiradas e sincronizadas com o servidor quando a conexão volta.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Componentes</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Componente</th><th>Papel</th></tr>
+        <tr><td class="fn">Drift (SQLite)</td><td class="td-desc">Banco local no dispositivo; replica os principais modelos (Animal, RegistroPesagem, etc.)</td></tr>
+        <tr><td class="fn">SyncService</td><td class="td-desc">Monitora conectividade; ao reconectar, envia fila de operações para <code>POST /api/cadastros/sync/</code></td></tr>
+        <tr><td class="fn">Fila de operações</td><td class="td-desc">Cada CRUD offline é salvo como operação pendente: <code>{tipo, dados, timestamp}</code></td></tr>
+        <tr><td class="fn">Delta sync endpoint</td><td class="td-desc">Recebe operações do cliente, aplica no servidor, retorna mudanças do servidor desde o último timestamp</td></tr>
+        <tr><td class="fn">flutter_secure_storage</td><td class="td-desc">Persiste tokens JWT, info do usuário, versão de update dispensada — sobrevive reinicializações</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoint de sincronização</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/sync/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Recebe lista de operações offline; aplica creates/updates/deletes; retorna mudanças do servidor desde <code>last_sync</code></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ CADASTROS -->
+<section class="sec" id="cadastros">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">cadastros</h2>
+  <p class="sec-desc">Núcleo do sistema. Gerencia propriedades rurais, animais, pesagens, piquetes, vacinas, aplicações vacinais, informações genéticas e fichas técnicas. Contém também os endpoints de romaneio e sincronização offline.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelos</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Modelo</th><th>Campos principais</th><th>Relações</th></tr>
+        <tr>
+          <td class="fn">Cliente</td>
+          <td class="td-desc"><code>nome_empresa</code>, <code>cnpj_cpf</code>, <code>email_contato</code>, <code>telefone</code>, <code>tipo_especie</code>, <code>status</code> (PENDENTE/ATIVO/SUSPENSO/CANCELADO), <code>data_cadastro</code></td>
+          <td class="td-desc">OneToOne ← Assinatura</td>
+        </tr>
+        <tr>
+          <td class="fn">Propriedade</td>
+          <td class="td-desc"><code>nome_propriedade</code>, <code>cidade</code>, <code>estado</code>, <code>hectares</code>, <code>objetivo_producao</code> (CRIA/RECRIA/ENGORDA), <code>geojson_car</code>, <code>geojson_piquetes_talhoes</code>, <code>geojson_infraestrutura</code></td>
+          <td class="td-desc">FK → Cliente; M2M ← Usuario</td>
+        </tr>
+        <tr>
+          <td class="fn">Animal</td>
+          <td class="td-desc"><code>brinco</code>, <code>nome</code>, <code>especie</code>, <code>sexo</code>, <code>categoria</code>, <code>raca</code> (free text), <code>data_nascimento</code>, <code>peso_atual</code>, <code>status</code> (ATIVO/VENDIDO/MORTO/ABATIDO), <code>pai</code> (self-FK), <code>mae</code> (self-FK)</td>
+          <td class="td-desc">FK → Propriedade; FK → Piquete (null); unique_together (propriedade, brinco)</td>
+        </tr>
+        <tr>
+          <td class="fn">RegistroPesagem</td>
+          <td class="td-desc"><code>data_pesagem</code>, <code>peso_kg</code>, <code>observacoes</code>, <code>metodo</code> (MANUAL/AUTOMATICO_RFID/BALANCA_BT)</td>
+          <td class="td-desc">FK → Animal</td>
+        </tr>
+        <tr>
+          <td class="fn">Piquete</td>
+          <td class="td-desc"><code>nome</code>, <code>area_hectares</code>, <code>tipo_vegetacao</code>, <code>capacidade_maxima</code></td>
+          <td class="td-desc">FK → Propriedade</td>
+        </tr>
+        <tr>
+          <td class="fn">Vacina</td>
+          <td class="td-desc"><code>nome</code>, <code>fabricante</code>, <code>tipo_doenca</code>, <code>dose_ml</code>, <code>intervalo_dias</code></td>
+          <td class="td-desc">FK → Cliente</td>
+        </tr>
+        <tr>
+          <td class="fn">AplicacaoVacina</td>
+          <td class="td-desc"><code>data_aplicacao</code>, <code>dose_ml</code>, <code>lote_vacina</code>, <code>proxima_dose</code>, <code>veterinario</code></td>
+          <td class="td-desc">FK → Animal; FK → Vacina</td>
+        </tr>
+        <tr>
+          <td class="fn">InformacaoGenetica</td>
+          <td class="td-desc"><code>registro_genealogico</code>, <code>touro_pai_registro</code>, <code>vaca_mae_registro</code>, <code>ebv_ganho_peso</code>, <code>ebv_acabamento</code>, <code>ebv_leite</code></td>
+          <td class="td-desc">OneToOne → Animal</td>
+        </tr>
+        <tr>
+          <td class="fn">FichaTecnicaAnimal</td>
+          <td class="td-desc"><code>status_saude</code> (BOM/ATENCAO/CRITICO), <code>ultima_data_pesagem</code>, <code>gmd_diario</code>, <code>gmd_semanal</code>, <code>gmd_quinzenal</code>, <code>gmd_mensal</code>, <code>gmd_anual</code>, <code>piquete_atual</code></td>
+          <td class="td-desc">OneToOne → Animal; FK → Piquete (null)</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/propriedades/</td><td><span class="perm">PermissaoPropriedades</span></td><td class="td-desc">Lista propriedades do cliente</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/propriedades/</td><td><span class="perm">IsProprietario</span></td><td class="td-desc">Cria nova propriedade</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/propriedades/&lt;id&gt;/importar_car/</td><td><span class="perm">IsProprietario</span></td><td class="td-desc">Faz upload e parse de arquivo GeoJSON/KML do CAR</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/cadastros/propriedades/&lt;id&gt;/atualizar_camadas/</td><td><span class="perm">IsProprietario</span></td><td class="td-desc">Salva piquetes e infraestrutura em GeoJSON</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/animais/</td><td><span class="perm">PermissaoAnimais</span></td><td class="td-desc">Lista animais do cliente (filtrável por propriedade, especie, status)</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/animais/</td><td><span class="perm">can_edit_animais</span></td><td class="td-desc">Cadastra animal; valida limite de animais do plano</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/cadastros/animais/&lt;id&gt;/</td><td><span class="perm">can_edit_animais</span></td><td class="td-desc">Edita animal</td></tr>
+        <tr><td><span class="m m-del">DELETE</span></td><td class="ep">/api/cadastros/animais/&lt;id&gt;/</td><td><span class="perm">can_delete_dados</span></td><td class="td-desc">Remove animal</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/animais/&lt;id&gt;/genealogia/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Retorna árvore genealógica (pai, mãe, filhos)</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/animais/&lt;id&gt;/registrar_pesagem/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Cria pesagem, recalcula GMD, atualiza FichaTecnicaAnimal</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/pesagens/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista pesagens (filtrar por <code>?animal=id</code>)</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/fichas/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista fichas técnicas com dados computados</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/cadastros/fichas/&lt;id&gt;/mover_piquete/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Reatribui animal a outro piquete</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/cadastros/fichas/&lt;id&gt;/atualizar_saude/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Define status_saude (BOM/ATENCAO/CRITICO)</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/fichas/&lt;id&gt;/relatorio_completo/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Relatório completo do animal</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/romaneio/calcular/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Calcula romaneio de pesagem; aceita <code>gerar_pdf=true</code> para retorno de base64 WeasyPrint</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/pesagens/automatica/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Integração RFID/Bluetooth: recebe brinco+peso, cria pesagem, dispara alerta de GMD baixo</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/sync/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Sincronização offline-first: aplica delta de operações e retorna mudanças do servidor</td></tr>
+        <tr><td colspan="4" style="padding:6px 12px;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface-raised)">CRUD padrão também disponível para: /vacinas/, /aplicacoes-vacina/, /piquetes/, /informacoes-geneticas/</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Serializadores relevantes</div>
+    <ul class="dl">
+      <li><code>AnimalSerializer</code> — campos computados: <code>pai_brinco</code>, <code>mae_brinco</code>, <code>idade_meses</code>; aceita raça em texto livre</li>
+      <li><code>FichaTecnicaAnimalSerializer</code> — campos computados: <code>animal_brinco</code>, <code>piquete_nome</code>, <code>vacinas_pendentes</code>, <code>ultima_pesagem_info</code></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FINANCEIRO -->
+<section class="sec" id="financeiro">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">financeiro</h2>
+  <p class="sec-desc">Controle financeiro da propriedade rural. Gerencia transações de receita, despesa e caixa inicial, categorias e formas de pagamento. Oferece relatórios de fluxo de caixa com cache.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelos</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Modelo</th><th>Campos principais</th><th>Relações</th></tr>
+        <tr>
+          <td class="fn">Categoria</td>
+          <td class="td-desc"><code>nome</code>, <code>tipo</code> (RECEITA/CUSTO)</td>
+          <td class="td-desc">FK → Cliente; unique_together (cliente, nome)</td>
+        </tr>
+        <tr>
+          <td class="fn">Transacao</td>
+          <td class="td-desc"><code>tipo</code> (RECEITA/DESPESA/INICIAL), <code>status</code> (PENDENTE/PAGO/CANCELADO), <code>descricao</code>, <code>valor</code>, <code>data</code>, <code>categoria_nome</code>, <code>observacao</code></td>
+          <td class="td-desc">FK → Cliente; FK → Categoria (null); FK → Animal (null)</td>
+        </tr>
+        <tr>
+          <td class="fn">FormaPagamento</td>
+          <td class="td-desc"><code>tipo</code> (CC/CD/BL/PX), <code>titular</code>, <code>numero_cartao</code>, <code>validade</code>, <code>bandeira</code>, <code>chave_pix</code>, <code>principal</code></td>
+          <td class="td-desc">FK → Usuario; save() garante único principal por usuário</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/transacoes/</td><td><span class="perm">can_view_financeiro</span></td><td class="td-desc">Lista transações; filtrável por <code>?tipo=RECEITA|DESPESA|INICIAL</code></td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/financeiro/transacoes/</td><td><span class="perm">can_edit_financeiro</span></td><td class="td-desc">Cria transação; se <code>categoria</code> for string, cria automaticamente via get_or_create</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/transacoes/fluxo_caixa/</td><td><span class="perm">can_view_financeiro</span></td><td class="td-desc">Totais de receita, despesa e saldo atual; cache 5 min</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/transacoes/fluxo_caixa_mensal/</td><td><span class="perm">can_view_financeiro</span></td><td class="td-desc">Breakdown mensal de receitas vs despesas</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/transacoes/relatorio_mensal/</td><td><span class="perm">can_view_financeiro</span></td><td class="td-desc">Relatório mensal detalhado; cache 10 min; invalidado a cada escrita</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/categorias/</td><td><span class="perm">can_view_financeiro</span></td><td class="td-desc">Lista categorias do cliente</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/financeiro/formas-pagamento/&lt;id&gt;/definir_principal/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Marca como principal, desmarca as demais</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ LOGÍSTICA -->
+<section class="sec" id="logistica">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">logística</h2>
+  <p class="sec-desc">Gestão de embarques de exportação (EXP) e importação (IMP) de animais e produtos pecuários. Importação requer plano com <code>acesso_importacao_internacional=True</code>.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelos</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Modelo</th><th>Campos principais</th><th>Relações</th></tr>
+        <tr>
+          <td class="fn">Embarque</td>
+          <td class="td-desc"><code>numero_embarque</code> (auto: EMP-YYYY-NNNN), <code>tipo</code> (EXP/IMP), <code>status</code> (PLA/PRE/NAV/POR/FIN/CAN), <code>porto_origem</code>, <code>porto_destino</code>, <code>pais_parceiro</code>, <code>navio</code>, <code>data_prevista_embarque</code>, <code>data_prevista_chegada</code>, <code>data_real_embarque</code>, <code>data_real_chegada</code>, <code>valor_total</code></td>
+          <td class="td-desc">FK → Cliente (responsavel); clean() valida ordem das datas</td>
+        </tr>
+        <tr>
+          <td class="fn">ItemEmbarque</td>
+          <td class="td-desc"><code>animal</code> (null — para carnes/subprodutos), <code>descricao_produto</code>, <code>quantidade</code>, <code>peso_kg</code>, <code>valor_unitario</code></td>
+          <td class="td-desc">FK → Embarque; FK → Animal (null)</td>
+        </tr>
+        <tr>
+          <td class="fn">RastreamentoEmbarque</td>
+          <td class="td-desc"><code>status_anterior</code>, <code>status_novo</code>, <code>observacoes</code>, <code>arquivo_anexo</code>, <code>data_registro</code></td>
+          <td class="td-desc">FK → Embarque; criado automaticamente a cada mudança de status</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Status de embarque</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Código</th><th>Rótulo</th><th>Significado</th></tr>
+        <tr><td class="fn">PLA</td><td>Planejado</td><td class="td-desc">Embarque criado, ainda em planejamento</td></tr>
+        <tr><td class="fn">PRE</td><td>Pré-Embarque</td><td class="td-desc">Documentação e carga sendo preparadas</td></tr>
+        <tr><td class="fn">NAV</td><td>Em Trânsito</td><td class="td-desc">Navio em viagem</td></tr>
+        <tr><td class="fn">POR</td><td>No Porto</td><td class="td-desc">Carga chegou ao porto de destino</td></tr>
+        <tr><td class="fn">FIN</td><td>Finalizado</td><td class="td-desc">Processo concluído com sucesso</td></tr>
+        <tr><td class="fn">CAN</td><td>Cancelado</td><td class="td-desc">Embarque cancelado</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/logistica/embarques/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista embarques; filtrável por <code>tipo</code>, <code>status</code>, <code>porto_destino</code></td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/logistica/embarques/</td><td><span class="perm">IsProprietarioOrGerente</span></td><td class="td-desc">Cria embarque; IMP requer IsImportacaoInternacional</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/logistica/embarques/&lt;id&gt;/</td><td><span class="perm">IsProprietarioOrGerente</span></td><td class="td-desc">Atualiza status e campos; mudança de status gera RastreamentoEmbarque</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/logistica/itens/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista itens de embarque; filtrável por <code>embarque</code>, <code>animal</code></td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/logistica/itens/</td><td><span class="perm">IsProprietarioOrGerente</span></td><td class="td-desc">Adiciona item ao embarque</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ USUÁRIOS -->
+<section class="sec" id="usuarios">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">usuários</h2>
+  <p class="sec-desc">Gerencia usuários, autenticação, equipe e conformidade LGPD. O modelo <code>Usuario</code> é um <code>AbstractBaseUser</code> com <code>email</code> como campo de autenticação.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelo Usuario</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr>
+        <tr><td class="fn">email</td><td class="type">EmailField (USERNAME_FIELD)</td><td class="td-desc">Identificador único de login</td></tr>
+        <tr><td class="fn">nome_completo</td><td class="type">CharField</td><td class="td-desc">Nome de exibição</td></tr>
+        <tr><td class="fn">tipo_usuario</td><td class="type">CharField choices</td><td class="td-desc">PROPRIETARIO / GERENTE / FUNCIONARIO</td></tr>
+        <tr><td class="fn">propriedades</td><td class="type">ManyToMany → Propriedade</td><td class="td-desc">Controla acesso de FUNCIONARIO às propriedades</td></tr>
+        <tr><td class="fn">permissoes_json</td><td class="type">JSONField</td><td class="td-desc">12 flags booleanas de permissão granular</td></tr>
+        <tr><td class="fn">is_active</td><td class="type">BooleanField</td><td class="td-desc">False após exclusão LGPD</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Modelo ConviteEquipe</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr>
+        <tr><td class="fn">email_convidado</td><td class="type">EmailField</td><td></td></tr>
+        <tr><td class="fn">cargo</td><td class="type">CharField</td><td class="td-desc">OPERADOR / GERENTE / VETERINARIO</td></tr>
+        <tr><td class="fn">codigo</td><td class="type">CharField(6)</td><td class="td-desc">Código exibido ao usuário para entrada manual</td></tr>
+        <tr><td class="fn">token</td><td class="type">CharField(72)</td><td class="td-desc">Token URL-safe para link de convite por email</td></tr>
+        <tr><td class="fn">data_expiracao</td><td class="type">DateTimeField</td><td class="td-desc">created_at + 48h; verificado por <code>is_valid</code></td></tr>
+        <tr><td class="fn">aceito</td><td class="type">BooleanField</td><td class="td-desc">True após aceite; convite é invalidado</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/registrar/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Cria Usuario + Cliente + Propriedade padrão; email de boas-vindas + notificação admin</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/login/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Valida credenciais, retorna JWT + tipo_especie + status_assinatura</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/usuarios/me/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Dados do usuário atual + permissões formatadas para o Flutter</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/usuarios/me/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Atualiza <code>nome_completo</code> e <code>telefone</code></td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/me/alterar_senha/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Valida senha atual + aplica nova senha</td></tr>
+        <tr><td><span class="m m-del">DELETE</span></td><td class="ep">/api/usuarios/me/excluir_conta/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">LGPD: email → email+sha256[:8], is_active=False, blacklist JWT</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/equipe/membros/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista membros com cargo, permissões e data de ingresso</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/equipe/convidar/</td><td><span class="perm">IsProprietario</span></td><td class="td-desc">Cria ConviteEquipe; envia email; retorna <code>codigo</code> de 6 dígitos</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/equipe/aceitar/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Aceita convite por <code>codigo</code> ou <code>token</code>; cria FUNCIONARIO e vincula propriedades</td></tr>
+        <tr><td><span class="m m-del">DELETE</span></td><td class="ep">/api/equipe/membros/&lt;pk&gt;/remover/</td><td><span class="perm">IsProprietario</span></td><td class="td-desc">Remove membro da equipe; limpa M2M de propriedades</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/equipe/membros/&lt;pk&gt;/permissoes/</td><td><span class="perm">IsProprietario</span></td><td class="td-desc">Atualiza flags de permissão granular do membro</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ CORE -->
+<section class="sec" id="core">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">core</h2>
+  <p class="sec-desc">Endpoints transversais: dashboard com KPIs agregados, onboarding de novos clientes, versão do app e painel de staff.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/core/dashboard/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">7 KPIs: total animais, animais ativos, peso médio, GMD médio, receita/despesa mensal, saldo</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/core/onboarding/&lt;step&gt;/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Steps 2-4: salva dados da fazenda → dados operacionais → finaliza conta (status ATIVO)</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/versao/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Retorna <code>{versao, url_download, obrigatorio, novidades}</code></td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/health/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Health check para Railway: <code>{status: "ok"}</code></td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/painel/</td><td><span class="perm">is_staff</span></td><td class="td-desc">Lista todos os clientes com status de assinatura</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/painel/usuarios/&lt;id&gt;/aprovar/</td><td><span class="perm">is_staff</span></td><td class="td-desc">Define cliente status=ATIVO</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/painel/usuarios/&lt;id&gt;/suspender/</td><td><span class="perm">is_staff</span></td><td class="td-desc">Define cliente status=PENDENTE</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/painel/usuarios/&lt;id&gt;/plano/</td><td><span class="perm">is_staff</span></td><td class="td-desc">Atribui plano ao cliente</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ AJUDA -->
+<section class="sec" id="ajuda">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">ajuda</h2>
+  <p class="sec-desc">Sistema de guias contextuais por módulo e espécie. O conteúdo é servido de forma adaptada à espécie do cliente.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelo GuiaModulo</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr>
+        <tr><td class="fn">modulo_slug</td><td class="type">CharField</td><td class="td-desc">Ex: "dashboard", "animais", "financeiro"</td></tr>
+        <tr><td class="fn">especie</td><td class="type">CharField choices</td><td class="td-desc">Uma das 5 espécies + <code>GLOBAL</code>; unique_together (modulo_slug, especie)</td></tr>
+        <tr><td class="fn">titulo</td><td class="type">CharField</td><td></td></tr>
+        <tr><td class="fn">conteudo_como_usar</td><td class="type">TextField</td><td class="td-desc">Instruções de uso exibidas no app</td></tr>
+        <tr><td class="fn">dicas_agronomicas</td><td class="type">TextField</td><td class="td-desc">Dicas técnicas específicas por espécie</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoint</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/ajuda/&lt;modulo_slug&gt;/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Resolve espécie do cliente; retorna guia específico ou fallback GLOBAL</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ ASSINATURAS -->
+<section class="sec" id="assinaturas">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">assinaturas</h2>
+  <p class="sec-desc">Planos de assinatura e controle de limites. O plano define o limite de animais, número de funcionários, acesso a importação internacional e expiração da assinatura.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelos</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Modelo</th><th>Campos principais</th><th>Regras</th></tr>
+        <tr>
+          <td class="fn">Plano</td>
+          <td class="td-desc"><code>nome</code> (Digital/Conectado/Elite), <code>preco_mensal</code>, <code>limite_animais</code> (null=ilimitado), <code>max_funcionarios</code>, <code>acesso_importacao_internacional</code>, <code>recursos</code> (JSONField list), <code>highlight</code></td>
+          <td class="td-desc"><code>limite_animais=null</code> → sem restrição; verificado em <code>Animal.clean()</code></td>
+        </tr>
+        <tr>
+          <td class="fn">Assinatura</td>
+          <td class="td-desc"><code>data_inicio</code>, <code>data_vencimento</code> (= inicio + 30 dias), <code>status</code> (ATIVO/VENCIDO/CANCELADO)</td>
+          <td class="td-desc">OneToOne → Cliente; FK → Plano; <code>save()</code> calcula vencimento automaticamente</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/assinaturas/planos/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Lista planos públicos (sem preço); usado na tela de onboarding</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/assinaturas/minha/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Retorna assinatura + plano do cliente autenticado</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ OPERACIONAL -->
+<section class="sec" id="operacional">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">operacional</h2>
+  <p class="sec-desc">Manejo sanitário, registros reprodutivos, lotes de animais, produtos sanitários e gestão de piquetes com rotação de pastagens.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelos</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Modelo</th><th>Campos principais</th><th>Relações</th></tr>
+        <tr>
+          <td class="fn">ProdutoSanitario</td>
+          <td class="td-desc"><code>nome</code>, <code>principio_ativo</code>, <code>fabricante</code>, <code>tipo</code> (VACINA/ANTIBIOTICO/ANTIPARASITARIO/VITAMINA/OUTRO), <code>unidade_medida</code>, <code>estoque_atual</code>, <code>estoque_minimo</code></td>
+          <td class="td-desc">FK → Cliente</td>
+        </tr>
+        <tr>
+          <td class="fn">ManejoSanitario</td>
+          <td class="td-desc"><code>data_aplicacao</code>, <code>dose</code>, <code>via_aplicacao</code>, <code>veterinario</code>, <code>proxima_aplicacao</code>, <code>observacoes</code></td>
+          <td class="td-desc">FK → Animal; FK → ProdutoSanitario</td>
+        </tr>
+        <tr>
+          <td class="fn">RegistroReprodutivo</td>
+          <td class="td-desc"><code>tipo</code> (CIO/COBERTURA/PRENHEZ/PARTO/ABORTO/INSEMINACAO), <code>data_evento</code>, <code>touro_ou_semen</code>, <code>resultado</code>, <code>ordem_parto</code> (auto em PARTO)</td>
+          <td class="td-desc">FK → Animal; save() calcula ordem_parto</td>
+        </tr>
+        <tr>
+          <td class="fn">Lote</td>
+          <td class="td-desc"><code>nome</code>, <code>descricao</code>, <code>data_formacao</code>, <code>ativo</code></td>
+          <td class="td-desc">FK → Cliente; M2M → Animal</td>
+        </tr>
+        <tr>
+          <td class="fn">Piquete (operacional)</td>
+          <td class="td-desc"><code>nome</code>, <code>area_ha</code>, <code>tipo_capim</code> (BRAQUIARIA/MOMBACA/TANZANIA/TIFTON/OTRO), <code>status</code> (DESCANSANDO/OCUPADO/REFORMA), <code>dias_descanso</code>, <code>dias_uso</code>, <code>capacidade_ua</code></td>
+          <td class="td-desc">FK → Propriedade; FK → Lote (lote_atual, null)</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/manejos-sanitarios/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista manejos; filtrável por <code>?animal=id</code></td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/operacional/manejos-sanitarios/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Registra manejo sanitário</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/registros-reprodutivos/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista registros; filtrável por <code>?animal=id</code></td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/operacional/registros-reprodutivos/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Registra evento reprodutivo; PARTO auto-incrementa ordem_parto</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/lotes/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista lotes do cliente</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/piquetes/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista piquetes operacionais</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/piquetes/recomendar/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Recomendação de rotação de pastagem baseada em dias_descanso e capacidade</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/produtos-sanitarios/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista estoque de produtos sanitários</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ RASTREABILIDADE -->
+<section class="sec" id="rastreabilidade">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">rastreabilidade</h2>
+  <p class="sec-desc">Perfis públicos de animais acessíveis via QR Code. Permite ao consumidor final consultar a origem do animal sem autenticação.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Modelo PerfilPublicoAnimal</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr>
+        <tr><td class="fn">slug</td><td class="type">SlugField</td><td class="td-desc">Auto-gerado a partir de brinco + id do animal</td></tr>
+        <tr><td class="fn">is_publico</td><td class="type">BooleanField</td><td class="td-desc">Somente perfis públicos são visíveis na URL pública</td></tr>
+        <tr><td class="fn">descricao_publica</td><td class="type">TextField</td><td class="td-desc">Texto livre para o consumidor final</td></tr>
+        <tr><td class="fn">foto_url</td><td class="type">URLField</td><td class="td-desc">Foto do animal para exibição pública</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/rastreabilidade/perfis/</td><td><span class="perm">IsProprietarioOrGerente</span></td><td class="td-desc">Lista perfis públicos do cliente</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/rastreabilidade/perfis/</td><td><span class="perm">IsProprietarioOrGerente</span></td><td class="td-desc">Cria perfil para um animal</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/rastreabilidade/perfis/&lt;id&gt;/gerar_qrcode/</td><td><span class="perm">IsProprietarioOrGerente</span></td><td class="td-desc">Gera QR Code como PNG base64 apontando para a URL pública</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/rastreabilidade/perfil/&lt;slug&gt;/</td><td><span class="perm">AllowAny</span></td><td class="td-desc">Página HTML pública do animal (consumidor final, sem auth)</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ RELATÓRIOS -->
+<section class="sec" id="relatorios">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">relatórios</h2>
+  <p class="sec-desc">Geração assíncrona de PDFs via WeasyPrint. A geração pode ser feita por Celery (quando disponível) ou de forma síncrona como fallback.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Modelo Relatorio</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr>
+        <tr><td class="fn">tipo</td><td class="type">CharField</td><td class="td-desc">Tipo de relatório solicitado</td></tr>
+        <tr><td class="fn">status</td><td class="type">CharField choices</td><td class="td-desc">GERANDO / CONCLUIDO / ERRO</td></tr>
+        <tr><td class="fn">arquivo</td><td class="type">FileField</td><td class="td-desc">PDF gerado armazenado no servidor</td></tr>
+        <tr><td class="fn">parametros</td><td class="type">JSONField</td><td class="td-desc">Parâmetros da solicitação (datas, filtros)</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Endpoints</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/relatorios/relatorios/gerar/</td><td><span class="perm">can_view_relatorios</span></td><td class="td-desc">Cria Relatorio com status=GERANDO; dispara Celery ou geração síncrona</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/relatorios/relatorios/&lt;id&gt;/download/</td><td><span class="perm">can_view_relatorios</span></td><td class="td-desc">Faz stream do PDF quando status=CONCLUIDO</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ NOTIFICAÇÕES -->
+<section class="sec" id="notificacoes">
+  <div class="eyebrow">Backend — App</div>
+  <h2 class="sec-title">notificações</h2>
+  <p class="sec-desc">Histórico de notificações enviadas por alertas do módulo de inteligência. Suporta canais: email, WhatsApp e push.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Modelo LogNotificacao</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr>
+        <tr><td class="fn">alerta</td><td class="type">FK → inteligencia.Alerta</td><td></td></tr>
+        <tr><td class="fn">canal</td><td class="type">CharField</td><td class="td-desc">EMAIL / WHATSAPP / PUSH</td></tr>
+        <tr><td class="fn">status</td><td class="type">CharField</td><td class="td-desc">ENVIADO / FALHOU / PENDENTE</td></tr>
+        <tr><td class="fn">mensagem</td><td class="type">TextField</td><td class="td-desc">Conteúdo enviado</td></tr>
+        <tr><td class="fn">data_envio</td><td class="type">DateTimeField</td><td></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Endpoint</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Permissão</th><th>Descrição</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/notificacoes/historico/</td><td><span class="perm">IsAuthenticated</span></td><td class="td-desc">Lista histórico de notificações do cliente, ordenado por data desc</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL LOGIN -->
+<section class="sec" id="fl-login">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Login</h2>
+  <p class="sec-desc">Ponto de entrada do app. Autentica o usuário e direciona para onboarding ou dashboard conforme o status da conta.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Fluxo principal</div>
+    <ul class="dl">
+      <li>Campos de email e senha com validação; botão "Entrar" chama <code>ApiService().login()</code></li>
+      <li>Fallback offline: se há token armazenado e sem conexão, navega direto para <code>/dashboard</code></li>
+      <li>Se <code>status_assinatura == PENDENTE</code> → redireciona para <code>/onboarding</code></li>
+      <li>Se <code>status_assinatura == ATIVO</code> → redireciona para <code>/dashboard</code></li>
+      <li>Tokens (access + refresh) salvos em <code>flutter_secure_storage</code></li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Dados</th></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/login/</td><td class="td-desc"><code>{email, password}</code> → access, refresh, tipo_especie, status_assinatura</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL DASHBOARD -->
+<section class="sec" id="fl-dashboard">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Dashboard</h2>
+  <p class="sec-desc">Hub central pós-login. Exibe KPIs da fazenda, versão do app e atalhos de navegação para todos os módulos.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Funcionalidades</div>
+    <ul class="dl">
+      <li>AppBar com título "DatumAgro" e subtítulo <code>v1.6.9</code></li>
+      <li>Card de destaque com GMD (Ganho Médio Diário) da semana</li>
+      <li>6 tiles de KPI: total animais, animais ativos, peso médio, receita mensal, despesa mensal, saldo</li>
+      <li>8 ações rápidas: Animais, Financeiro, Logística, Mapa, Equipe, Romaneio, Relatórios, Perfil</li>
+      <li>Verificação de versão: se <code>versao</code> do servidor ≠ <code>kAppVersion</code>, exibe dialog de atualização (obrigatória se <code>obrigatorio=true</code>)</li>
+      <li>Pull-to-refresh recalcula todos os KPIs</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/core/dashboard/</td><td class="td-desc">7 KPIs agregados do servidor</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/usuarios/me/</td><td class="td-desc">Nome do usuário para saudação</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/versao/</td><td class="td-desc">Verificação de atualização disponível</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL ANIMAIS -->
+<section class="sec" id="fl-animais">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Telas — Animais</h2>
+  <p class="sec-desc">Três telas interligadas: lista do rebanho, formulário de cadastro/edição e detalhe completo com 5 abas.</p>
+  <hr class="sec-divider">
+
+  <div class="sub">
+    <div class="sub-title">Lista do Rebanho (AnimalListScreen)</div>
+    <ul class="dl">
+      <li>Exibe animais do banco local Drift em tempo real (sem esperar API)</li>
+      <li>Busca por brinco/nome; chips de filtro por sexo e categoria</li>
+      <li>Scanner QR Code para localizar animal diretamente por brinco</li>
+      <li>FAB "+" visível somente se <code>can_edit_animais = true</code></li>
+      <li>SyncService sincroniza automaticamente ao reconectar</li>
+    </ul>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Formulário de Animal (AnimalForm)</div>
+    <ul class="dl">
+      <li>Modo criação e edição; campos adaptados por espécie via <code>_EspecieConfig</code></li>
+      <li>Campos: brinco, nome, espécie, sexo, categoria, raça (dropdown + campo livre quando "Outra/Mestiço"), data nascimento, peso, status, pai (lookup por brinco), mãe (lookup por brinco), piquete</li>
+      <li>Ao salvar: grava no Drift local + enfileira operação de sync</li>
+      <li>Após criação: navega direto para <code>AnimalDetailScreen</code></li>
+    </ul>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Detalhe do Animal (AnimalDetailScreen) — 5 abas</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Aba</th><th>Conteúdo e ações</th></tr>
+        <tr><td class="fn">Informações</td><td class="td-desc">Todos os campos do animal; botão editar; botão excluir com confirmação</td></tr>
+        <tr><td class="fn">Pesagens</td><td class="td-desc">Gráfico de histórico de peso (fl_chart); botão integração Bluetooth (flutter_blue_plus) ou entrada manual; exibe GMD por período</td></tr>
+        <tr><td class="fn">Fotos</td><td class="td-desc">Galeria de fotos (placeholder — ainda não implementado)</td></tr>
+        <tr><td class="fn">Saúde</td><td class="td-desc">Lista ManejoSanitario com produto, dose, data e próxima aplicação; formulário de novo manejo</td></tr>
+        <tr><td class="fn">Reprodução</td><td class="td-desc">Timeline de RegistroReprodutivo (CIO, cobertura, parto, etc.); formulário de novo registro</td></tr>
+      </table>
+    </div>
+    <ul class="dl">
+      <li>Botão compartilhar via WhatsApp: abre <code>wa.me/</code> com resumo do animal</li>
+      <li>Botão QR Code de rastreabilidade pública</li>
+    </ul>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/animais/&lt;id&gt;/</td><td class="td-desc">Detalhe completo do animal</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/pesagens/?animal=&lt;id&gt;</td><td class="td-desc">Histórico de pesagens</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/animais/&lt;id&gt;/registrar_pesagem/</td><td class="td-desc">Nova pesagem</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/manejos-sanitarios/?animal=&lt;id&gt;</td><td class="td-desc">Histórico de manejo</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/operacional/manejos-sanitarios/</td><td class="td-desc">Novo manejo sanitário</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/operacional/registros-reprodutivos/?animal=&lt;id&gt;</td><td class="td-desc">Histórico reprodutivo</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/operacional/registros-reprodutivos/</td><td class="td-desc">Novo evento reprodutivo</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/sync/</td><td class="td-desc">Sync offline (via SyncService, em background)</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL FINANCEIRO -->
+<section class="sec" id="fl-financeiro">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Financeiro</h2>
+  <p class="sec-desc">Gestão financeira da propriedade. Permite visualizar saldo, fluxo de caixa e lançar novas transações.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Funcionalidades</div>
+    <ul class="dl">
+      <li>Card de saldo com cor verde (positivo) ou vermelho (negativo)</li>
+      <li>Gráfico de barras: receitas vs despesas do mês</li>
+      <li>Lista de transações com 3 abas: TODAS / RECEITAS / DESPESAS</li>
+      <li>FAB "+" abre <code>_NovaTransacaoSheet</code>: seletor de tipo com 3 botões (Despesa vermelho · Receita verde · Caixa Inicial teal); campos de descrição, valor, data e categoria; ao selecionar "Caixa Inicial" preenche descrição automaticamente</li>
+      <li>Ao criar INICIAL, a descrição padrão "Caixa Inicial" é sugerida automaticamente</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/transacoes/fluxo_caixa/</td><td class="td-desc">Saldo total, receitas e despesas</td></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/financeiro/transacoes/</td><td class="td-desc">Lista de lançamentos (filtrado por tipo)</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/financeiro/transacoes/</td><td class="td-desc">Novo lançamento (RECEITA / DESPESA / INICIAL)</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL LOGÍSTICA -->
+<section class="sec" id="fl-logistica">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Logística</h2>
+  <p class="sec-desc">Visualização e gestão de embarques de exportação e importação. Cada card representa um embarque; o toque abre sheet de atualização de status.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Funcionalidades</div>
+    <ul class="dl">
+      <li>Barra de filtro horizontal com chips de status: TODOS, PLA, PRE, NAV, POR, FIN, CAN</li>
+      <li>Card por embarque: número, tipo (EXP/IMP com cor), status chip, rota, país, navio, data de embarque, valor USD</li>
+      <li>Toque no card abre <code>_StatusUpdateSheet</code>: lista de radio buttons com os 6 status → botão "Salvar status" chama PATCH</li>
+      <li>FAB "Novo Embarque": formulário com tipo, país parceiro, porto destino, porto origem (padrão: Porto do Açu), navio, datas de embarque e chegada</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/logistica/embarques/</td><td class="td-desc">Lista embarques (filtrado por status no cliente)</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/logistica/embarques/</td><td class="td-desc">Cria novo embarque</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/logistica/embarques/&lt;id&gt;/</td><td class="td-desc">Atualiza status do embarque</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL EQUIPE -->
+<section class="sec" id="fl-equipe">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Equipe</h2>
+  <p class="sec-desc">Gerenciamento de membros da equipe. Permite convidar novos funcionários por email e controlar quem tem acesso ao sistema.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Funcionalidades</div>
+    <ul class="dl">
+      <li>Lista de membros: avatar com inicial, nome, email, badge de cargo (Proprietário/Gerente/Veterinário/Operador), data de ingresso</li>
+      <li>Botão de remover (lixeira) por membro, com dialog de confirmação</li>
+      <li>FAB "Convidar": dialog com campo email + dropdown de cargo (OPERADOR/GERENTE/VETERINARIO); ao confirmar exibe o código de 6 dígitos retornado pelo servidor</li>
+      <li>O convidado entra no app com código ou link enviado por email (válido por 48h)</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/equipe/membros/</td><td class="td-desc">Lista membros com permissões</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/equipe/convidar/</td><td class="td-desc"><code>{email, cargo}</code> → retorna <code>codigo</code> de 6 dígitos</td></tr>
+        <tr><td><span class="m m-del">DELETE</span></td><td class="ep">/api/equipe/membros/&lt;pk&gt;/remover/</td><td class="td-desc">Remove membro e limpa propriedades vinculadas</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL ROMANEIO -->
+<section class="sec" id="fl-romaneio">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Romaneio</h2>
+  <p class="sec-desc">Calculadora de romaneio de pesagem para venda de gado. Calcula arrobas e valor total por animal e gera PDF oficial via backend.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Funcionalidades</div>
+    <ul class="dl">
+      <li>Seção de configuração: preço da arroba (R$), nome da fazenda, vendedor, comprador</li>
+      <li>Banner verde com totais em tempo real: qtd animais · total kg · total arrobas · valor total (calculado localmente sem API)</li>
+      <li>Lista dinâmica de animais: por linha — campo brinco, campo peso (kg), exibição de arrobas (peso/30), botão remover</li>
+      <li>Botão "Adicionar Animal" insere nova linha</li>
+      <li>Botão "Calcular Romaneio" envia ao servidor e exibe painel de resultado</li>
+      <li>Botão PDF (ícone): chama cálculo com <code>gerar_pdf=true</code>; backend retorna PDF base64 via WeasyPrint; botão de copiar/exportar aparece</li>
+      <li>Painel de resultado: data/hora, resumo por animal (brinco, raça, kg, arrobas, R$), totais</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Body</th></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/romaneio/calcular/</td><td class="td-desc"><code>{preco_arroba, animais:[{brinco,peso_kg}], nome_fazenda, vendedor, comprador, gerar_pdf}</code></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL MAPA -->
+<section class="sec" id="fl-mapa">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Mapa</h2>
+  <p class="sec-desc">Editor interativo de mapa da propriedade rural. Permite visualizar e desenhar polígonos de piquetes/talhões e marcar infraestrutura no mapa (flutter_map + OpenStreetMap).</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Camadas do mapa</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Camada</th><th>Fonte</th><th>Comportamento</th></tr>
+        <tr><td class="fn">CAR</td><td class="td-desc"><code>geojson_car</code> da Propriedade</td><td class="td-desc">Polígono verde semi-transparente; somente visualização (imutável)</td></tr>
+        <tr><td class="fn">Piquetes/Talhões</td><td class="td-desc"><code>geojson_piquetes_talhoes</code></td><td class="td-desc">Polígonos amarelos com rótulo de nome e área; editável</td></tr>
+        <tr><td class="fn">Infraestrutura</td><td class="td-desc"><code>geojson_infraestrutura</code></td><td class="td-desc">Marcadores emoji (bebedouro 💧, cocho 🧂, porteira, curral, sede, silo, bomba); pressão longa para excluir</td></tr>
+        <tr><td class="fn">Desenho em progresso</td><td class="td-desc">Local (não salvo)</td><td class="td-desc">Linha laranja com vértices enquanto usuário toca para desenhar um piquete</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Ações de edição</div>
+    <ul class="dl">
+      <li>Toolbar de visibilidade (overlay superior esquerdo): toggle de cada camada</li>
+      <li>Toolbar de desenho (overlay inferior): modo Piquete — toque para adicionar vértices, "Desfazer" remove último ponto, "Fechar Piquete" (≥3 pontos) abre dialog de nome e calcula área por fórmula de Shoelace esférica</li>
+      <li>Modo Infraestrutura: bottom sheet com 7 tipos de marcador; toque no mapa insere o marcador selecionado</li>
+      <li>Botão "Salvar" aparece no AppBar somente quando há mudanças não salvas (<code>_hasChanges</code>)</li>
+      <li>Cadastrar nova propriedade: bottom sheet com nome, cidade, UF (27 estados), área (ha), objetivo (CRIA/RECRIA/ENGORDA)</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/cadastros/propriedades/</td><td class="td-desc">Lista propriedades disponíveis</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/cadastros/propriedades/</td><td class="td-desc">Cadastra nova propriedade; exibe erro real da API em caso de falha</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/cadastros/propriedades/&lt;id&gt;/atualizar_camadas/</td><td class="td-desc">Persiste GeoJSON de piquetes e infraestrutura</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ FL PERFIL -->
+<section class="sec" id="fl-perfil">
+  <div class="eyebrow">Flutter Mobile</div>
+  <h2 class="sec-title">Tela — Perfil</h2>
+  <p class="sec-desc">Gerenciamento de conta, segurança e conformidade LGPD. Exibe todas as permissões do usuário atual e permite exclusão definitiva de conta.</p>
+  <hr class="sec-divider">
+  <div class="sub">
+    <div class="sub-title">Seções da tela</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Seção</th><th>Conteúdo e ações</th></tr>
+        <tr><td class="fn">Header</td><td class="td-desc">Avatar com inicial, nome completo, badge de tipo (Proprietário/Gerente/Funcionário com cores)</td></tr>
+        <tr><td class="fn">Dados pessoais</td><td class="td-desc">Email (somente leitura), telefone; botão "Editar" abre dialog para nome_completo e telefone</td></tr>
+        <tr><td class="fn">Permissões</td><td class="td-desc">12 flags exibidas com ✓ ou ✗; visível apenas para quem tem permissões configuradas (funcionários)</td></tr>
+        <tr><td class="fn">Segurança</td><td class="td-desc">Botão "Alterar senha": dialog com senha atual, nova senha, confirmação (mín. 6 chars)</td></tr>
+        <tr><td class="fn">Conta</td><td class="td-desc">"Sair" → limpa tokens, navega para /login; "Excluir minha conta" (vermelho) → dialog LGPD com confirmação de senha → anonimização irreversível</td></tr>
+        <tr><td class="fn">Rodapé</td><td class="td-desc">Exibe "DatumAgro v1.6.9" com <code>kAppVersion</code></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">Chamadas de API</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Método</th><th>Caminho</th><th>Propósito</th></tr>
+        <tr><td><span class="m m-get">GET</span></td><td class="ep">/api/usuarios/me/</td><td class="td-desc">Dados do usuário ao abrir a tela</td></tr>
+        <tr><td><span class="m m-patch">PATCH</span></td><td class="ep">/api/usuarios/me/</td><td class="td-desc">Salva nome_completo e telefone</td></tr>
+        <tr><td><span class="m m-post">POST</span></td><td class="ep">/api/usuarios/me/alterar_senha/</td><td class="td-desc">Troca de senha com validação da senha atual</td></tr>
+        <tr><td><span class="m m-del">DELETE</span></td><td class="ep">/api/usuarios/me/excluir_conta/</td><td class="td-desc">Exclusão LGPD — irreversível</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function(){
+  const links = document.querySelectorAll('.nav-a');
+  const sections = document.querySelectorAll('.sec');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.toggle('active', l.getAttribute('href') === '#'+id);
+        });
+      }
+    });
+  }, {rootMargin:'-20% 0px -70% 0px'});
+  sections.forEach(s => obs.observe(s));
+})();
+</script>

@@ -307,21 +307,29 @@ logging.config.dictConfig({
 })
 
 
-# 🚀 CONFIGURAÇÕES DE EMAIL (Notificações)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'DatumAgro <nexusia47@gmail.com>')
-# Evita que a conexão SMTP trave indefinidamente (Railway bloqueia portas SMTP)
-EMAIL_TIMEOUT = 10
+# 🚀 CONFIGURAÇÕES DE EMAIL
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'DatumAgro <equipe@datumagro.com.br>')
 
-# Se não houver credenciais de email, usar backend de console para dev
-if not EMAIL_HOST_USER:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+_sendgrid_key = os.getenv('SENDGRID_API_KEY', '')
+if _sendgrid_key:
+    # SendGrid via django-anymail (produção)
+    INSTALLED_APPS += ['anymail']
+    EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+    ANYMAIL = {'SENDGRID_API_KEY': _sendgrid_key}
+else:
+    # Fallback SMTP (configurável por env vars) ou console em dev
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    EMAIL_TIMEOUT = 10
+    EMAIL_BACKEND = (
+        'django.core.mail.backends.smtp.EmailBackend'
+        if EMAIL_HOST_USER
+        else 'django.core.mail.backends.console.EmailBackend'
+    )
 
 # Configurações do drf-spectacular (OpenAPI / Swagger)
 SPECTACULAR_SETTINGS = {

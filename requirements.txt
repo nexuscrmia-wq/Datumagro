@@ -41,6 +41,9 @@ python-dotenv
 python-decouple
 Pillow
 
+# --- Email ---
+django-anymail[sendgrid]
+
 # Monitoring and Security tools
 sentry-sdk>=1.7.0
 bandit>=1.7.4
