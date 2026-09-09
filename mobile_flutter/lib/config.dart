@@ -7,4 +7,4 @@ const String kApiBaseUrlEmulator = String.fromEnvironment(
 );
 
 // Versão do APK instalado — atualizar a cada release junto com pubspec.yaml
-const String kAppVersion = '1.6.9';
+const String kAppVersion = '1.7.0';
