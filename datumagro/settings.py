@@ -37,7 +37,12 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 🚀 SECURITY: Use environment variables for sensitive data
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-for-local-dev-only')
+_secret_key = os.getenv('SECRET_KEY', '')
+if not _secret_key:
+    if os.getenv('ENVIRONMENT', 'production') == 'production' and os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+        raise Exception('SECRET_KEY não definida. Configure a variável de ambiente no Railway.')
+    _secret_key = 'django-insecure-fallback-key-for-local-dev-only'
+SECRET_KEY = _secret_key
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'production') == 'production' or bool(os.getenv('RENDER'))
 
@@ -243,8 +248,8 @@ REST_FRAMEWORK = {
 
 # 🚀 CONFIGURAÇÃO JWT (Autenticação)
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
@@ -373,7 +378,7 @@ if IS_PRODUCTION:
     ]
     CORS_ALLOWED_ORIGINS = [o for o in CORS_ALLOWED_ORIGINS if o]
 else:
-    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",

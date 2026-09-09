@@ -17,7 +17,7 @@ from datumagro.apps.core.views import (
 from datumagro.apps.usuarios.views import (
     equipe_membros, equipe_convidar, equipe_aceitar,
     equipe_remover, equipe_permissoes, excluir_conta,
-    entrar_equipe_landing,
+    entrar_equipe_landing, logout_view,
 )
 
 urlpatterns = [
@@ -51,6 +51,7 @@ urlpatterns = [
     path('api/equipe/aceitar/', equipe_aceitar, name='equipe-aceitar'),
     path('api/equipe/membros/<int:pk>/remover/', equipe_remover, name='equipe-remover'),
     path('api/equipe/membros/<int:pk>/permissoes/', equipe_permissoes, name='equipe-permissoes'),
+    path('api/auth/logout/', logout_view, name='logout'),
     path('api/usuarios/excluir-conta/', excluir_conta, name='excluir-conta'),
 
     # Recuperação de senha via browser (link enviado por email)

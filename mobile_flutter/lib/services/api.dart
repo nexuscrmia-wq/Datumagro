@@ -153,6 +153,22 @@ class ApiService {
   }
 
   Future<void> logout() async {
+    final refresh = await _storage.read(key: 'refresh_token');
+    if (refresh != null && refresh.isNotEmpty) {
+      try {
+        final access = await _storage.read(key: 'access_token');
+        await http.post(
+          Uri.parse('$kApiBaseUrlEmulator/api/auth/logout/'),
+          headers: {
+            'Content-Type': 'application/json',
+            if (access != null) 'Authorization': 'Bearer $access',
+          },
+          body: json.encode({'refresh': refresh}),
+        );
+      } catch (_) {
+        // falha silenciosa — tokens locais serão limpos de qualquer forma
+      }
+    }
     await _storage.delete(key: 'access_token');
     await _storage.delete(key: 'refresh_token');
     await _storage.delete(key: 'user');

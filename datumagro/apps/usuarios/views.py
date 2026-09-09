@@ -758,6 +758,30 @@ def equipe_permissoes(request, pk):
 
 
 # ---------------------------------------------------------------------------
+# Logout — invalida o refresh token na blacklist
+# ---------------------------------------------------------------------------
+
+@api_view(['POST'])
+@pc([IsAuthenticated])
+def logout_view(request):
+    """
+    Body: { "refresh": "<refresh_token>" }
+    Insere o refresh token na blacklist do simplejwt para invalidação imediata.
+    O access token expira naturalmente (15 min).
+    """
+    refresh_token = request.data.get('refresh', '').strip()
+    if not refresh_token:
+        return Response({'detail': 'refresh token obrigatório.'}, status=400)
+    try:
+        from rest_framework_simplejwt.tokens import RefreshToken as RT
+        token = RT(refresh_token)
+        token.blacklist()
+    except Exception:
+        pass  # já blacklistado ou inválido — aceita sem erro
+    return Response({'detail': 'Logout realizado com sucesso.'}, status=200)
+
+
+# ---------------------------------------------------------------------------
 # Exclusão de conta — obrigatório Apple App Store
 # ---------------------------------------------------------------------------
 

@@ -8,10 +8,15 @@ from django.views.decorators.http import require_GET
 from datumagro.apps.cadastros.models import Animal, Propriedade
 from datumagro.apps.assinaturas.models import Assinatura
 from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.throttling import AnonRateThrottle
+
+
+class ApkDownloadThrottle(AnonRateThrottle):
+    rate = '10/hour'
 from django.utils import timezone
 from datetime import timedelta
 import uuid
@@ -60,16 +65,16 @@ def politica_privacidade(request):
     return render(request, 'privacidade.html')
 
 
+@api_view(['GET', 'HEAD'])
+@permission_classes([AllowAny])
+@throttle_classes([ApkDownloadThrottle])
 def download_apk(request):
-    """Serve o APK do DatumAgro. Aceita GET e HEAD (Chrome Android manda HEAD primeiro)."""
-    if request.method not in ('GET', 'HEAD'):
-        from django.http import HttpResponseNotAllowed
-        return HttpResponseNotAllowed(['GET', 'HEAD'])
+    """Serve o APK do DatumAgro. Limita 10 downloads/hora por IP (anti-scraping)."""
+    from django.http import HttpResponse
     apk_path = _apk_path()
     if not os.path.isfile(apk_path):
         raise Http404("APK não disponível no momento.")
     if request.method == 'HEAD':
-        from django.http import HttpResponse
         size = os.path.getsize(apk_path)
         resp = HttpResponse(content_type='application/vnd.android.package-archive')
         resp['Content-Length'] = size
