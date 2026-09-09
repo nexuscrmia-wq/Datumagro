@@ -566,6 +566,8 @@ from rest_framework.decorators import api_view, permission_classes as pc
 @pc([IsAuthenticated])
 def equipe_membros(request):
     """Lista todos os membros da equipe do mesmo cliente."""
+    if request.user.is_superuser or request.user.is_staff:
+        return Response({'is_superuser': True, 'membros': []})
     cliente = _get_cliente_equipe(request.user)
     if not cliente:
         return Response({'detail': 'Cliente não encontrado.'}, status=404)
@@ -582,6 +584,8 @@ def equipe_membros(request):
 @pc([IsAuthenticated, IsProprietario])
 def equipe_convidar(request):
     """Cria um ConviteEquipe (token + código) e retorna os detalhes."""
+    if request.user.is_superuser or request.user.is_staff:
+        return Response({'detail': 'Superusuários não pertencem a um tenant. Use uma conta de proprietário.'}, status=400)
     cliente = _get_cliente_equipe(request.user)
     if not cliente:
         return Response({'detail': 'Cliente não encontrado. Crie um cliente primeiro.'}, status=400)
