@@ -1,9 +1,9 @@
 [build]
-builder = "NIXPACKS"
+builder = "nixpacks"
 
 [deploy]
-startCommand = "sh start.sh"
-healthcheckPath = "/api/health/"
-healthcheckTimeout = 120
-restartPolicyType = "ON_FAILURE"
+startCommand = "python manage.py migrate --noinput && python manage.py seed_guias && gunicorn datumagro.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --worker-class sync --timeout 60 --access-logfile -"
+healthcheckPath = "/ping/"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3

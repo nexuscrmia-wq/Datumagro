@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,11 @@ import '../config.dart';
 
 class ApiService {
   final _storage = const FlutterSecureStorage();
+
+  // Mutex para garantir que apenas uma rotação de refresh token aconteça por vez.
+  // Sem isso, N requisições simultâneas com token expirado disparariam N refreshes,
+  // e o segundo chegaria ao servidor com um token já blacklistado pela rotação do primeiro.
+  Future<bool>? _refreshInProgress;
 
   final List<String> _refreshPaths = [
     '/api/token/refresh/',
@@ -175,7 +181,16 @@ class ApiService {
   }
 
   /// Tenta renovar o access token usando o refresh token armazenado.
-  Future<bool> refreshAccessToken() async {
+  /// Usa mutex: se já há uma rotação em andamento, aguarda o resultado dela
+  /// em vez de disparar uma segunda (que chegaria com token já blacklistado).
+  Future<bool> refreshAccessToken() {
+    _refreshInProgress ??= _doRefresh().whenComplete(() {
+      _refreshInProgress = null;
+    });
+    return _refreshInProgress!;
+  }
+
+  Future<bool> _doRefresh() async {
     final refresh = await _storage.read(key: 'refresh_token');
     if (refresh == null || refresh.isEmpty) return false;
 
