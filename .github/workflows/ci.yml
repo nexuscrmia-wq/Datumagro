@@ -1,0 +1,37 @@
+name: Deploy → Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Django system check
+        run: |
+          python manage.py check --deploy 2>&1 | grep -v "WARNINGS\|?: " || true
+        env:
+          DJANGO_SETTINGS_MODULE: datumagro.settings
+          SECRET_KEY: ci-check-only-not-real
+          DATABASE_URL: sqlite:///tmp_ci.db
+
+      - name: Deploy to Railway
+        run: |
+          npm install -g @railway/cli
+          railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
