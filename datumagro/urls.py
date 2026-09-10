@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.views.static import serve
 from rest_framework.permissions import IsAuthenticated
@@ -24,7 +24,7 @@ urlpatterns = [
     path('', home, name='home'),
     # Admin em path não-padrão — bots varrem /admin/ automaticamente
     path('datumagro-gestao/', admin.site.urls),
-    path('ping/', lambda _: HttpResponse('pong'), name='ping'),
+    path('ping/', lambda _: JsonResponse({'status': 'ok'}), name='ping'),
 
     # Página pública (obrigatória para aprovação nas lojas)
     path('privacidade/', politica_privacidade, name='politica-privacidade'),
