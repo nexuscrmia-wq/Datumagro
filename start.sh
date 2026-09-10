@@ -35,6 +35,9 @@ for su in User.objects.filter(is_superuser=True):
 echo "==> Populando base de conhecimento (guias do app)..."
 python manage.py seed_guias || echo "Aviso: seed_guias falhou (não crítico)"
 
+echo "==> Validando ambiente..."
+python manage.py startup_check || true
+
 echo "==> Starting Gunicorn..."
 exec gunicorn datumagro.wsgi:application \
     --bind "0.0.0.0:${PORT:-8000}" \
