@@ -1,19 +1,4 @@
-"""
-Roda antes do gunicorn no Railway. Verifica pré-condições críticas e loga
-avisos sem travar o processo — falhas de banco são esperadas em cold-start
-e resolvidas pelo retry do Railway.
-"""
 import os
-import sys
-import logging
-
-logger = logging.getLogger('datumagro.startup')
-
-
-class Command:
-    pass
-
-
 from django.core.management.base import BaseCommand
 
 
