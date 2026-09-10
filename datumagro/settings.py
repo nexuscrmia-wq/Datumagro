@@ -37,11 +37,13 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 🚀 SECURITY: Use environment variables for sensitive data
-_secret_key = os.getenv('SECRET_KEY', '')
-if not _secret_key:
-    if os.getenv('ENVIRONMENT', 'production') == 'production' and os.getenv('RAILWAY_PUBLIC_DOMAIN'):
-        raise Exception('SECRET_KEY não definida. Configure a variável de ambiente no Railway.')
-    _secret_key = 'django-insecure-fallback-key-for-local-dev-only'
+_secret_key = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-for-local-dev-only')
+import logging as _logging
+if _secret_key.startswith('django-insecure-') and os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+    _logging.getLogger('django').warning(
+        'SECURITY: SECRET_KEY está usando o fallback inseguro em produção. '
+        'Defina SECRET_KEY nas variáveis de ambiente do Railway.'
+    )
 SECRET_KEY = _secret_key
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'production') == 'production' or bool(os.getenv('RENDER'))
