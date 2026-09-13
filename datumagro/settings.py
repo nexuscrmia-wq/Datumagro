@@ -10,6 +10,7 @@ from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
 import logging.config
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -37,7 +38,13 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 🚀 SECURITY: Use environment variables for sensitive data
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-for-local-dev-only')
+_secret_key = os.getenv('SECRET_KEY')
+if not _secret_key:
+    raise ImproperlyConfigured(
+        "A variável de ambiente SECRET_KEY não está definida. "
+        "Defina-a no Railway Variables (produção) ou no .env (desenvolvimento)."
+    )
+SECRET_KEY = _secret_key
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'production') == 'production' or bool(os.getenv('RENDER'))
 
@@ -101,10 +108,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # 🚀 WhiteNoise para arquivos estáticos comprimidos
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    # 🚀 CORS primeiro na chain
     'corsheaders.middleware.CorsMiddleware',
+    'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -417,3 +423,20 @@ else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
     SECURE_SSL_REDIRECT = False
+
+# ---------------------------------------------------------------------------
+# Content-Security-Policy (django-csp)
+# Modo report-only por 1 semana — troque CSP_REPORT_ONLY = False para bloquear.
+# A landing page usa Google Fonts e inline styles (admin), por isso unsafe-inline
+# e fonts.googleapis estão liberados enquanto o CSP é refinado.
+# ---------------------------------------------------------------------------
+CSP_REPORT_ONLY = True  # muda para False quando confirmar que nada quebrou
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC  = ("'self'", "'unsafe-inline'")  # remover unsafe-inline após auditoria
+CSP_STYLE_SRC   = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
+CSP_FONT_SRC    = ("'self'", "https://fonts.gstatic.com")
+CSP_IMG_SRC     = ("'self'", "data:", "https:")
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FRAME_SRC   = ("'none'",)
+CSP_FRAME_ANCESTORS = ("'none'",)
+CSP_OBJECT_SRC  = ("'none'",)
