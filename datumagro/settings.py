@@ -425,18 +425,22 @@ else:
     SECURE_SSL_REDIRECT = False
 
 # ---------------------------------------------------------------------------
-# Content-Security-Policy (django-csp)
-# Modo report-only por 1 semana — troque CSP_REPORT_ONLY = False para bloquear.
-# A landing page usa Google Fonts e inline styles (admin), por isso unsafe-inline
-# e fonts.googleapis estão liberados enquanto o CSP é refinado.
+# Content-Security-Policy (django-csp >= 4.x)
+# Modo report-only por ~1 semana. Para bloquear, mova "REPORT_ONLY" para False
+# dentro do dict CONTENT_SECURITY_POLICY abaixo.
+# Landing page usa Google Fonts e scripts inline — unsafe-inline temporário.
 # ---------------------------------------------------------------------------
-CSP_REPORT_ONLY = True  # muda para False quando confirmar que nada quebrou
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC  = ("'self'", "'unsafe-inline'")  # remover unsafe-inline após auditoria
-CSP_STYLE_SRC   = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
-CSP_FONT_SRC    = ("'self'", "https://fonts.gstatic.com")
-CSP_IMG_SRC     = ("'self'", "data:", "https:")
-CSP_CONNECT_SRC = ("'self'",)
-CSP_FRAME_SRC   = ("'none'",)
-CSP_FRAME_ANCESTORS = ("'none'",)
-CSP_OBJECT_SRC  = ("'none'",)
+CONTENT_SECURITY_POLICY = {
+    "REPORT_ONLY": True,  # troque para False após confirmar que nada quebrou
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src":  ["'self'", "'unsafe-inline'"],  # remover após auditoria
+        "style-src":   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        "font-src":    ["'self'", "https://fonts.gstatic.com"],
+        "img-src":     ["'self'", "data:", "https:"],
+        "connect-src": ["'self'"],
+        "frame-src":   ["'none'"],
+        "frame-ancestors": ["'none'"],
+        "object-src":  ["'none'"],
+    },
+}
