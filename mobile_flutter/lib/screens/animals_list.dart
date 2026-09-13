@@ -86,7 +86,6 @@ class _AnimalsListScreenState extends State<AnimalsListScreen> {
   void dispose() {
     _connectivitySub?.cancel();
     _searchCtrl.dispose();
-    try { db.close(); } catch (_) {}
     super.dispose();
   }
 

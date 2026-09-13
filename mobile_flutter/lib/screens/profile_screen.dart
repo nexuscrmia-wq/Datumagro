@@ -711,6 +711,7 @@ class _PermRow extends StatelessWidget {
     'can_edit_vacinas': 'Editar vacinas',
     'can_view_alertas': 'Ver alertas',
     'can_view_propriedades': 'Ver propriedades',
+    'can_edit_propriedades': 'Editar propriedades',
   };
 
   @override

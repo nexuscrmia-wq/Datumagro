@@ -997,7 +997,13 @@ def sync_offline(request):
                     for field in update_fields:
                         src_key = 'is_reprodut' if field == 'is_reprodutor' else field
                         if src_key in data:
-                            setattr(animal, field, data[src_key])
+                            val = data[src_key]
+                            # CharField(null=False) não aceita None — converte para ''
+                            if val is None:
+                                meta_field = Animal._meta.get_field(field)
+                                if not getattr(meta_field, 'null', True) and hasattr(meta_field, 'max_length'):
+                                    val = ''
+                            setattr(animal, field, val)
                     animal.save(update_fields=update_fields)
                     applied.append({'client_id': client_id})
 
