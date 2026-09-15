@@ -103,34 +103,31 @@ class BaseViewSet(viewsets.ModelViewSet):
 
     def _get_user_cliente(self, user):
         """
-        Obtém o cliente associado ao usuário com fallbacks.
-        
-        Precedência:
-        1. Relacionamento direto (se existir)
-        2. Email do usuário
-        3. Primeiro cliente no banco (dev only)
+        Obtém o cliente associado ao usuário.
+        Retorna None se não encontrado — nunca retorna dados de outro tenant.
         """
         try:
-            # Tentar via relacionamento direto
             if hasattr(user, 'cliente') and user.cliente:
                 return user.cliente
         except Exception:
             pass
-        
+
         try:
-            # Fallback: buscar por email
+            prop = user.propriedades.select_related('cliente').first()
+            if prop and prop.cliente:
+                return prop.cliente
+        except Exception:
+            pass
+
+        try:
             if user.email:
                 cliente = Cliente.objects.filter(email_contato=user.email).first()
                 if cliente:
                     return cliente
         except Exception:
             pass
-        
-        try:
-            # Última tentativa: primeiro cliente (dev only)
-            return Cliente.objects.first()
-        except Exception:
-            return None
+
+        return None
 
     def _apply_cliente_filter(self, cliente):
         """
@@ -156,12 +153,12 @@ class BaseViewSet(viewsets.ModelViewSet):
         elif model_name == 'Piquete':
             return self.queryset.filter(propriedade__cliente=cliente)
         
-        # Para outros modelos, retorna sem filtro (ajustar conforme necessário)
-        logger.warning(
-            f"Modelo {model_name} não possui filtro de cliente customizado",
+        # Modelo sem filtro mapeado — nega acesso por segurança
+        logger.error(
+            f"Modelo {model_name} sem filtro de cliente: acesso bloqueado",
             extra={'model': model_name}
         )
-        return self.queryset
+        return self.queryset.none()
 
     def _apply_funcionario_filter(self, queryset, user):
         """
@@ -229,13 +226,24 @@ class BaseViewSet(viewsets.ModelViewSet):
 
 
 class ClienteViewSet(viewsets.ModelViewSet):
-    """ViewSet otimizado para clientes — apenas Proprietários"""
+    """ViewSet para o próprio cliente do usuário — apenas Proprietários"""
     queryset = Cliente.objects.prefetch_related('propriedades').all()
     serializer_class = None  # Será definido no método get_serializer_class
     permission_classes = [permissions.IsAuthenticated, IsProprietario]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = []
     search_fields = ['nome_empresa', 'cpf_cnpj', 'email_contato']
+
+    def get_queryset(self):
+        """Retorna apenas o cliente associado ao próprio usuário."""
+        user = self.request.user
+        prop = user.propriedades.select_related('cliente').first()
+        if prop and prop.cliente:
+            return Cliente.objects.filter(pk=prop.cliente.pk).prefetch_related('propriedades')
+        cliente = Cliente.objects.filter(email_contato=user.email).first()
+        if cliente:
+            return Cliente.objects.filter(pk=cliente.pk).prefetch_related('propriedades')
+        return Cliente.objects.none()
 
     def get_serializer_class(self):
         from .serializers import ClienteSerializer
@@ -549,16 +557,9 @@ class AplicacaoVacinaViewSet(BaseViewSet):
     def get_queryset(self):
         """Filtra aplicações de vacina pelos animais do cliente"""
         user = getattr(self.request, 'user', None)
-        cliente = None
-
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        if not user:
+            return AplicacaoVacina.objects.none()
+        cliente = self._get_user_cliente(user)
         if cliente is None:
             return AplicacaoVacina.objects.none()
 
@@ -577,16 +578,9 @@ class InformacaoGeneticaViewSet(BaseViewSet):
     def get_queryset(self):
         """Filtra informações genéticas pelos animais do cliente"""
         user = getattr(self.request, 'user', None)
-        cliente = None
-
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        if not user:
+            return InformacaoGenetica.objects.none()
+        cliente = self._get_user_cliente(user)
         if cliente is None:
             return InformacaoGenetica.objects.none()
 
@@ -616,16 +610,9 @@ class FichaTecnicaAnimalViewSet(BaseViewSet):
     def get_queryset(self):
         """Filtra fichas técnicas pelos animais do cliente"""
         user = getattr(self.request, 'user', None)
-        cliente = None
-
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        if not user:
+            return FichaTecnicaAnimal.objects.none()
+        cliente = self._get_user_cliente(user)
         if cliente is None:
             return FichaTecnicaAnimal.objects.none()
 
@@ -871,15 +858,14 @@ def _gerar_pdf_romaneio(itens: list, resumo: dict) -> str:
 # ─────────────────────────────────────────────
 
 def _get_user_cliente_sync(user):
-    """Resolve o cliente do usuário para o sync."""
+    """Resolve o cliente do usuário para o sync. Nunca retorna cliente de outro tenant."""
     prop = user.propriedades.select_related('cliente').first()
-    if prop:
+    if prop and prop.cliente:
         return prop.cliente
-    cliente = Cliente.objects.filter(email_contato=user.email).first()
-    if cliente:
-        return cliente
-    if Cliente.objects.count() == 1:
-        return Cliente.objects.first()
+    if user.email:
+        cliente = Cliente.objects.filter(email_contato=user.email).first()
+        if cliente:
+            return cliente
     return None
 
 

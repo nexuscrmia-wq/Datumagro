@@ -27,12 +27,17 @@ class BaseOperacionalViewSet(viewsets.ModelViewSet):
         from datumagro.apps.cadastros.models import Cliente
         user = self.request.user
         try:
-            cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente:
-                return cliente
+            prop = user.propriedades.select_related('cliente').first()
+            if prop and prop.cliente:
+                return prop.cliente
         except Exception:
             pass
-        return Cliente.objects.first()
+        try:
+            if user.email:
+                return Cliente.objects.filter(email_contato=user.email).first()
+        except Exception:
+            pass
+        return None
 
     def get_queryset(self):
         cliente = self._get_cliente()

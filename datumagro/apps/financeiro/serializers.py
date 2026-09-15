@@ -51,10 +51,13 @@ class TransacaoSerializer(serializers.ModelSerializer):
     def _get_cliente(self):
         from datumagro.apps.cadastros.models import Cliente
         user = self.context['request'].user
-        cliente = Cliente.objects.filter(email_contato=user.email).first()
-        if cliente is None:
-            cliente = Cliente.objects.first()
-        return cliente
+        try:
+            prop = user.propriedades.select_related('cliente').first()
+            if prop and prop.cliente:
+                return prop.cliente
+        except Exception:
+            pass
+        return Cliente.objects.filter(email_contato=user.email).first()
 
     def _resolve_categoria(self, validated_data):
         """Auto-create Categoria from categoria_nome if FK not set."""

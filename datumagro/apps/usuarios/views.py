@@ -38,6 +38,17 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Usuario.objects.none()
+        cliente = _resolver_cliente(user)
+        if not cliente:
+            return Usuario.objects.filter(id=user.id)
+        return Usuario.objects.filter(
+            propriedades__cliente=cliente
+        ).distinct()
+
     def get_permissions(self):
         if self.action in ['registrar', 'login', 'reset_password', 'confirm_reset_password']:
             return [AllowAny()]
@@ -499,9 +510,6 @@ def _get_cliente_equipe(user):
     cliente = Cliente.objects.filter(email_contato=user.email).first()
     if cliente:
         return cliente
-    # 4. único cliente no sistema (proprietário sem M2M/email configurado)
-    if Cliente.objects.count() == 1:
-        return Cliente.objects.first()
     return None
 
 

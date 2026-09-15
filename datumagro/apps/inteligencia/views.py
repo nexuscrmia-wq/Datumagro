@@ -33,14 +33,19 @@ class AlertaViewSet(viewsets.ModelViewSet):
     def _resolver_cliente(self):
         from datumagro.apps.cadastros.models import Cliente
         user = self.request.user
-        prop = user.propriedades.select_related('cliente').first()
-        if prop:
-            return prop.cliente
-        cliente = Cliente.objects.filter(email_contato=user.email).first()
-        if cliente:
-            return cliente
-        if Cliente.objects.count() == 1:
-            return Cliente.objects.first()
+        try:
+            prop = user.propriedades.select_related('cliente').first()
+            if prop and prop.cliente:
+                return prop.cliente
+        except Exception:
+            pass
+        try:
+            if user.email:
+                cliente = Cliente.objects.filter(email_contato=user.email).first()
+                if cliente:
+                    return cliente
+        except Exception:
+            pass
         return None
 
     def get_queryset(self):

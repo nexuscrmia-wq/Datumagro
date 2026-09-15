@@ -8,16 +8,15 @@ from .serializers import EmbarqueSerializer, ItemEmbarqueSerializer
 
 
 def _resolver_cliente_logistica(user):
-    """Resolve o cliente do usuário com fallback para sistema mono-cliente."""
+    """Resolve o cliente do usuário. Nunca retorna cliente de outro tenant."""
     from datumagro.apps.cadastros.models import Cliente
     prop = user.propriedades.select_related('cliente').first()
-    if prop:
+    if prop and prop.cliente:
         return prop.cliente
-    cliente = Cliente.objects.filter(email_contato=user.email).first()
-    if cliente:
-        return cliente
-    if Cliente.objects.count() == 1:
-        return Cliente.objects.first()
+    if user.email:
+        cliente = Cliente.objects.filter(email_contato=user.email).first()
+        if cliente:
+            return cliente
     return None
 
 
@@ -76,6 +75,14 @@ class ItemEmbarqueViewSet(viewsets.ModelViewSet):
     filterset_fields = ['embarque', 'animal', 'tipo_produto']
     search_fields = ['descricao_produto', 'gta', 'sif']
     ordering_fields = ['peso_total_kg', 'valor_total']
+
+    def get_queryset(self):
+        cliente = _resolver_cliente_logistica(self.request.user)
+        if not cliente:
+            return ItemEmbarque.objects.none()
+        return ItemEmbarque.objects.filter(
+            embarque__responsavel=cliente
+        ).order_by('-id')
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:

@@ -26,6 +26,24 @@ from datumagro.apps.usuarios.permissions import PermissaoFinanceiro, CanDeleteDa
 logger = logging.getLogger(__name__)
 
 
+def _resolver_cliente_financeiro(user):
+    """Resolve o cliente do usuário sem nenhum fallback de segurança."""
+    try:
+        prop = user.propriedades.select_related('cliente').first()
+        if prop and prop.cliente:
+            return prop.cliente
+    except Exception:
+        pass
+    try:
+        if user.email:
+            cliente = Cliente.objects.filter(email_contato=user.email).first()
+            if cliente:
+                return cliente
+    except Exception:
+        pass
+    return None
+
+
 class CategoriaViewSet(viewsets.ModelViewSet):
     """ViewSet otimizado para categorias financeiras com cache"""
     serializer_class = CategoriaSerializer
@@ -35,44 +53,15 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     search_fields = ['nome']
 
     def get_queryset(self):
-        # Protege contra usuários sem perfil/cliente associado
-        user = getattr(self.request, 'user', None)
-        cliente = None
-        
-        # Fallback: tente achar cliente por email do usuário
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                # Se não encontrar por email, pega o primeiro cliente (dev only)
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        cliente = _resolver_cliente_financeiro(self.request.user)
         if cliente is None:
-            # Retorna queryset vazio quando não há cliente associado para evitar 500
             return Categoria.objects.none()
-        
         return Categoria.objects.filter(cliente=cliente)
 
     def perform_create(self, serializer):
-        # Protege contra usuários sem perfil/cliente associado
-        user = getattr(self.request, 'user', None)
-        cliente = None
-        
-        # Fallback: tente achar cliente por email do usuário
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                # Se não encontrar por email, pega o primeiro cliente (dev only)
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        cliente = _resolver_cliente_financeiro(self.request.user)
         if cliente is None:
             raise serializers.ValidationError({'detail': 'Usuário sem cliente vinculado.'})
-        
         instance = serializer.save(cliente=cliente)
         # 🚀 Invalida cache de relatórios (usando delete ao invés de delete_pattern)
         try:
@@ -123,48 +112,17 @@ class TransacaoViewSet(viewsets.ModelViewSet):
     ordering = ['-data']
 
     def get_queryset(self):
-        # ✅ OTIMIZAÇÃO: select_related para categoria
-        # Protege contra usuários sem perfil/cliente associado
-        user = getattr(self.request, 'user', None)
-        cliente = None
-        
-        # Fallback: tente achar cliente por email do usuário
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                # Se não encontrar por email, pega o primeiro cliente (dev only)
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        cliente = _resolver_cliente_financeiro(self.request.user)
         if cliente is None:
             return Transacao.objects.none()
-        
-        return Transacao.objects.select_related(
-            'categoria'
-        ).filter(
+        return Transacao.objects.select_related('categoria').filter(
             cliente=cliente
         ).order_by('-data')
 
     def perform_create(self, serializer):
-        # Protege contra usuários sem perfil/cliente associado
-        user = getattr(self.request, 'user', None)
-        cliente = None
-        
-        # Fallback: tente achar cliente por email do usuário
-        try:
-            if user and getattr(user, 'email', None):
-                cliente = Cliente.objects.filter(email_contato=user.email).first()
-            if cliente is None:
-                # Se não encontrar por email, pega o primeiro cliente (dev only)
-                cliente = Cliente.objects.first()
-        except Exception:
-            cliente = None
-
+        cliente = _resolver_cliente_financeiro(self.request.user)
         if cliente is None:
             raise serializers.ValidationError({'detail': 'Usuário sem cliente vinculado.'})
-        
         instance = serializer.save(cliente=cliente)
         # 🚀 Invalida cache de relatórios
         try:

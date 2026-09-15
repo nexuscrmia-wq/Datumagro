@@ -226,8 +226,6 @@ class IsImportacaoInternacional(BasePermission):
             cliente = prop.cliente
         else:
             cliente = Cliente.objects.filter(email_contato=request.user.email).first()
-            if not cliente and Cliente.objects.count() == 1:
-                cliente = Cliente.objects.first()
         if not cliente:
             return False
 
