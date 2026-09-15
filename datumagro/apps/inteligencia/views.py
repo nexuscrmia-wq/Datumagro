@@ -8,8 +8,6 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from django.db.models import Avg, Count, Q, Sum
 from django.utils import timezone
@@ -190,14 +188,23 @@ class MetricasDesempenhoView(APIView):
     """Métricas de desempenho com cache"""
     permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 
-    @method_decorator(cache_page(60 * 60))  # 🚀 Cache de 1 hora para métricas pesadas
     def get(self, request):
+        # Cache por usuário — nunca por URL — para evitar vazamento entre contas
+        cache_key = f"metricas_desempenho_user_{request.user.id}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
         try:
             from datumagro.apps.cadastros.models import Animal, RegistroPesagem, Propriedade
-            
+
             perfil = getattr(request.user, 'perfilusuario', None)
             cliente = getattr(perfil, 'cliente', None) if perfil else None
-            
+
+            if not cliente:
+                prop = request.user.propriedades.select_related('cliente').first()
+                cliente = prop.cliente if prop and prop.cliente else None
+
             if not cliente:
                 return Response({})
             
@@ -217,7 +224,7 @@ class MetricasDesempenhoView(APIView):
             # Cálculo de GMD (Ganho Médio Diário) - exemplo simplificado
             gmd_medio = 1.25  # Implementar cálculo real conforme necessário
             
-            return Response({
+            data = {
                 'total_animais': metricas_animais['total'],
                 'total_propriedades': propriedades.count(),
                 'gmd_medio': gmd_medio,
@@ -246,7 +253,9 @@ class MetricasDesempenhoView(APIView):
                     {'mes': 'Mar', 'gmd': 1.25},
                     {'mes': 'Abr', 'gmd': 1.4},
                 ]
-            })
+            }
+            cache.set(cache_key, data, 60 * 60)
+            return Response(data)
             
         except Exception as e:
             logger.error("Erro ao calcular métricas", extra={

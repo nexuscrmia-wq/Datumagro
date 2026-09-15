@@ -513,9 +513,10 @@ class RegistroPesagemViewSet(BaseViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOperadorCampo]
 
     def get_queryset(self):
-        return RegistroPesagem.objects.select_related(
-            'animal', 'animal__propriedade'
-        ).all()
+        # Chama BaseViewSet.get_queryset() para garantir filtro de tenant,
+        # depois adiciona select_related para performance
+        qs = super().get_queryset()
+        return qs.select_related('animal', 'animal__propriedade')
 
     def perform_create(self, serializer):
         serializer.save()
