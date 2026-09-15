@@ -414,7 +414,7 @@ def versao_app(request):
         'versao': versao,
         'url_download': f'{url_base}/baixar/apk/',
         'obrigatorio': os.getenv('UPDATE_OBRIGATORIO', 'false').lower() == 'true',
-        'novidades': os.getenv('UPDATE_NOVIDADES', 'Raça livre: ao selecionar "Outra/Mestiço", agora é possível digitar qualquer raça. Sincronização entre dispositivos corrigida para proprietários.'),
+        'novidades': os.getenv('UPDATE_NOVIDADES', 'Segurança: isolamento total entre contas. Correções de sincronização e edição de animais. Novos formulários e filtros aprimorados.'),
     })
 
 
