@@ -25,6 +25,7 @@ class EmbarqueViewSet(viewsets.ModelViewSet):
     Embarques e GTA: peão pode consultar a agenda de saída mas não criar/editar.
     Leitura: todos autenticados. Escrita: Proprietário + Gerente.
     """
+    queryset = Embarque.objects.none()  # fallback para drf-spectacular
     serializer_class = EmbarqueSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['tipo', 'status', 'porto_destino']

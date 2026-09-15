@@ -18,6 +18,7 @@ def _get_cliente(user):
 
 class RelatorioViewSet(viewsets.ModelViewSet):
     """Histórico de relatórios gerados pelo cliente."""
+    queryset = Relatorio.objects.none()  # fallback para drf-spectacular
     serializer_class = RelatorioSerializer
     permission_classes = [permissions.IsAuthenticated, PermissaoRelatorios]
     http_method_names = ['get', 'post', 'delete', 'head', 'options']

@@ -110,7 +110,7 @@ class _LogisticaScreenState extends State<LogisticaScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: tipo,
+                  initialValue: tipo,
                   decoration: const InputDecoration(
                       labelText: 'Tipo *', border: OutlineInputBorder()),
                   items: const [
@@ -596,22 +596,26 @@ class _StatusUpdateSheetState extends State<_StatusUpdateSheet> {
           const Text('Alterar status do embarque',
             style: TextStyle(fontSize: 13, color: Colors.grey)),
           const SizedBox(height: 16),
-          ..._statusOpts.map((opt) {
-            final (code, label, color, icon) = opt;
-            return RadioListTile<String>(
-              value: code,
-              groupValue: _status,
-              onChanged: (v) => setState(() => _status = v!),
-              activeColor: color,
-              title: Row(
-                children: [
-                  Icon(icon, size: 18, color: color),
-                  const SizedBox(width: 8),
-                  Text(label),
-                ],
-              ),
-            );
-          }),
+          RadioGroup<String>(
+            groupValue: _status,
+            onChanged: (v) => setState(() => _status = v!),
+            child: Column(
+              children: _statusOpts.map((opt) {
+                final (code, label, color, icon) = opt;
+                return RadioListTile<String>(
+                  value: code,
+                  activeColor: color,
+                  title: Row(
+                    children: [
+                      Icon(icon, size: 18, color: color),
+                      const SizedBox(width: 8),
+                      Text(label),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,

@@ -13,6 +13,7 @@ dependencies:
   connectivity_plus: ^4.0.0
   drift: any
   drift_flutter: any
+  path: any
   path_provider: ^2.0.15
   provider: ^6.0.5
   flutter_secure_storage: ^8.0.0

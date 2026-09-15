@@ -12,6 +12,7 @@ class HistoricoNotificacoesViewSet(viewsets.ReadOnlyModelViewSet):
 
     É 'ReadOnly' porque o cliente não pode criar ou apagar um log de notificação.
     """
+    queryset = LogNotificacao.objects.none()  # fallback para drf-spectacular
     serializer_class = LogNotificacaoSerializer
     permission_classes = [permissions.IsAuthenticated]
 

@@ -20,6 +20,7 @@ class MinhaAssinaturaViewSet(viewsets.GenericViewSet):
     API endpoint para um cliente logado ver e gerenciar sua própria assinatura.
     - GET /api/minha-assinatura/ -> Retorna os detalhes da assinatura do usuário logado.
     """
+    queryset = Assinatura.objects.none()  # fallback para drf-spectacular
     serializer_class = AssinaturaSerializer
     permission_classes = [permissions.IsAuthenticated]
 

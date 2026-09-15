@@ -278,7 +278,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: tipo,
+                  initialValue: tipo,
                   decoration: const InputDecoration(labelText: 'Tipo'),
                   items: const [
                     DropdownMenuItem(value: 'VACINACAO', child: Text('Vacinação')),
@@ -381,7 +381,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: tipoEvento,
+                  initialValue: tipoEvento,
                   decoration: const InputDecoration(labelText: 'Tipo de Evento'),
                   items: const [
                     DropdownMenuItem(value: 'COBERTURA', child: Text('Cobertura Natural')),
@@ -393,7 +393,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen>
                 ),
                 if (tipoEvento == 'DIAGNOSTICO')
                   DropdownButtonFormField<String?>(
-                    value: resultadoDg,
+                    initialValue: resultadoDg,
                     decoration: const InputDecoration(labelText: 'Resultado DG'),
                     items: const [
                       DropdownMenuItem(value: null, child: Text('—')),

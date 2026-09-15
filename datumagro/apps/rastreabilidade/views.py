@@ -16,6 +16,7 @@ class PerfilPublicoAPIViewSet(viewsets.ModelViewSet):
     Gerenciamento dos perfis de rastreabilidade (QR Code / passaporte).
     Restrito a Proprietário e Gerente — peão não emite documentos sanitários.
     """
+    queryset = PerfilPublicoAnimal.objects.none()  # fallback para drf-spectacular
     serializer_class = PerfilPublicoManagementSerializer
     permission_classes = [permissions.IsAuthenticated, IsProprietarioOrGerente]
 

@@ -431,7 +431,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
               ),
               _Field(
                 child: DropdownButtonFormField<String>(
-                  value: _raca,
+                  initialValue: _raca,
                   decoration: _dec('Raça / Linhagem', Icons.biotech_outlined),
                   isExpanded: true,
                   items: cfg.racas
@@ -456,7 +456,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
                 ),
               _Field(
                 child: DropdownButtonFormField<String>(
-                  value: _registroGenetico,
+                  initialValue: _registroGenetico,
                   decoration:
                       _dec('Registro genético', Icons.workspace_premium_outlined),
                   isExpanded: true,
@@ -534,7 +534,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
               ),
               _Field(
                 child: DropdownButtonFormField<String>(
-                  value: _categoria,
+                  initialValue: _categoria,
                   decoration: _dec('Categoria', Icons.category_outlined),
                   isExpanded: true,
                   items: cfg.categorias
@@ -545,7 +545,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
               ),
               _Field(
                 child: DropdownButtonFormField<String>(
-                  value: _aptidao,
+                  initialValue: _aptidao,
                   decoration: _dec('Aptidão / Finalidade', Icons.agriculture_outlined),
                   isExpanded: true,
                   items: cfg.aptidoes
@@ -556,7 +556,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
               ),
               _Field(
                 child: DropdownButtonFormField<String>(
-                  value: _temperamento,
+                  initialValue: _temperamento,
                   decoration: _dec('Temperamento', Icons.mood_outlined),
                   isExpanded: true,
                   items: _temperamentos
@@ -574,7 +574,7 @@ class _AnimalFormScreenState extends State<AnimalFormScreen> {
               if (cfg.temStatus && _sexo == 'F')
                 _Field(
                   child: DropdownButtonFormField<String>(
-                    value: _statusReprodutivo,
+                    initialValue: _statusReprodutivo,
                     decoration:
                         _dec('Status reprodutivo', Icons.child_friendly_outlined),
                     isExpanded: true,

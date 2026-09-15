@@ -609,7 +609,7 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
                   SizedBox(
                     width: 100,
                     child: DropdownButtonFormField<String>(
-                      value: uf,
+                      initialValue: uf,
                       decoration: const InputDecoration(
                         labelText: 'UF',
                         border: OutlineInputBorder(),
@@ -637,7 +637,7 @@ class _MapaPropriedadeScreenState extends State<MapaPropriedadeScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: objetivo,
+                      initialValue: objetivo,
                       decoration: const InputDecoration(
                         labelText: 'Objetivo',
                         border: OutlineInputBorder(),
